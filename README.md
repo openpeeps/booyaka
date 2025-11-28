@@ -1,29 +1,84 @@
 <p align="center">
-  <img src="https://github.com/openpeeps/PKG/blob/main/.github/logo.png" width="90px"><br>
-  OpenPeeps repository template for developing libraries,<br>projects and other cool things. 👑 Written in Nim language
+  <img src="https://github.com/openpeeps/booyaka/blob/main/.github/booyaka.png" width="90px" height="90px" alt="Booyaka Logo"><br>
+  👻 Booyaka &mdash; A fast documentation generator for cool kids!<br>
+  Compiled &bullet; Lightweight &bullet; Fast &bullet; 👑 Written in Nim language
 </p>
 
 <p align="center">
-  <code>nimble install {PKG}</code>
+  <code>nimble install booyaka</code> | <a href="https://github.com/openpeeps/booyaka/releases">Download from GitHub</a>
 </p>
 
 <p align="center">
   <a href="https://github.com/">API reference</a><br>
-  <img src="https://github.com/openpeeps/pistachio/workflows/test/badge.svg" alt="Github Actions">  <img src="https://github.com/openpeeps/pistachio/workflows/docs/badge.svg" alt="Github Actions">
+  <img src="https://github.com/openpeeps/booyaka/workflows/test/badge.svg" alt="Github Actions">  <img src="https://github.com/openpeeps/booyaka/workflows/docs/badge.svg" alt="Github Actions">
 </p>
 
 ## 😍 Key Features
-- [x] Open Source | `MIT` License
-- [x] Written in Nim language
+- 🔥 Compiled, extremely lightweight, and super fast
+- 🌍 Cross-platform CLI application (Linux, macOS, Windows)
+- 📄 Generate documentation from **Markdown files**
+- Dynamic Site Generation with embedded HTTP server
+- 🖼 Almost 5K SVG Icons powered by [Tabler Icons](https://tabler.io/icons)
+- 🔎 Search Functionality with Offline capabilities powered by IndexedDB
+- 🔁 Browser Sync & Live Reload
+- 📲 Responsive & Clean UI 💪 Powered by **Bootstrap 5**
+- 💅 Fully Customizable UI
+- 👌 No Vendor Lock-in | Your docs are just Markdown files
+- 💪 Self-hosted / No third-party services
+- 🎩 **Open Source** | **AGPLv3** License
+- 👑 Written in Nim language | Made by Humans from OpenPeeps
 
-## Examples
-...
+> [!NOTE]
+> Booyaka is still in active development. Expect frequent updates and new features as we work towards a stable release.
+
+## About
+Booyaka is a documentation site generator that takes a directory of Markdown files and generates a
+fully functional documentation website, then serves it dynamically using an embedded HTTP server.
+It is designed to be simple, fast, and easy to use.
+
+Booyaka is written in [Nim language](https://github.com/nim-lang), a statically typed compiled systems
+programming language that combines the performance and low-level control of C with the expressiveness
+and ease of use of modern languages like Python and Ruby. [Learn more about Nim](https://nim-lang.org).
+
+## 📦 Installation
+Download the precompiled binaries from the [releases page](https://github.com/openpeeps/booyaka/releases)
+or use `nimble` to build from source. Read the [Nim installation guide](https://nim-lang.org/install.html)
+if you don't have Nim installed.
+
+
+### Prerequisites
+- [Nim](https://nim-lang.org/install.html) >= 2.0
+- Libevent
+
+```
+nimble install booyaka
+```
+
+
+## 🚀 Getting Started
+
+To generate a documentation website using Booyaka, run the following command in your terminal,
+replacing `<directory>` with the path of  the next directory you want to create the documentation site from:
+
+```
+booyaka new <directory>
+```
+
+Booyaka will create a new directory with the necessary files and folders to get started.
+You can then navigate to the newly created directory and start the embedded HTTP server by running:
+
+```
+booyaka run --port:8000 --sync
+```
+
+Open your web browser and go to `http://localhost:8000` to view your documentation site.
+
 
 ### ❤ Contributions & Support
-- 🐛 Found a bug? [Create a new Issue](/issues)
-- 👋 Wanna help? [Fork it!](/fork)
+- 🐛 Found a bug? [Create a new Issue](https://github.com/openpeeps/booyaka/issues)
+- 👋 Wanna help? [Fork it!](https://github.com/openpeeps/booyaka/fork)
 - 😎 [Get €20 in cloud credits from Hetzner](https://hetzner.cloud/?ref=Hm0mYGM9NxZ4)
 
 ### 🎩 License
-{PKG} | MIT license. [Made by Humans from OpenPeeps](https://github.com/openpeeps).<br>
+AGPLv3 license. [Made by Humans from OpenPeeps](https://github.com/openpeeps).<br>
 Copyright OpenPeeps & Contributors &mdash; All rights reserved.
