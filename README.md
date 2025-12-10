@@ -18,19 +18,18 @@
 </p>
 
 ## 😍 Key Features
-- 🔥 Compiled, extremely lightweight, and super fast
-- 🌍 Cross-platform CLI application (Linux, macOS, Windows)
-- 📄 Generate documentation from **Markdown files**
-- Dynamic Site Generation with embedded HTTP server
-- 🖼 Almost 5K SVG Icons powered by [Tabler Icons](https://tabler.io/icons)
+- 🔥 **Compiled**, extremely **lightweight**, **super fast** and... 🤩 **SELF-HOSTED!**
+- 🌍 **Cross-platform** CLI application (Linux, macOS, Windows)
+- 📄 Generate documentation websites from **Markdown files**
+- 🤔 **YAML** or **JSON** based configuration? Choose your favorite! 😻
+- ⚡️ Dynamic Site Generation with **embedded HTTP server**
 - 🔎 Search Functionality with Offline capabilities powered by IndexedDB
-- 🔁 Browser Sync & Live Reload
+- 🔁 Browser Sync & **Live Reload**
 - 📲 Responsive & Clean UI 💪 Powered by **Bootstrap 5**
-- 💅 Fully Customizable UI
-- 👌 No Vendor Lock-in | Your docs are just Markdown files
-- 💪 Self-hosted / No third-party services
+- 💅 Customizable UI themes
+- 🧩 Easy to extend with custom **CSS** and **JS**
 - 🎩 **Open Source** | **AGPLv3** License
-- 👑 Written in Nim language | Made by Humans from OpenPeeps
+- 👑 Written in **Nim language** | **Made by Humans from OpenPeeps**
 
 > [!NOTE]
 > Booyaka is still in active development. Expect frequent updates and new features as we work towards a stable release.
@@ -77,6 +76,18 @@ booyaka run --port:8000 --sync
 
 Open your web browser and go to `http://localhost:8000` to view your documentation site.
 
+## Roadmap
+Here are some planned features and improvements for future releases:
+
+- [ ] UI Mobile-optimized
+- [ ] UI Dark/Light mode toggle
+- [ ] Inline Markdown Editor for content editing
+- [ ] Embed [Tabler Icons](https://tabler.io/icons) directly into Booyaka for easier icon usage
+- [ ] PDF/Offline Export
+- [ ] Backend - Static site generation mode
+- [ ] Backend - Feedback and Commenting System
+- [ ] Authentication for private documentation
+- [ ] Multi-language support
 
 ### ❤ Contributions & Support
 - 🐛 Found a bug? [Create a new Issue](https://github.com/openpeeps/booyaka/issues)
