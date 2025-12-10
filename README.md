@@ -13,10 +13,6 @@
   <img src="https://github.com/openpeeps/booyaka/workflows/test/badge.svg" alt="Github Actions">  <img src="https://github.com/openpeeps/booyaka/workflows/docs/badge.svg" alt="Github Actions">
 </p>
 
-<p align="center">
-<img src="https://github.com/openpeeps/booyaka/blob/main/.github/booyaka_readme.png" width="100%" alt="Booyaka Documentation Preview"><br>
-</p>
-
 ## 😍 Key Features
 - 🔥 **Compiled**, extremely **lightweight**, **super fast** and... 🤩 **SELF-HOSTED!**
 - 🌍 **Cross-platform** CLI application (Linux, macOS, Windows)
