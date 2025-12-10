@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-<img src="https://github.com/openpeeps/booyaka/blob/main/.github/booyaka_readme.jpg" width="100%" alt="Booyaka Documentation Preview"><br>
+<img src="https://github.com/openpeeps/booyaka/blob/main/.github/booyaka_readme.png" width="100%" alt="Booyaka Documentation Preview"><br>
 </p>
 
 ## 😍 Key Features
