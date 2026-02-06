@@ -1,7 +1,9 @@
+import std/times
+
 import pkg/supranim/middleware
 import pkg/limiter
 
-var globalLimiter = Limiter()
+var globalLimiter = Limiter(timeLimit: initDuration(seconds = 10))
 
 newBaseMiddleware limitChecker:
   ## Checks if the request is coming from an IP
