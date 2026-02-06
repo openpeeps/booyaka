@@ -199,7 +199,15 @@ initService Markdown[Global]:
             "config": toJson(globalBooyakaConfig).fromJson()
           })
         else:
-          render("errors.4xx", httpCode = Http404)
+          render("errors.4xx", local = &*{
+            "markdown": {
+              "meta": {
+                "title": "Page Not Found",
+                "description": "The page you are looking for does not exist."
+              },
+            },
+            "config": toJson(globalBooyakaConfig).fromJson()
+          }, httpCode = Http404)
 
     # Setup the filesystem monitor
     proc init*(app: Application) =

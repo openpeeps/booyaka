@@ -41,8 +41,6 @@ div.container-fluid.my-4 style="min-height:calc(100vh - 150px)"
                       li > a.bg-dark href=$item["url"]: $item["title"]
                     else:
                       li > a href=$item["url"]: $item["title"]
-              else:
-                div: "?" // parser error for `else` block
           else:
             div.border-1.border-dark.rounded-4.p-4 style="border-style: dashed"
               p.lh-sm.mb-0: "No navigation items available."
