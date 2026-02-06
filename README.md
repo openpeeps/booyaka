@@ -14,17 +14,18 @@
 </p>
 
 <p align="center">
-<img src="https://github.com/openpeeps/booyaka/blob/main/.github/booyaka_readme.jpg" width="100%" alt="Booyaka Documentation Preview"><br>
+  <img src="https://github.com/openpeeps/booyaka/blob/main/.github/booyaka_readme.jpg" width="100%" alt="Booyaka Documentation Preview"><br>
 </p>
 
 ## 😍 Key Features
 - 🔥 **Compiled**, extremely **lightweight**, **super fast** and... 🤩 **SELF-HOSTED!**
 - 🌍 **Cross-platform** CLI application (Linux, macOS, Windows)
 - 📄 Generate documentation websites from **Markdown files**
-- 🤔 **YAML** or **JSON** based configuration? Choose your favorite! 😻
+- 📚 **Build online book websites** directly from Markdown
 - ⚡️ Dynamic Site Generation with **embedded HTTP server**
 - 🔎 Search Functionality with Offline capabilities powered by IndexedDB
 - 🔁 Browser Sync & **Live Reload**
+- 🤔 **YAML** or **JSON** based configuration? Choose your favorite! 😻
 - 📲 Responsive & Clean UI 💪 Powered by **Bootstrap 5**
 - 💅 Customizable UI themes
 - 🧩 Easy to extend with custom **CSS** and **JS**
@@ -57,7 +58,6 @@ if you don't have Nim installed.
 nimble install booyaka
 ```
 
-
 ## 🚀 Getting Started
 
 To generate a documentation website using Booyaka, run the following command in your terminal,
@@ -67,8 +67,7 @@ replacing `<directory>` with the path of  the next directory you want to create 
 booyaka new <directory>
 ```
 
-Booyaka will create a new directory with the necessary files and folders to get started.
-You can then navigate to the newly created directory and start the embedded HTTP server by running:
+Booyaka will create a new directory with the necessary files and folders to get started. You can then navigate to the newly created directory and start the embedded HTTP server by running:
 
 ```
 booyaka run --port:8000 --sync
