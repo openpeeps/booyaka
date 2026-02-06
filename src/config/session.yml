@@ -1,0 +1,24 @@
+# This file contains the configuration for session management
+settings:
+  ssid_cookie_name: 'ssid'
+    # the name of the cookie to store the session id
+  expiration_time: 60
+    # set the expiration time in minutes
+
+authentication:
+  enable_multiple_device_sessions: true
+    # Allow multiple devices to be authenticated
+    # using the same account at the same time.
+  allow_multiple_devices: true
+    # whether to allow multiple devices
+    # to be logged in at the same time
+  # enable_2fa: false
+    # Enable two-factor authentication.
+
+session_cookie:
+  name: 'ssid' # the name of the session cookie
+  domain: '127.0.0.1' # the domain for the session cookie
+  # the expiration time in minutes
+  # removing this will set the cookie to expire at the
+  # end of the session (when the browser is closed)
+  expiration: 60

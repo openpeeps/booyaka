@@ -1,0 +1,25 @@
+div.col-xl-8.col-lg-7.col-md-8.col-11.mx-auto > div.card.p-0.rounded-4.border-0.overflow-hidden > div.row.h-100
+  div.col-lg-7 > div.p-5.my-5
+    h1.display-5.fw-bold: "My Account"
+    ul.nav.nav-underline.mb-3
+      li.nav-item > a.nav-link.active href="/account/edit?tab=personal": "Personal info"
+      li.nav-item > a.nav-link href="/account/edit?tab=security": "Security"
+
+    p: "Manage your account settings and set e-mail preferences."
+    form method="POST" action="/auth/login"
+      div.form-floating.mb-3
+        input.form-control name="name" type="text" placeholder="Username"
+        label: "Your name"
+
+      div.form-floating.mb-3
+        input.form-control name="email" type="email" placeholder="Email address"
+        label: "Email address"
+
+    div.text-end.w-100 > a.btn.btn-dark href="/auth/logout": "Save changes"
+
+  div.col-lg-5.bg-cover.position-relative.d-flex.noir
+    style="background-image:url(https://images.unsplash.com/photo-1726601057317-d3cbefb0d215?q=80&w=1750&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D)"
+    div.align-self-center.text-center.w-100 > img src="/assets/supranim.png" alt="Supranim" width="100px" height="100px"
+    div.position-absolute.bottom-0.start-0.text-center.w-100.pb-3
+      a.text-light.text-decoration-none target="_blank" href="https://unsplash.com/@perlamutrs": "@perlamutrs"
+

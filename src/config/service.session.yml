@@ -1,0 +1,24 @@
+server:
+  # The reserved port number for running
+  # the current service provider
+  port: 4300
+  # Whether Service's API can be accessed
+  # without requring an API key
+  require_key: false
+
+settings:
+  # Choose where to store data.
+  # Can be `memory`, `database` or `filesystem`
+  storage_type: memory
+
+  # When storage_type is set to `database`
+  # be sure you provide the `storage_database`
+  # credentials
+  storage_database: 
+    name: 'postgres_db'
+    user: 'postgres'
+    password: 'postgres'
+
+  # Adjust the expiration time (in minutes)
+  # Leave 0 for no expiration time
+  expiration_time: 60

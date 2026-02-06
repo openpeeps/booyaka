@@ -1,0 +1,4 @@
+div.col-7.mx-auto > div.row.vh-100 > div.col-12.align-self-center.text-center
+  h1.h3.fw-normal.text-center.d-block: "500 | Internal Error"
+  p: "There was a problem rendering this page"
+  a href="/": "Go back to first page"

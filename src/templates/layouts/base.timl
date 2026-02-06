@@ -1,0 +1,193 @@
+html data-bs-theme="dark"
+  head
+    meta charset="utf-8"
+    title: $this["markdown"]["meta"]["title"] & " &mdash; " & "Booyaka"
+    meta name="viewport" content="width=device-width, initial-scale=1"
+    link rel="icon" href="/assets/favicon-32x32.png" type="image/x-icon"
+    link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+    link rel="preconnect" href="https://fonts.googleapis.com"
+    link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""
+    link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet"
+    link rel="stylesheet" href="/assets/app.css"
+    style: """
+    body:before {
+      content: "";
+      display: block;
+      background-image: url("/assets/image.png");
+      background-repeat: repeat;
+      background-size: 257px auto;
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      pointer-events: none;
+      z-index: 99999;
+      opacity: .45;
+    }
+    """
+  body
+    div.container-fluid
+      div.row
+        // The `@view` macro is a special macro that injects
+        // the content of the specific view into this layout.
+        @view
+      footer.row > div.col-12.text-center > small
+        p.mt-4.mb-0: "Made by Humans from OpenPeeps"
+        p.mb-0: "2025 &copy; OpenPeeps & Contributors | MIT License"
+
+    script src="https://cdn.jsdelivr.net/npm/fuse.js/dist/fuse.js"
+    script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"
+    script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"
+    script: """
+hljs.highlightAll();
+
+document.addEventListener('DOMContentLoaded', function() {
+  fetch("/results.json")
+    .then(response => response.json())
+    .then(data => {
+      if(!data) return;
+      let spotlightForm = document.querySelector('.spotlight-form');
+      let spotlightAutocomplete = document.createElement('div');
+      spotlightAutocomplete.classList.add('position-fixed', 'border', 'border-dark', 'list-unstyled', 'w-100', 'rounded-4', 'p-2', 'd-none', 'spotlight-autocomplete');
+      spotlightAutocomplete.style.top = '68px'
+      spotlightAutocomplete.style.zIndex = '1050';
+      spotlightAutocomplete.style.maxWidth = spotlightForm.offsetWidth + 'px';
+      spotlightAutocomplete.style.left = spotlightForm.getBoundingClientRect().left + 'px';
+      spotlightAutocomplete.style.backgroundColor = 'rgba(10,14,14,0.60)';
+      spotlightAutocomplete.style.boxShadow = '0 30px 30px rgba(0,0,0,.8)';
+      spotlightAutocomplete.style.backdropFilter = 'blur(34px)';
+      
+      spotlightAutocomplete.style.maxHeight = '280px';
+
+      let spotlightInner = document.createElement('ul');
+      spotlightInner.classList.add('m-0', 'p-0', 'spotlight-autocomplete-list');
+      spotlightInner.style.overflowX = 'scroll';
+      spotlightInner.style.maxHeight = '260px';
+      
+      spotlightAutocomplete.appendChild(spotlightInner);
+      document.body.insertAdjacentElement('beforeend', spotlightAutocomplete);
+
+      // Create Fuse instance
+      let fuse = new Fuse(data.results, {
+        keys: ['title', 'description', 'headings'],
+        minMatchCharLength: 4, // Only match longer substrings
+        includeMatches: true,
+        threshold: 0.1, // Stricter matching
+        distance: 500,
+        useExtendedSearch: true, // Enable extended search
+        findAllMatches: false,   // Only best matches
+      });
+
+      // clicking outside the autocomplete closes it
+      document.addEventListener('click', function(event) {
+        if (!spotlightForm.contains(event.target)) {
+          spotlightAutocomplete.classList.add('d-none');
+        }
+      });
+      
+      // pressing cmd/ctrl + / focuses the search input
+      document.addEventListener('keydown', function(event) {
+        if (event.key === '/' && (event.metaKey || event.ctrlKey)) {
+          event.preventDefault();
+          spotlightForm.querySelector('.spotlight').focus();
+        }
+      });
+
+      // Example search function
+      function searchDocs(query) {
+        const results = fuse.search(query);
+        // results is an array of objects: { item, refIndex, ... }
+        spotlightInner.innerHTML = '';
+        if(results.length === 0) {
+          spotlightAutocomplete.classList.add('d-none');
+          return;
+        }
+        spotlightAutocomplete.classList.remove('d-none');
+        for (let r of results) {
+          let li = document.createElement('li');
+          let a = document.createElement('a');
+          a.classList.add('d-block', 'rounded-4', 'py-2', 'px-3', 'border-0', 'text-decoration-none', 'spotlight-autocomplete-item');
+          a.href = `/${r.item.url}`;
+          a.innerHTML = `<span class="d-block">${r.item.title}</span><span class="text-muted small d-block lh-sm">${r.item.description}</span>`;
+          li.appendChild(a);
+
+          // use provided indices to highlight matched terms
+          for (let match of r.matches) {
+            if (match.key === 'title' || match.key === 'description') {
+              // Find the corresponding span for title/description
+              let spanSelector = match.key === 'title' ? 'span.d-block' : 'span.text-muted';
+              let span = a.querySelector(spanSelector);
+              if (span) {
+                let text = span.textContent;
+                let highlighted = '';
+                let lastIndex = 0;
+                for (let range of match.indices) {
+                  let start = range[0];
+                  let end = range[1] + 1;
+                  highlighted += text.slice(lastIndex, start);
+                  highlighted += '<mark>' + text.slice(start, end) + '</mark>';
+                  lastIndex = end;
+                }
+                highlighted += text.slice(lastIndex);
+                span.innerHTML = highlighted;
+              }
+            }
+          }
+          spotlightInner.appendChild(li);
+        }
+      }
+  
+      let spotlight = document.querySelector('.spotlight');
+
+      spotlight.addEventListener('keydown', function(event) {
+        if (event.key === '/' && (event.metaKey || event.ctrlKey)) {
+          event.preventDefault();
+          spotlight.focus();
+        } else if(event.key === 'Escape') {
+          spotlightAutocomplete.classList.add('d-none');
+        }
+      });
+  
+      spotlight.addEventListener('input', function(event) {
+        const query = event.target.value;
+        if(query.length <= 3) {
+          spotlightAutocomplete.classList.add('d-none');
+          return;
+        }
+        searchDocs(query);
+      });
+    });
+});
+    """
+
+    // Connects to the Watchout server to listen
+    // for file changes and reloads the page when a change is detected.
+    if $app["isDev"] == true:
+      script: """
+      {
+        let addrs = ["ws://127.0.0.1:9000", "ws://127.0.0.1:5000/ws"]
+        addrs.forEach(function(addr) {
+          function connectWatchoutServer() {      
+            const watchout = new WebSocket(addr);
+            watchout.addEventListener('message', (e) => {
+              if(e.data == '1') location.reload()
+            });
+
+            setInterval(() => {
+              if(watchout.readyState == WebSocket.OPEN) {
+                watchout.send('ping')
+              }
+            }, 300)
+
+            watchout.addEventListener('close', () => {
+              setTimeout(() => {
+                console.log('Watchout WebSocket is closed. Try again...')
+                connectWatchoutServer()
+              }, 300)
+            })
+          }
+          connectWatchoutServer()
+        });
+      }
+      """

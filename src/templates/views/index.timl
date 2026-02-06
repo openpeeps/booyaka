@@ -1,0 +1,183 @@
+div.navbar-container-area.sticky-top.user-select-none
+  nav.navbar.navbar-expand-lg.py-1
+    div.container.d-flex
+      a.navbar-brand.fw-bold.py-0 href="/"
+        img src="/assets/booyaka.png" alt="Booyaka Logo" height="32"
+        em
+      
+      div#navbarSupportedContent.collapse.navbar-collapse
+        // When enabled, shows the search bar in the header
+        if $this["config"]["header"]["search"]["enable"] == true:
+          div.col-5
+            form.spotlight-form.d-flex.ms-3.mb-0.position-relative action="/search" method="GET"
+              input.form-control.form-control-sm.px-3.rounded-4.spotlight.border-2.me-2 type="search" name="q" placeholder="Search the docs..." aria-label="Search the docs"
+              button.btn.btn-sm.text-muted.position-absolute.me-2.border-0 type="submit" style="margin-top:2px; right:10px;": "⌘/"
+
+        div
+          select.border-2.rounded-3.form-select.form-select-sm
+            option selected: "Version Latest"
+            option: "Version 1.0.0"
+
+        // Main navigation items
+        if $this["config"]["navbar"].len() > 0:
+          ul.navbar-nav.ms-auto.mb-2.mb-lg-0
+            for $navItem in items($this["config"]["navbar"]):
+              li.nav-item.mx-1
+                a.nav-link.fw-medium href=$navItem["url"]: $navItem["title"]
+
+div.container-fluid.my-4 style="min-height:calc(100vh - 150px)"
+  div.row > div.col-lg-12.col-xl-10.mx-auto > div.row
+    div.col-lg-2.collapse.d-lg-block data-area="left"
+      div.sidebar-navigation.sticky-top.sticky-sidebar
+        div.sidebar-navigation-scroll.mb-3
+          if len($this["config"]["sidebar_navigation"]) > 0:
+            for $section in items($this["config"]["sidebar_navigation"]):
+              if $section.hasKey("name"):
+                h6.small.text-light.mt-3.mb-2: $section["name"]
+              if len($section["items"]) > 0:
+                ul.list-unstyled.mb-4
+                  for $item in items($section["items"]):
+                    if $this["path"] == $item["url"]:
+                      li > a.bg-dark href=$item["url"]: $item["title"]
+                    else:
+                      li > a href=$item["url"]: $item["title"]
+              else:
+                div: "?" // parser error for `else` block
+          else:
+            div.border-1.border-dark.rounded-4.p-4 style="border-style: dashed"
+              p.lh-sm.mb-0: "No navigation items available."
+        for $widget in items($this["config"]["extra_sections"]["left_sidebar"]):
+          div.mb-4: $widget["content"]
+
+    div.col-lg-7.position-relative data-area="main"
+      if $this["config"]["appearance"]["show_toggle_left_sidebar"] == true:
+        div.position-absolute.start-0.top-0
+          button.btn.btn-sm.border-0 data-toggle-area="left"
+            span.icon-hide-sidebar
+              svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                  fill="currentColor" class="icon icon-tabler icons-tabler-filled icon-tabler-layout-sidebar-left-collapse"
+                path stroke="none" d="M0 0h24v24H0z" fill="none"
+                path d="M18 3a3 3 0 0 1 2.995 2.824l.005 .176v12a3 3 0 0 1 -2.824 2.995l-.176 .005h-12a3 3 0 0 1 -2.995 -2.824l-.005 -.176v-12a3 3 0 0 1 2.824 -2.995l.176 -.005h12zm0 2h-9v14h9a1 1 0 0 0 .993 -.883l.007 -.117v-12a1 1 0 0 0 -.883 -.993l-.117 -.007zm-2.293 4.293a1 1 0 0 1 .083 1.32l-.083 .094l-1.292 1.293l1.292 1.293a1 1 0 0 1 .083 1.32l-.083 .094a1 1 0 0 1 -1.32 .083l-.094 -.083l-2 -2a1 1 0 0 1 -.083 -1.32l.083 -.094l2 -2a1 1 0 0 1 1.414 0z"
+            span.icon-show-sidebar.d-none
+              svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                  fill="currentColor" class="icon icon-tabler icons-tabler-filled icon-tabler-layout-sidebar-left-expand"
+                path stroke="none" d="M0 0h24v24H0z" fill="none"
+                path d="M18 3a3 3 0 0 1 2.995 2.824l.005 .176v12a3 3 0 0 1 -2.824 2.995l-.176 .005h-12a3 3 0 0 1 -2.995 -2.824l-.005 -.176v-12a3 3 0 0 1 2.824 -2.995l.176 -.005h12zm0 2h-9v14h9a1 1 0 0 0 .993 -.883l.007 -.117v-12a1 1 0 0 0 -.883 -.993l-.117 -.007zm-4.387 4.21l.094 .083l2 2a1 1 0 0 1 .083 1.32l-.083 .094l-2 2a1 1 0 0 1 -1.497 -1.32l.083 -.094l1.292 -1.293l-1.292 -1.293a1 1 0 0 1 -.083 -1.32l.083 -.094a1 1 0 0 1 1.32 -.083z"
+      div.px-lg-4.px-2 > div.container-fluid
+        div.row > div.col-12
+          div.row.align-items-center
+            div.col-6 > h6.my-0: $this["markdown"]["section"]
+            div.col-6.text-end
+              div.btn-group
+                button type="button" aria-label="Share this page" class="btn btn-dark btn-sm border-end rounded-start-3 d-flex align-items-center"
+                  span.ms-1: "Share page"
+                button type="button" aria-label="Open share options" class="btn btn-dark btn-sm dropdown-toggle dropdown-toggle-split rounded-end-3" data-bs-toggle="dropdown" aria-expanded="false"
+                  span class="visually-hidden": "Toggle Dropdown"
+                ul.dropdown-menu.dropdown-menu-sm.dropdown-menu-end.rounded-4.shadow-lg style="font-size:0.85em"
+                  for $shareOption in $app["share_options"]:
+                    if hasKey($shareOption, "divider"):
+                      li: hr.dropdown-divider
+                    else:
+                      li > a.dropdown-item.d-flex.align-items-center.gap-2 href="#" aria-label=$shareOption["title"]
+                        div.d-flex.flex-column
+                          span.fw-bold.text-light: $shareOption["title"]
+                          small.text-muted: $shareOption["description"]
+          div.row > div.col-12
+            div.page-header.mb-4
+              h1.display-6.mt-3.fw-normal: $this["markdown"]["meta"]["title"]
+              p.lead.text-muted: $this["markdown"]["meta"]["description"]
+
+          div.row > div.col-12 > div.d-block.mb-3.px-3.py-2.border-top.border-bottom.border-dark
+            span: "Last updated"
+            time.ms-2 datetime=$this["markdown"]["last_updated"] title=$this["markdown"]["last_updated"]: $this["markdown"]["last_updated"]
+
+          // Main content area
+          div.row > div.col-12
+            article.container-content-area: $this["markdown"]["content"]
+
+          // Show bottom navigation if enabled
+          // This shows "Previous" and "Next" links at the bottom of the page
+          if $this["config"]["content"]["bottom_navigation"] == true:
+            div.row.g-3
+              div.col-lg-6.col-md-6
+                if $this["markdown"]["navigation"]["previous"] != nil:
+                  const previousItem = $this["markdown"]["navigation"]["previous"]
+                  a.btn.btn-outline-dark.border-2.rounded-4.px-4.py-3.w-100.text-start href=$previousItem["url"]
+                    span.text-muted.small: "← Previous"
+                    span.d-block.mt-1.h6.text-light: $previousItem["title"]
+              div.col-lg-6.col-md-6
+                if $this["markdown"]["navigation"]["next"] != nil:
+                  const nextItem = $this["markdown"]["navigation"]["next"]
+                  a.btn.btn-outline-dark.border-2.rounded-4.px-4.py-3.w-100.text-end href=$nextItem["url"]
+                    span.text-muted.small: "Next →"
+                    span.d-block.mt-1.h6.text-light: $nextItem["title"]
+      
+      // Toggle right sidebar area button
+      if $this["config"]["appearance"]["show_toggle_right_sidebar"] == true:
+        div.position-absolute.end-0.top-0
+          button.btn.btn-sm.border-0 data-toggle-area="right"
+            span.icon-hide-sidebar
+              svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"
+                path stroke="none" d="M0 0h24v24H0z" fill="none"
+                path d="M18 3a3 3 0 0 1 2.995 2.824l.005 .176v12a3 3 0 0 1 -2.824 2.995l-.176 .005h-12a3 3 0 0 1 -2.995 -2.824l-.005 -.176v-12a3 3 0 0 1 2.824 -2.995l.176 -.005h12zm-3 2h-9a1 1 0 0 0 -.993 .883l-.007 .117v12a1 1 0 0 0 .883 .993l.117 .007h9v-14zm-5.387 4.21l.094 .083l2 2a1 1 0 0 1 .083 1.32l-.083 .094l-2 2a1 1 0 0 1 -1.497 -1.32l.083 -.094l1.292 -1.293l-1.292 -1.293a1 1 0 0 1 -.083 -1.32l.083 -.094a1 1 0 0 1 1.32 -.083z"
+            span.icon-show-sidebar.d-none
+              svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"
+                path stroke="none" d="M0 0h24v24H0z" fill="none"
+                path d="M18 3a3 3 0 0 1 2.995 2.824l.005 .176v12a3 3 0 0 1 -2.824 2.995l-.176 .005h-12a3 3 0 0 1 -2.995 -2.824l-.005 -.176v-12a3 3 0 0 1 2.824 -2.995l.176 -.005h12zm-3 2h-9a1 1 0 0 0 -.993 .883l-.007 .117v12a1 1 0 0 0 .883 .993l.117 .007h9v-14zm-3.293 4.293a1 1 0 0 1 .083 1.32l-.083 .094l-1.292 1.293l1.292 1.293a1 1 0 0 1 .083 1.32l-.083 .094a1 1 0 0 1 -1.32 .083l-.094 -.083l-2 -2a1 1 0 0 1 -.083 -1.32l.083 -.094l2 -2a1 1 0 0 1 1.414 0z"
+    
+    // Right sidebar area
+    div.col-lg-3.collapse.d-lg-block data-area="right"
+      div.sticky-top.sidebar-right.sticky-sidebar
+        if $this["markdown"].hasKey("toc")
+          div.pb-2
+            const tocItems = toKeys($this["markdown"]["toc"])
+            if len($tocItems) > 0:
+              h6.small.text-light: "Table of Contents"
+              ul.table-of-contents
+                for $k in $tocItems:
+                  const key = toString($k)
+                  li > a href="#" & $key: $this["markdown"]["toc"][toString($k)]
+        
+        for $widget in items($this["config"]["extra_sections"]["right_sidebar"]):
+          div.mb-4: $widget["content"]
+        
+
+link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/codepen-embed.min.css"
+script src="https://cdn.jsdelivr.net/npm/fuse.js/dist/fuse.js"
+script src="/assets/app.js"
+
+
+script: """
+document.querySelectorAll('.alert').forEach(alert => {
+  const anim = document.createElement('div');
+  anim.className = 'alert-animation';
+  anim.style.left = '0px';
+  anim.style.top = '0px';
+  alert.style.position = 'relative';
+  alert.insertAdjacentElement('afterbegin', anim);
+
+  // Set your desired offset here
+  const offsetX = 400; // pixels allowed to exceed horizontally
+  const offsetY = 400; // pixels allowed to exceed vertically
+
+  document.body.addEventListener('mousemove', e => {
+    const rect = alert.getBoundingClientRect();
+    const animW = anim.offsetWidth;
+    const animH = anim.offsetHeight;
+    let x = e.clientX - rect.left - animW / 2;
+    let y = e.clientY - rect.top - animH / 2;
+
+    // Allow exceeding by offset
+    x = Math.max(-offsetX, Math.min(x, rect.width - animW + offsetX));
+    y = Math.max(-offsetY, Math.min(y, rect.height - animH + offsetY));
+
+    // Calculate rotation based on mouse position (example: angle from center)
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    const dx = x + animW / 2 - centerX;
+    const dy = y + animH / 2 - centerY;
+    const angle = Math.atan2(dy, dx) * (18 / Math.PI); // degrees
+    anim.style.transform = 'translate(' + x + 'px, ' + y + 'px) rotate(' + angle + 'deg)';
+  });
+});
+"""

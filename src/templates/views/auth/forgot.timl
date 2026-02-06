@@ -1,0 +1,26 @@
+div.col-xl-7.col-lg-7.col-md-8.col-11.mx-auto > div.card.p-0.rounded-4.border-0.overflow-hidden > div.row.h-100
+  div.col-lg-7 > div.p-5.my-4
+    h4.h6.d-block.mb-2 > a.text-decoration-none.text-light href="/auth/login": "&#8592; Back to login"
+    h1.display-6.fw-bold.mb-3: "Forgot password"
+
+    // Display flash bag notifications (if any)
+    for $msg in $this["notifications"]:
+      div.alert.alert-info.border-0 > p.mb-0: $msg
+
+    form method="POST" action="/auth/forgot-password"
+      div.form-floating.mb-3
+        input.form-control name="email" type="email" placeholder="Email address"
+        label: "Email address"
+      
+      input type="hidden" name="csrf" value=$this["csrf"]
+
+      div.row > div.col-12.d-flex.justify-content-between.align-items-center
+        a.text-light href="/auth/register": "Create an account"
+        button.btn.btn-primary.border-2.rounded-3.px-4.fw-bold: "Request new password"
+
+  // inserts a cool cover image
+  div.col-lg-5.bg-cover.position-relative.d-flex.noir style="background-image:url(" & $app["login_cover"] & ")"
+    div.align-self-center.text-center.w-100 > a.position-relative href="/"
+      img src="/assets/supranim.png" alt="Supranim" width="100px" height="100px"
+    div.position-absolute.bottom-0.start-0.text-center.w-100.pb-3
+      a.text-light.text-decoration-none target="_blank" href="https://unsplash.com/@william_44": "@william_44"
