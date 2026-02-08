@@ -30,7 +30,7 @@ jobs:
       # meanwhile, install it directly from the repo for testing
       - run: |
           nimble install https://github.com/supranim/session
-          nimble install https://github.com/openpeeps/enimsql
+          nimble install https://github.com/supranim/enimsql
 
       - run: nimble install -Y
       - run: nim c -r src/${{ github.event.repository.name }}.nim
