@@ -25,6 +25,12 @@ jobs:
         with:
           nim-version: ${{ matrix.nim-version }}
           repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      # todo publish supranim's session package
+      # meanwhile, install it directly from the repo for testing
+      - run: |
+          nimble install https://github.com/supranim/session
+
       - run: nimble install -Y
       - run: nim c -r src/${{ github.event.repository.name }}.nim
       - run: nimble test
