@@ -5,20 +5,22 @@ div.navbar-container-area.sticky-top.user-select-none
         img src="/assets/booyaka.png" alt="Booyaka Logo" height="32"
         em
       
-      div#navbarSupportedContent.collapse.navbar-collapse
-        // When enabled, shows the search bar in the header
-        if $this["config"]["header"]["search"]["enable"] == true:
-          div.col-5
-            form.spotlight-form.d-flex.ms-3.mb-0.position-relative action="/search" method="GET"
-              input.form-control.form-control-sm.px-3.rounded-4.spotlight.border-2.me-2 type="search" name="q" placeholder="Search the docs..." aria-label="Search the docs"
-              button.btn.btn-sm.text-muted.position-absolute.me-2.border-0 type="submit" style="margin-top:2px; right:10px;": "⌘/"
+      // When enabled, shows the search bar in the header
+      if $this["config"]["header"]["search"]["enable"] == true:
+        div.col-5.col-lg-4
+          form.spotlight-form.d-flex.ms-3.mb-0.position-relative action="/search" method="GET"
+            input.form-control.form-control-sm.px-3.rounded-4.spotlight.border-2.me-2 type="search" name="q" placeholder="Search the docs..." aria-label="Search the docs"
+            button.btn.btn-sm.text-muted.position-absolute.me-2.border-0 type="submit" style="margin-top:2px; right:10px;": "⌘/"
 
         div
           select.border-2.rounded-3.form-select.form-select-sm
-            option selected: "Version Latest"
-            option: "Version 1.0.0"
-
-        // Main navigation items
+            option selected: "Latest"
+            option: "1.0.0"
+      
+      div#navbarSupportedContent.collapse.navbar-collapse
+        // Makes the navbar items defined in the config file.
+        // You can add links to other pages, external sites
+        // or anything you want here.
         if $this["config"]["navbar"].len() > 0:
           ul.navbar-nav.ms-auto.mb-2.mb-lg-0
             for $navItem in items($this["config"]["navbar"]):
@@ -95,6 +97,7 @@ div.container-fluid.my-4 style="min-height:calc(100vh - 150px)"
 
           // Show bottom navigation if enabled
           // This shows "Previous" and "Next" links at the bottom of the page
+          // You can disable this in the config file `content.bottom_navigation = false`
           if $this["config"]["content"]["bottom_navigation"] == true:
             div.row.g-3
               div.col-lg-6.col-md-6
