@@ -25,3 +25,16 @@ ctrl getResultsJson:
   json(%*{
     "results": spotlight().getEntries()
   })
+
+ctrl getSearch:
+  ## renders the search results page.
+  ## The rendering of the search results is done at client side
+  ## using JavaScript, which fetches the search results from the
+  ## getResultsJson endpoint.
+  # let query = request.query["q"] or ""
+  # let results = spotlight().search(query)
+  render("search", local = &*{
+    # "query": query,
+    # "results": results,
+    "config": toJson(globalBooyakaConfig).fromJson()
+  })

@@ -52,8 +52,8 @@ body:after {
   letter-spacing: -35px;
   content: "booyaka";
   width: 100%;
-  font-size: 30rem;
-  color: #1b1a1a;
+  font-size: clamp(15rem, 35vw, 40rem);
+  color: #141414;
   display: flex;
   justify-content: center;
   align-items: start;
@@ -64,10 +64,10 @@ body:after {
   pointer-events: none;
   z-index: -1;
   height: 300px;
-  margin-top: -200px;
+  margin-top: -250px;
   overflow: hidden;
   padding-bottom: 50px;
-  opacity: .5;
+  /* opacity: .5; */
   line-height: 23rem;
 }
 

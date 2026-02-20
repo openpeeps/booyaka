@@ -10,3 +10,5 @@ routes:
   get "/results.json"
     # GET route links to `getResultsJson` controller
 
+  get "/search"
+    # GET route links to `getSearch` controller

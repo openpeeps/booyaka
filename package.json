@@ -1,0 +1,23 @@
+{
+  "name": "booyaka",
+  "version": "0.1.0",
+  "description": "A fast documentation generator for cool kids!",
+  "directories": {
+    "test": "tests"
+  },
+  "type": "module",
+  "scripts": {
+    "build": "NODE_ENV=production rollup -c rollup.config.js",
+    "start": "rollup -c rollup.config.js -w"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^28.0.5",
+    "@rollup/plugin-node-resolve": "^16.0.1",
+    "rollup": "^4.41.1",
+    "rollup-plugin-livereload": "^2.0.5",
+    "rollup-plugin-serve": "^3.0.0",
+    "rollup-plugin-terser": "^7.0.2"
+  }
+}
