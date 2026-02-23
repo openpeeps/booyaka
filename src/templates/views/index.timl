@@ -2,7 +2,7 @@ div.navbar-container-area.sticky-top.user-select-none
   nav.navbar.navbar-expand-lg.py-1
     div.container.d-flex
       a.navbar-brand.fw-bold.py-0 href="/"
-        img src="/assets/booyaka.png" alt="Booyaka Logo" height="32"
+        img src="/assets/booyaka.png" height="32"
         em
       
       // When enabled, shows the search bar in the header

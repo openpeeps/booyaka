@@ -111,6 +111,14 @@ App.services do:
   # init Markdown Service
   markdown.init(App)
 
+  # init static assets
+  assets.embedAssets("assets")
+
+App.withAssetsHandler:
+  proc (req: var Request, res: var Response, hasFoundResource: var bool) =
+    # Serve static assets from the embedded StaticBundle
+    req.sendEmbeddedAsset(req.path, res.getHeaders(), hasFoundResource)
+
 #
 # Starts the application. This will start the HTTP
 # server and listen for incoming requests.
@@ -118,8 +126,8 @@ App.services do:
 # The application will be available at the specified port.
 #
 App.run do:
+  # Booyaka WebSocket endpoint for live-reloading
   server.addCallback("/ws",
     proc (req: ptr evhttp_request, arg: pointer) {.cdecl.} =
-      let ws = websocketUpgrade(req, onOpenCallback, nil, onClose, onError)
-      discard ws
+      discard websocketUpgrade(req, onOpenCallback, nil, onClose, onError)
     )

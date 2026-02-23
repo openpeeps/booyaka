@@ -166,7 +166,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if $app["isDev"] == true:
       script: """
       {
-        let addrs = ["ws://127.0.0.1:9000", "ws://127.0.0.1:5000/ws"]
+        let addrs = ["ws://127.0.0.1:9000", "ws://127.0.0.1:3000/ws"]
         addrs.forEach(function(addr) {
           function connectWatchoutServer() {      
             const watchout = new WebSocket(addr);
