@@ -32,6 +32,8 @@
 - 🎩 **Open Source** | **AGPLv3** License
 - 👑 Written in **Nim language** | **Made by Humans from OpenPeeps**
 
+![Booyaka Homepage Preview](https://github.com/openpeeps/booyaka/blob/main/.github/booyaka_preview.png)
+
 > [!NOTE]
 > Booyaka is still in active development. Expect frequent updates and new features as we work towards a stable release.
 
