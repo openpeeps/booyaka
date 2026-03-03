@@ -1,14 +1,48 @@
-
+/**
+ * Booyaka Client App
+ * 
+ * This module initializes the client-side application, sets up UI interactions,
+ * and provides utility functions for features like sticky sidebars and "time ago" formatting.
+ */
 const defaultAppOpts = {
+  /**
+   * Enable sticky sidebars that remain visible below the navbar when scrolling.
+   * This is useful for keeping navigation or other important elements accessible.
+   */
   enableStickySidebar: true,
-  enableTimeAgo: true
+
+  /**
+   * Enable "time ago" formatting for <time> elements with a datetime attribute.
+   * This converts timestamps into a human-readable format like "5 minutes ago".
+   * It enhances the user experience by providing relative time information.
+  */
+  enableTimeAgo: true,
+
+  /**
+   * Enable animated alerts that follow the mouse cursor within the alert box.
+   * This adds a dynamic visual effect to alert messages, making them more engaging.
+   * The animation allows the alert to move slightly in response to mouse movements,
+   * creating an interactive experience for the user.
+  */
+  enableAnimatedAlerts: true
 }
 
 export default {
+  /**
+   * Initialize the application with the given options.
+   * This function sets up the UI features based on the provided options.
+   * It also adds necessary event listeners and applies styles to checkboxes.
+   * 
+   * @param {Object} opts - Configuration options for initializing the app.
+   * @param {boolean} opts.enableStickySidebar - Whether to enable sticky sidebars.
+   * @param {boolean} opts.enableTimeAgo - Whether to enable "time ago" formatting.
+   *
+  */
   init: function(opts = defaultAppOpts) {
     console.log("Booyaka Initialized");
     if (opts.enableStickySidebar) this.initStickySidebar();
     if (opts.enableTimeAgo) this.initTimeAgo();
+    if (opts.enableAnimatedAlerts) this.initAnimatedAlerts();
     this.initSmoothAnchors();
     this.initExternalLinksDecorator();
 
@@ -18,7 +52,7 @@ export default {
   },
   
   /**
-   * Make sidebars sticky below the navbar
+   * Make sidebars sticky so they remain visible when scrolling down the page.
    */
   initStickySidebar: function() {
     const sidebars = document.querySelectorAll('.sticky-sidebar');
@@ -36,6 +70,11 @@ export default {
     updateSidebarTop()
   },
 
+  /**
+   * Initialize smooth scrolling for internal anchor links.
+   * This function ensures that when users click on links that point to anchors within the page,
+   * the page will scroll smoothly to the target section, accounting for the height of the sticky navbar.
+   */
   initSmoothAnchors: function() {
     // Smooth scroll to anchor, offset by sticky navbar height
     function scrollToAnchorWithOffset(hash) {
@@ -54,11 +93,15 @@ export default {
     // Attach click event to all internal anchor links
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
       anchor.addEventListener('click', function(e) {
-        const hash = this.getAttribute('href').slice(1);
-        if (document.getElementById(hash)) {
-          e.preventDefault();
-          scrollToAnchorWithOffset(hash);
-          history.replaceState(null, null, '#' + hash);
+        const rawHash = this.getAttribute('href');
+        const hash = decodeURIComponent(rawHash.slice(1));
+        if (hash) {
+          const target = document.getElementById(hash) || document.querySelector(`[name="${hash}"]`);
+          if (target) {
+            e.preventDefault();
+            scrollToAnchorWithOffset(hash);
+            history.replaceState(null, null, rawHash);
+          }
         }
       });
     });
@@ -84,6 +127,44 @@ export default {
         a.classList.add('external');
         a.setAttribute('target', '_blank');
       }
+    });
+  },
+
+  /**
+   * Initialize the application with the default options.
+   */
+  initAnimatedAlerts: function() {
+    document.querySelectorAll('.alert').forEach(alert => {
+      const anim = document.createElement('div');
+      anim.className = 'alert-animation';
+      anim.style.left = '0px';
+      anim.style.top = '0px';
+      alert.style.position = 'relative';
+      alert.insertAdjacentElement('afterbegin', anim);
+
+      // Set your desired offset here
+      const offsetX = 400; // pixels allowed to exceed horizontally
+      const offsetY = 400; // pixels allowed to exceed vertically
+
+      document.body.addEventListener('mousemove', e => {
+        const rect = alert.getBoundingClientRect();
+        const animW = anim.offsetWidth;
+        const animH = anim.offsetHeight;
+        let x = e.clientX - rect.left - animW / 2;
+        let y = e.clientY - rect.top - animH / 2;
+
+        // Allow exceeding by offset
+        x = Math.max(-offsetX, Math.min(x, rect.width - animW + offsetX));
+        y = Math.max(-offsetY, Math.min(y, rect.height - animH + offsetY));
+
+        // Calculate rotation based on mouse position (example: angle from center)
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+        const dx = x + animW / 2 - centerX;
+        const dy = y + animH / 2 - centerY;
+        const angle = Math.atan2(dy, dx) * (18 / Math.PI); // degrees
+        anim.style.transform = 'translate(' + x + 'px, ' + y + 'px) rotate(' + angle + 'deg)';
+      });
     });
   },
   

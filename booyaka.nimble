@@ -24,6 +24,7 @@ requires "marvdown#head"
 requires "flatty"
 requires "supersnappy"
 requires "semver"
+requires "iconim"
 
 # requires "htmlparser"
 requires "libffi"

@@ -1,18 +1,28 @@
-import std/[macros, json, strutils, sequtils, httpcore, times]
+import std/[macros, json, strutils, os,
+        sequtils, httpcore, times, options]
 
 import pkg/supranim/support/slug
-import pkg/supranim/core/servicemanager
+import pkg/supranim/core/[servicemanager, paths]
 
-import pkg/[tim, kapsis/cli]
+import pkg/[tim, iconim, kapsis/cli]
 
 export HttpCode, render, `&*`
 export times.now, times.format
+
+import ../../app/structs
 
 initService Tim[Global]:
   # A singleton service that wraps the Tim Engine
   # and provides a simple interface to render HTML pages
   backend do:
     var timInstance: TimEngine
+    
+    Icon.init(
+      source = storagePath / "icons",
+      default = "filled",
+      stripAttrs = %*[]
+    )
+
     proc init*(src, output, basePath: string; global = newJObject()) =
       ## Initialize Tim Engine as a singleton service
       timInstance = newTim(
@@ -35,11 +45,20 @@ initService Tim[Global]:
           return initValue("/dashboard/" & args[0].stringVal[])
         )
 
+      timInstance.userScript.addProc("icon", @[paramDef("name", tyString)], tyString,
+        proc (args: StackView): Value =
+          # Return an HTML string for an icon
+          let iconName = args[0].stringVal[]
+          return initValue($icon(iconName))
+        )
+
       tim.initCommonStorage:
         {
           "path": req.getUrl(),
           "currentYear": now().format("yyyy"),
-          "isAuth": true, # req.isAuthenticated(res)
+          "site": {
+            "logo": globalBooyakaConfig.metadata.logo.get("/assets/booyaka.png"),
+          }
         }
 
       timInstance.precompile()
@@ -53,7 +72,6 @@ initService Tim[Global]:
   client do:
     macro staticRender*() = 
       ## Traspiles the Tim template to Nim code for static site generation
-      
 
     template render*(view: string, layout: string = "base",
                       httpCode = Http200, local: JsonNode = nil): untyped =
@@ -62,9 +80,11 @@ initService Tim[Global]:
       try:
         let output = render(timInstance, view, layout, local)
         respond(httpCode, output)
-      except TimEngineError as e:
-        displayError("<services.tim> " & e.msg)
-        respond(Http500, render(timInstance, "errors.5xx", layout, local))
-      except Exception as e:
-        displayError("<services.tim> " & e.msg)
-        respond(Http500, render(timInstance, "errors.5xx", layout, local))
+      except:
+        let errMsg = getCurrentExceptionMsg()
+        displayError("<runtime.exception> " & errMsg)
+        try:
+          let errorLocal = %*{"error": errMsg}
+          respond(Http500, render(timInstance, "errors.5xx", layout, errorLocal))
+        except:
+          respond(Http500, "Internal Server Error: " & errMsg)

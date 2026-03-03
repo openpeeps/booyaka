@@ -2,7 +2,7 @@ div.navbar-container-area.sticky-top.user-select-none
   nav.navbar.navbar-expand-lg.py-1
     div.container.d-flex
       a.navbar-brand.fw-bold.py-0 href="/"
-        img src="/assets/booyaka.png" height="32"
+        img src=$this["site"]["logo"] height="32"
         em
       
       // When enabled, shows the search bar in the header
@@ -40,6 +40,7 @@ div.container-fluid.my-4 style="min-height:calc(100vh - 150px)"
                 ul.list-unstyled.mb-4
                   for $item in items($section["items"]):
                     if $this["path"] == $item["url"]:
+                      // the current page is active, highlight it in the sidebar
                       li > a.bg-dark href=$item["url"]: $item["title"]
                     else:
                       li > a href=$item["url"]: $item["title"]
@@ -146,39 +147,3 @@ div.container-fluid.my-4 style="min-height:calc(100vh - 150px)"
 link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/codepen-embed.min.css"
 script src="https://cdn.jsdelivr.net/npm/fuse.js/dist/fuse.js"
 script src="/assets/app.js"
-
-
-script: """
-document.querySelectorAll('.alert').forEach(alert => {
-  const anim = document.createElement('div');
-  anim.className = 'alert-animation';
-  anim.style.left = '0px';
-  anim.style.top = '0px';
-  alert.style.position = 'relative';
-  alert.insertAdjacentElement('afterbegin', anim);
-
-  // Set your desired offset here
-  const offsetX = 400; // pixels allowed to exceed horizontally
-  const offsetY = 400; // pixels allowed to exceed vertically
-
-  document.body.addEventListener('mousemove', e => {
-    const rect = alert.getBoundingClientRect();
-    const animW = anim.offsetWidth;
-    const animH = anim.offsetHeight;
-    let x = e.clientX - rect.left - animW / 2;
-    let y = e.clientY - rect.top - animH / 2;
-
-    // Allow exceeding by offset
-    x = Math.max(-offsetX, Math.min(x, rect.width - animW + offsetX));
-    y = Math.max(-offsetY, Math.min(y, rect.height - animH + offsetY));
-
-    // Calculate rotation based on mouse position (example: angle from center)
-    const centerX = rect.width / 2;
-    const centerY = rect.height / 2;
-    const dx = x + animW / 2 - centerX;
-    const dy = y + animH / 2 - centerY;
-    const angle = Math.atan2(dy, dx) * (18 / Math.PI); // degrees
-    anim.style.transform = 'translate(' + x + 'px, ' + y + 'px) rotate(' + angle + 'deg)';
-  });
-});
-"""

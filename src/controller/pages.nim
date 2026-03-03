@@ -4,12 +4,10 @@
 #          Made by Humans from OpenPeeps
 #          https://github.com/openpeeps/booyaka
 
-import std/[os, json, tables, sequtils]
+import std/json
+import pkg/supranim/[controller, core/paths]
 
-import pkg/[bag, enimsql]
-import pkg/supranim/[core/paths, controller]
-import ../service/provider/[db, session, tim, markdown, search]
-
+import ../service/provider/[tim, markdown, search]
 import ../app/structs
 
 ctrl getHomepage:

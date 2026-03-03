@@ -17,6 +17,8 @@ elif defined(linux):
 
 when not defined release:
   --define:timHotCode
-else:
-  --passC:"-O3 -flto" # Optimize for speed
-  --passL:"-flto"     # Link Time Optimization for smaller/faster binaries
+# else:
+  # --passC:"-O3" # Optimize for speed
+  # --passL:"-flto"     # Link Time Optimization for smaller/faster binaries
+
+--path:"/Users/georgelemon/Development/packages/voodoo/src"

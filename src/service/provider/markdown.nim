@@ -4,22 +4,23 @@
 #          Made by Humans from OpenPeeps
 #          https://github.com/openpeeps/booyaka
 
-import std/[os, osproc, tables, httpcore, strutils, xmltree,
-          json, options, sequtils, macros, times, net, critbits]
+import std/[os, tables, httpcore, strutils,
+          json, options, sequtils, macros, times, net]
 
 import pkg/checksums/sha1
 import pkg/[nyml, htmlparser, supersnappy, flatty, jsony,
             watchout, marvdown, semver, kapsis/cli]
 
-import pkg/supranim/core/[servicemanager, application, paths, config]
+import pkg/supranim/core/[servicemanager, application, paths]
 import pkg/supranim/network/http/webserver
 import pkg/supranim/network/ws/websocket
-import pkg/supranim/http/[request, response, fileserver, autolink, router]
+import pkg/supranim/http/[request, response, autolink, router]
+import pkg/supranim/support/slug
 
 import ./tim, ./search
 import ../../app/structs
 
-import pkg/supranim/support/[nanoid, url, slug]
+export structs
 
 initService Markdown[Global]:
   backend do:
@@ -32,10 +33,12 @@ initService Markdown[Global]:
 
     var
       contentSourcePath: string # provided when initializing the service
+      buildSourcePath: string
+      buildPartialsPath: string
+      buildStaticPath: string
       watcher*: Watchout
       hasChanges: bool
       globalMarkdownService*: MarkdownInstance
-      globalBooyakaConfig*: BooyakaConfig
       wsClients: seq[ptr WebSocketConnectionImpl]
       searchInstance: SpotlightInstance
     
@@ -133,12 +136,8 @@ initService Markdown[Global]:
           else: hashedSlug.get()
         # get previous and next navigation items
         (prev, next) = getPrevNext(globalBooyakaConfig.sidebar_navigation, slugHash[0])
-        # markdown to html
-        htmlContent: string = md.toHtml()
-        # retrieve page metadata
-        meta: JsonNode = md.getHeader()
-        # update search index
-      
+        htmlContent: string = md.toHtml()   # convert markdown to HTML
+        meta: JsonNode = md.getHeader()     # retrieve page metadata
       searchInstance.addEntry(
         slugHash[1],
         slugHash[0],
@@ -160,6 +159,7 @@ initService Markdown[Global]:
           if item.url == "/" & slugHash[0]:
             sectionName = section.name
             break
+      # update the markdown instance with the new page content
       mdInstance.pages[slugHash[1]] =
         MarkdownPage(
           meta: meta,
@@ -171,6 +171,11 @@ initService Markdown[Global]:
           navigation: MarkdownPageBottomNavigation(previous: prev, next: next),
           lastEdited: some(now().toTime)
         )
+      # write the parsed markdown content to disk
+      # we write to a hashed filename to avoid issues with special characters in URLs and to ensure uniqueness
+      let hashedPath = buildPartialsPath / toLowerAscii(slugHash[1])  & ".html"
+      writeFile(hashedPath, htmlContent) #
+      hasChanges = true
 
     # initialize markdown service
     proc onFound(file: watchout.File) =
@@ -210,6 +215,7 @@ initService Markdown[Global]:
           }, httpCode = Http404)
 
     # Setup the filesystem monitor
+    const defaultHomePage = staticRead(storagePath / "stubs" / "index.md")
     proc init*(app: Application) =
       ## Initialize the Markdown service and start monitoring files
       let autolinked: Autolinked =
@@ -218,7 +224,16 @@ initService Markdown[Global]:
 
       searchInstance = getSpotlightInstance()
       contentSourcePath = app.applicationPaths.getInstallationPath / "contents"
-      discard existsOrCreateDir(contentSourcePath) # ensure contents directory exists
+      buildSourcePath = app.applicationPaths.getInstallationPath / "_build"
+      buildPartialsPath = buildSourcePath / "partials"
+
+      discard existsOrCreateDir(buildSourcePath)
+      discard existsOrCreateDir(buildSourcePath / "partials")
+      discard existsOrCreateDir(contentSourcePath)
+      
+      if not fileExists(contentSourcePath / "index.md"):
+        # ensure there's at least an index.md to start with
+        writeFile(contentSourcePath / "index.md", defaultHomePage)
 
       let booyakaDatabasePath = app.applicationPaths.getInstallationPath / "booyaka.db"
       let booyakaSearchPath = app.applicationPaths.getInstallationPath / "booyaka.search.db"
@@ -250,6 +265,7 @@ initService Markdown[Global]:
           let md = globalMarkdownService.pages[hashedSlug[1]]
           if md.lastEdited.isSome and md.lastEdited.get() >= getLastModificationTime(path):
             continue # skip unchanged files
+        # parse markdown file and update the markdown service index
         globalMarkdownService.parseMarkdownFile(contentSourcePath, path, some(hashedSlug))
       
       # write initial index to booyaka.db

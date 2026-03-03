@@ -1,0 +1,90 @@
+metadata:
+  logo: "/assets/logo.png"
+  title: ""
+  description: ""
+  keywords:
+    - "docs"
+    - "booyaka"
+
+appearance:
+  show_theme_switcher: true
+  default_theme: "system"
+  show_toggle_left_sidebar: true
+  show_toggle_right_sidebar: false
+  container_width: "col-lg-10 mx-auto"
+  content_width: "col-lg-7"
+  background_noise_opacity: 0.03
+
+git:
+  enable_versioning: false
+  enable_contributors_info: false
+
+header:
+  search:
+    enable: true
+    index_meta_data: true
+    index_page_titles: true
+
+content:
+  allowedRawHtmlTags:
+    - "b"
+    - "i"
+    - "strong"
+    - "em"
+    - "a"
+    - "p"
+    - "ul"
+    - "ol"
+    - "li"
+
+  showLastUpdated: true
+  lastDateUpdatedFormat: "yyyy-MM-dd HH:mm:ss"
+  enableAutoFormatLinks: true
+  bottom_navigation: true
+  codeHighlightTheme: "default"
+  share_ai_buttons: true
+  share_buttons_ai_providers:
+    - label: "ChatGPT"
+      url: "https://chat.openai.com/share?text={content}"
+      description: "Share with ChatGPT"
+    - label: "Claude"
+      url: "https://claude.ai/share?text={content}"
+      description: "Share with Claude"
+
+navbar:
+  - title: "Home"
+    url: "/"
+    icon: ""
+  - title: "Docs"
+    url: "/docs"
+    icon: "icon-book"
+
+sidebar_navigation:
+  - name: "Getting Started"
+    items:
+      - title: "Introduction"
+        url: "/"
+        icon: ""
+      - title: "Installation"
+        url: "/install"
+        icon: "icon-download"
+  - name: "Guides"
+    items:
+      - title: "Usage"
+        url: "/usage"
+        icon: ""
+
+extra_sections:
+  left_sidebar:
+    - title: ""
+      content: ""
+  right_sidebar:
+    - title: ""
+      content: ""
+
+footer:
+  text: ""
+  links:
+    - title: "GitHub"
+      url: "https://github.com/example"
+      icon: "icon-brand-github"
