@@ -1,3 +1,5 @@
+import std/[macros, os]
+
 when defined(macosx):
   --passL:"/opt/local/lib/libevent.a"
   --passC:"-I /opt/local/include"
@@ -14,3 +16,10 @@ elif defined(linux):
 
 when not defined release:
   --define:timHotCode
+else:
+  const embedAssetsPath {.strdefine.} = ""
+  if embedAssetsPath.len != 0:
+    let outputEmbedAssets = getProjectPath().parentDir() / ".cache" / "embed_assets.nim"
+    let assetsPath = absolutePath(joinPath(getProjectPath() / "storage", embedAssetsPath))
+    if dirExists(assetsPath):
+      exec "supra bundle.assets \"" & assetsPath & "\" \"" & outputEmbedAssets & "\""

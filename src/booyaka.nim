@@ -155,6 +155,8 @@ App.services do:
   # init static assets
   assets.embedAssets("assets")
 
+assets.loadAssets()
+
 App.withAssetsHandler:
   proc (req: var Request, res: var Response, hasFoundResource: var bool) =
     # Serve static assets from the embedded StaticBundle
