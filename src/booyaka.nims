@@ -1,9 +1,10 @@
 when defined(macosx):
   --passL:"/opt/local/lib/libevent.a"
   --passC:"-I /opt/local/include"
+  --passC:"-Wno-incompatible-function-pointer-types"
 elif defined(linux):
-  --passL:"/usr/local/lib/libevent.a"
-  --passC:"-I /usr/local/include"
+  --passL:"-L/usr/local/lib/lib -L/usr/local/lib -Wl,-rpath,/usr/local/lib/lib -Wl,-rpath,/usr/local/lib -levent"
+  --passC:"-I /usr/include"
 
 --mm:arc
 --define:webapp # todo supWebApp
