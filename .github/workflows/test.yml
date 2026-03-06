@@ -21,16 +21,29 @@ jobs:
           - 'stable'
     steps:
       - uses: actions/checkout@v3
+      
       - uses: jiro4989/setup-nim-action@v1
         with:
           nim-version: ${{ matrix.nim-version }}
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Install deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            pkg-config libssl-dev libevent-dev ca-certificates
+          sudo ldconfig
+
+      - name: Debug - verify libs visible
+        run: |
+          pkg-config --cflags --libs openssl libevent || true
+          ldconfig -p | grep -E "libssl|libcrypto|libevent" || true
+          ls -l /usr/lib/*/libssl* /usr/local/lib/libssl* || true
+
       # todo publish supranim's session package
       # meanwhile, install it directly from the repo for testing
       - run: |
           nimble install https://github.com/supranim/session
-          nimble install https://github.com/supranim/enimsql
 
       - run: nimble install -Y
       - run: nim c -r src/${{ github.event.repository.name }}.nim
