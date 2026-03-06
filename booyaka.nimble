@@ -23,6 +23,7 @@ requires "flatty"
 requires "supersnappy"
 requires "semver"
 requires "iconim"
+requires "https://github.com/supranim/supra"
 
 # requires "htmlparser"
 requires "libffi"
