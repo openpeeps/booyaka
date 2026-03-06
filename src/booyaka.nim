@@ -155,7 +155,7 @@ App.services do:
   # init static assets
   assets.embedAssets("assets")
 
-assets.loadAssets()
+assets.preloadAssets()
 
 App.withAssetsHandler:
   proc (req: var Request, res: var Response, hasFoundResource: var bool) =

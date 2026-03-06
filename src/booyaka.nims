@@ -18,8 +18,7 @@ when not defined release:
   --define:timHotCode
 else:
   const embedAssetsPath {.strdefine.} = ""
-  if embedAssetsPath.len != 0:
-    let outputEmbedAssets = getProjectPath().parentDir() / ".cache" / "embed_assets.nim"
-    let assetsPath = absolutePath(joinPath(getProjectPath() / "storage", embedAssetsPath))
-    if dirExists(assetsPath):
-      exec "supra bundle.assets \"" & assetsPath & "\" \"" & outputEmbedAssets & "\""
+  let outputEmbedAssets = getProjectPath().parentDir() / ".cache" / "embed_assets.nim"
+  let assetsPath = absolutePath(joinPath(getProjectPath() / "storage", "assets"))
+  if dirExists(assetsPath):
+    exec "supra bundle.assets \"" & assetsPath & "\" \"" & outputEmbedAssets & "\""
