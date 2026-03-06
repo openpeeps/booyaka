@@ -20,5 +20,3 @@ when not defined release:
 # else:
   # --passC:"-O3" # Optimize for speed
   # --passL:"-flto"     # Link Time Optimization for smaller/faster binaries
-
---path:"/Users/georgelemon/Development/packages/voodoo/src"
