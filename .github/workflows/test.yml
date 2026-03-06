@@ -31,7 +31,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            pkg-config libssl-dev libevent-dev ca-certificates
+            pkg-config libssl-dev libevent-dev ca-certificates libpcre3-dev
           sudo ldconfig
 
       - name: Debug - verify libs visible
