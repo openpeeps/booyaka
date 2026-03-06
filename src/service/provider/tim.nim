@@ -33,19 +33,19 @@ initService Tim[Global]:
       )
 
       # predefine foreign functions
-      timInstance.userScript.addProc("slugify", @[paramDef("s", tyString)], tyString,
+      timInstance.userScript.addProc("slugify", @[paramDef("s", ttyString)], ttyString,
         proc (args: StackView): Value =
           ## Convert a string to a URL-friendly slug
           return initValue(slugify(args[0].stringVal[]))
         )
 
-      timInstance.userScript.addProc("dashboard", @[paramDef("x", tyString)], tyString,
+      timInstance.userScript.addProc("dashboard", @[paramDef("x", ttyString)], ttyString,
         proc (args: StackView): Value =
           # prefix a link with `/dashboard/`
           return initValue("/dashboard/" & args[0].stringVal[])
         )
 
-      timInstance.userScript.addProc("icon", @[paramDef("name", tyString)], tyString,
+      timInstance.userScript.addProc("icon", @[paramDef("name", ttyString)], ttyString,
         proc (args: StackView): Value =
           # Return an HTML string for an icon
           let iconName = args[0].stringVal[]
