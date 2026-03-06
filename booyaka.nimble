@@ -25,7 +25,7 @@ requires "semver"
 requires "iconim"
 requires "https://github.com/supranim/supra"
 
-# requires "htmlparser"
+requires "htmlparser"
 requires "libffi"
 
 task dev, "Generate a development build":
