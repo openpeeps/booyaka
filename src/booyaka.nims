@@ -5,7 +5,8 @@ when defined(macosx):
   --passC:"-I /opt/local/include"
   --passC:"-Wno-incompatible-function-pointer-types"
 elif defined(linux):
-  --passL:"-L/usr/local/lib/lib -L/usr/local/lib -Wl,-rpath,/usr/local/lib/lib -Wl,-rpath,/usr/local/lib -levent"
+  # --passL:"-L/usr/local/lib/lib -L/usr/local/lib -Wl,-rpath,/usr/local/lib/lib -Wl,-rpath,/usr/local/lib -levent"
+  --passL:"/usr/lib/x86_64-linux-gnu/libevent.a"
   --passC:"-I /usr/include"
 
 --mm:arc
