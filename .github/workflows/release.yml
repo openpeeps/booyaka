@@ -34,7 +34,7 @@ jobs:
             ${{ runner.os }}-nimble-v2-
         if: runner.os != 'Windows'
 
-      - uses: georgelemon/setup-nim-action
+      - uses: georgelemon/setup-nim-action@master
         with:
           nim-version: ${{ env.NIM_VERSION }}
           repo-token: ${{ secrets.GITHUB_TOKEN }}
