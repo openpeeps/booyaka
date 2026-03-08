@@ -46,13 +46,20 @@ jobs:
             sudo apt-get install -y --no-install-recommends \
               pkg-config libevent-dev libpcre3-dev libpq-dev
           elif [[ "${{ runner.os }}" == "macOS" ]]; then
-            brew install pkgconfig libevent pcre postgresql@15
+            brew install pkgconfig libevent pcre libpq
           fi
         shell: bash
 
-      - name: Set DYLD_LIBRARY_PATH for Homebrew libraries (macOS only)
+      - name: Export Homebrew library paths (macOS only)
         if: runner.os == 'macOS'
-        run: echo "DYLD_LIBRARY_PATH=$(brew --prefix)/lib" >> $GITHUB_ENV
+        run: |
+          BREW_PREFIX="$(brew --prefix)"
+          LIBPQ_PREFIX="$(brew --prefix libpq)"
+          echo "PATH=${LIBPQ_PREFIX}/bin:${BREW_PREFIX}/bin:${PATH}" >> "$GITHUB_ENV"
+          echo "DYLD_LIBRARY_PATH=${LIBPQ_PREFIX}/lib:${BREW_PREFIX}/lib" >> "$GITHUB_ENV"
+          echo "DYLD_FALLBACK_LIBRARY_PATH=${LIBPQ_PREFIX}/lib:${BREW_PREFIX}/lib" >> "$GITHUB_ENV"
+          echo "PKG_CONFIG_PATH=${LIBPQ_PREFIX}/lib/pkgconfig:${BREW_PREFIX}/lib/pkgconfig" >> "$GITHUB_ENV"
+          ls -lah "${LIBPQ_PREFIX}/lib/libpq.dylib"
 
       - run: nimble build -Y -d:release
 
