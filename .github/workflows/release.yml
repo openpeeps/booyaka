@@ -50,6 +50,18 @@ jobs:
           fi
         shell: bash
 
+      - name: Create /opt/local aliases for libevent (macOS only)
+        if: runner.os == 'macOS'
+        run: |
+          LIBEVENT_PREFIX="$(brew --prefix libevent)"
+
+          sudo mkdir -p /opt/local/include /opt/local/lib
+          sudo ln -sfn "${LIBEVENT_PREFIX}/include/event2" /opt/local/include/event2
+          sudo ln -sfn "${LIBEVENT_PREFIX}/lib/libevent.a" /opt/local/lib/libevent.a
+
+          ls -lah /opt/local/include/event2
+          ls -lah /opt/local/lib/libevent.a
+
       - name: Export Homebrew library paths (macOS only)
         if: runner.os == 'macOS'
         run: |
