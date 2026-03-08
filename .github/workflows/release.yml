@@ -39,10 +39,6 @@ jobs:
           nim-version: ${{ env.NIM_VERSION }}
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Setup MacPorts (macOS only)
-        if: runner.os == 'macOS'
-        uses: melusina-org/setup-macports@v1
-
       - name: Install C library dependencies
         run: |
           if [[ "${{ runner.os }}" == "Linux" ]]; then
@@ -50,8 +46,7 @@ jobs:
             sudo apt-get install -y --no-install-recommends \
               pkg-config libevent-dev libpcre3-dev libpq-dev
           elif [[ "${{ runner.os }}" == "macOS" ]]; then
-            sudo port -v selfupdate
-            sudo port install pkgconfig libevent pcre postgresql15
+            brew install pkgconfig libevent pcre postgresql@15
           fi
         shell: bash
 
