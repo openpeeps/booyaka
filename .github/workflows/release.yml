@@ -48,10 +48,10 @@ jobs:
           if [[ "${{ runner.os }}" == "Linux" ]]; then
             sudo apt-get update
             sudo apt-get install -y --no-install-recommends \
-              pkg-config libevent-dev libpcre3-dev 
+              pkg-config libevent-dev libpcre3-dev libpq-dev
           elif [[ "${{ runner.os }}" == "macOS" ]]; then
             sudo port -v selfupdate
-            sudo port install pkgconfig libevent pcre
+            sudo port install pkgconfig libevent pcre postgresql15
           fi
         shell: bash
 
