@@ -5,7 +5,7 @@ on:
       - '*.*.*'
   workflow_dispatch:
 env:
-  APP_NAME: 'groovebox'
+  APP_NAME: 'booyaka'
   NIM_VERSION: 'stable'
   MAINTAINER: 'OpenPeeps'
 
@@ -66,7 +66,7 @@ jobs:
           assets="${{ env.APP_NAME }}_$(echo "$suffix" | tr '[:upper:]' '[:lower:]')"
           echo "$assets"
           mkdir -p "dist/$assets"
-          cp -r bin LICENSE README.* "dist/$assets/"
+          cp -r build LICENSE README.* "dist/$assets/"
           (
             cd dist
             tar czf "$assets.tar.gz" "$assets"
