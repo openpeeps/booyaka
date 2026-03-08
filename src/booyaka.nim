@@ -6,11 +6,10 @@
 #
 import std/[os, sequtils, tables]
 
-import pkg/[supranim, nyml]
+import pkg/supranim
 import pkg/supranim/core/paths
-import pkg/kapsis/[runtime, cli]
 
-import ./app/structs
+import ./app/[structs, cli_commands]
 
 #
 # Init core modules using `init` macro
@@ -37,53 +36,16 @@ minify: true
 """).toJson
   App.configs["server"] = serverConfig
   App.configs["tim"] = timConfig
-
-
-# Define CLI commands for the application
-proc startCommand(v: Values) =
-  ## Kapsis `init` command handler
-  initStartCommand(v, createDirs = false)
-
-  let
-    configPath = absolutePath($(v.get("directory").getPath)) / "booyaka.config"
-    port = 
-      if v.has("--port"): v.get("--port").getPort
-      else: 3000.Port
-  # Set the server port in the application configuration
-  App.configs["server"].contents["port"] = newJInt(port.int)
-
-  if fileExists(configPath & ".yml"):
-    globalBooyakaConfig = fromYaml(readFile(configPath & ".yml"), BooyakaConfig)
-  elif fileExists(configPath & ".yaml"):
-    globalBooyakaConfig = fromYaml(readFile(configPath & ".yaml"), BooyakaConfig)
-  elif fileExists(configPath & ".json"):
-    globalBooyakaConfig = fromJson(readFile(configPath & ".json"), BooyakaConfig)
-  else:
-    display("No Booyaka Config found in the current directory (.yml/.yaml/.json)")
-    QuitFailure.quit
-  globalBooyakaConfig.ensureLeadingSlash()
-  booyakaProjectPath = configPath.parentDir
-
-const tpl = staticRead(storagePath / "stubs" / "template_booyaka.config.yaml")
-proc newCommand(v: Values) =
-  ## Create a new Booyaka project in the specified directory
-  let dirPath = absolutePath($(v.get("directory").getPath))
-  if dirExists(dirPath):
-    # checking if the directory is empty
-    if walkDir(dirPath).toSeq().len > 0:
-      displayError("Directory is not empty.", quitProcess = true)
-  if v.has("--json"):
-    writeFile(dirPath / "booyaka.config.json", yaml(tpl).toJsonStr(prettyPrint = true))
-  else:
-    writeFile(dirPath / "booyaka.config.yaml", tpl)
   
-
 App.cli do:
   new path(directory), ?bool(--json):
     ## Create a new Booyaka project in the specified directory
 
   start path(directory), bool(--sync), ?port(--port):
     ## Init the app with the given installation path
+
+  build path(directory):
+    ## Generate static HTML website
 
 #
 # Initialize available Service Providers.
@@ -152,21 +114,22 @@ App.services do:
   # init Markdown Service
   markdown.init(App)
 
-  # init static assets
-  assets.embedAssets("assets")
+  when defined release: # init static assets
+    assets.embedAssets("assets")
 
-assets.preloadAssets()
-
-App.withAssetsHandler:
-  proc (req: var Request, res: var Response, hasFoundResource: var bool) =
-    # Serve static assets from the embedded StaticBundle
-    req.sendEmbeddedAsset(req.path, res.getHeaders(), hasFoundResource)
-    if not hasFoundResource:
-      # If not found in embedded assets, try serving from
-      # the local `/assets` directory
-      if req.path.startsWith("/assets/"):
-        hasFoundResource =
-          req.sendAssets(booyakaProjectPath, req.path, res.getHeaders())
+when defined release:
+  # Preload embedded assets into memory for faster access in production
+  assets.preloadAssets()
+  App.withAssetsHandler:
+    proc (req: var Request, res: var Response, hasFoundResource: var bool) =
+      # Serve static assets from the embedded StaticBundle
+      req.sendEmbeddedAsset(req.path, res.getHeaders(), hasFoundResource)
+      if not hasFoundResource:
+        # If not found in embedded assets, try serving from
+        # the local `/assets` directory
+        if req.path.startsWith("/assets/"):
+          hasFoundResource =
+            req.sendAssets(booyakaProjectPath, req.path, res.getHeaders())
       
 
 #

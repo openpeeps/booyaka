@@ -15,7 +15,7 @@ initService Tim[Global]:
   # A singleton service that wraps the Tim Engine
   # and provides a simple interface to render HTML pages
   backend do:
-    var timInstance: TimEngine
+    var timInstance*: TimEngine
     
     Icon.init(
       source = storagePath / "icons",
@@ -51,7 +51,6 @@ initService Tim[Global]:
           let iconName = args[0].stringVal[]
           return initValue($icon(iconName))
         )
-
       tim.initCommonStorage:
         {
           "path": req.getUrl(),
@@ -60,7 +59,6 @@ initService Tim[Global]:
             "logo": globalBooyakaConfig.metadata.logo.get("/assets/booyaka.png"),
           }
         }
-
       timInstance.precompile()
 
     proc getTimInstance*: TimEngine =

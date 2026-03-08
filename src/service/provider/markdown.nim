@@ -25,16 +25,16 @@ export structs
 initService Markdown[Global]:
   backend do:
     type
-      MarkdownInstance = ref object
+      MarkdownInstance* = ref object
         pages*: TableRef[string, MarkdownPage] # map of markdown file paths to HTML content
         index*: TableRef[string, string] # map of original paths to hashed paths
         config*: BooyakaConfig
         version*: semver.Version = newVersion(0, 1, 0)
 
     var
-      contentSourcePath: string # provided when initializing the service
-      buildSourcePath: string
-      buildPartialsPath: string
+      contentPath: string # provided when initializing the service
+      buildPath: string
+      partialsPath: string
       buildStaticPath: string
       watcher*: Watchout
       hasChanges: bool
@@ -67,6 +67,18 @@ initService Markdown[Global]:
       var unix: int64
       s.fromFlatty(i, unix)
       x = unix.fromUnix
+
+    proc initMarkdownInstance*(app: Application, dbPath: string) =
+      ## Initializes the markdown service instance, loading existing data from the database if it exists
+      if fileExists(dbPath):
+        globalMarkdownService = fromFlatty(uncompress(readFile(dbPath)), MarkdownInstance)
+      else:
+        globalMarkdownService = MarkdownInstance(
+          pages: newTable[string, MarkdownPage](),
+          index: newTable[string, string](), # map of original paths to hashed paths
+        )
+      search.init(app)
+      searchInstance = getSpotlightInstance()
 
     # WebSocket Connection - Callbacks
     proc onMessageCallback(c: ptr WebSocketConnectionImpl, code: int, data: openArray[byte]) =
@@ -173,7 +185,7 @@ initService Markdown[Global]:
         )
       # write the parsed markdown content to disk
       # we write to a hashed filename to avoid issues with special characters in URLs and to ensure uniqueness
-      let hashedPath = buildPartialsPath / toLowerAscii(slugHash[1])  & ".html"
+      let hashedPath = partialsPath / toLowerAscii(slugHash[1])  & ".html"
       writeFile(hashedPath, htmlContent) #
       hasChanges = true
 
@@ -185,7 +197,7 @@ initService Markdown[Global]:
     proc onChange(file: watchout.File) =
       # Callback when a markdown file is changed
       let path = file.getPath()
-      globalMarkdownService.parseMarkdownFile(contentSourcePath, path)
+      globalMarkdownService.parseMarkdownFile(contentPath, path)
       notifyClients()
 
     proc onDelete(file: watchout.File) =
@@ -214,6 +226,25 @@ initService Markdown[Global]:
             "config": toJson(globalBooyakaConfig).fromJson()
           }, httpCode = Http404)
 
+    proc scanMarkdownFiles*(contentPath, dbPath, searchPath: string) =
+      for path in walkDirRec(contentPath, {pcFile}):
+        let fpath = path.splitFile
+        if path.splitFile.ext != ".md": continue # only process markdown files
+        if fpath.name.startsWith("!"): continue # skip files prefixed with "!"
+        let hashedSlug = getSlugHash(contentPath, path)
+        
+        if globalMarkdownService.pages.hasKey(hashedSlug[1]):
+          let md = globalMarkdownService.pages[hashedSlug[1]]
+          if md.lastEdited.isSome and md.lastEdited.get() >= getLastModificationTime(path):
+            continue # skip unchanged files
+        
+        # parse markdown file and update the markdown service index
+        globalMarkdownService.parseMarkdownFile(contentPath, path, some(hashedSlug))
+      
+      # write initial index to booyaka.db
+      writeFile(dbPath, compress(toFlatty(globalMarkdownService)))
+      writeFile(searchPath, compress(toFlatty(searchInstance[])))
+
     # Setup the filesystem monitor
     const defaultHomePage = staticRead(storagePath / "stubs" / "index.md")
     proc init*(app: Application) =
@@ -222,52 +253,29 @@ initService Markdown[Global]:
         autolink.autolinkController("/{slug:anySlug}", HttpGet)
       app.router.registerRoute((autolinked[1], autolinked[2]), HttpGet, getSlug)
 
-      searchInstance = getSpotlightInstance()
-      contentSourcePath = app.applicationPaths.getInstallationPath / "contents"
-      buildSourcePath = app.applicationPaths.getInstallationPath / "_build"
-      buildPartialsPath = buildSourcePath / "partials"
+      contentPath = app.applicationPaths.getInstallationPath / "contents"
+      buildPath = app.applicationPaths.getInstallationPath / "_build"
+      partialsPath = buildPath / "partials"
 
-      discard existsOrCreateDir(buildSourcePath)
-      discard existsOrCreateDir(buildSourcePath / "partials")
-      discard existsOrCreateDir(contentSourcePath)
+      discard existsOrCreateDir(buildPath)
+      discard existsOrCreateDir(buildPath / "partials")
+      discard existsOrCreateDir(contentPath)
       
-      if not fileExists(contentSourcePath / "index.md"):
+      if not fileExists(contentPath / "index.md"):
         # ensure there's at least an index.md to start with
-        writeFile(contentSourcePath / "index.md", defaultHomePage)
+        writeFile(contentPath / "index.md", defaultHomePage)
 
-      let booyakaDatabasePath = app.applicationPaths.getInstallationPath / "booyaka.db"
-      let booyakaSearchPath = app.applicationPaths.getInstallationPath / "booyaka.search.db"
-      if fileExists(booyakaDatabasePath):
-        # Load existing markdown database if it exists
-        globalMarkdownService = fromFlatty(uncompress(readFile(booyakaDatabasePath)), MarkdownInstance)
-      else:
-        # Create a new MarkdownInstance if no database exists
-        globalMarkdownService = MarkdownInstance(
-          pages: newTable[string, MarkdownPage](),
-          index: newTable[string, string](), # map of original paths to hashed paths
-        )
+      let dbPath = app.applicationPaths.getInstallationPath / "booyaka.db"
+      let searchPath = app.applicationPaths.getInstallationPath / "booyaka.search.db"
+      app.initMarkdownInstance(dbPath)
 
       # Create a new Watchout instance to monitor markdown files
-      watcher = newWatchout(@[contentSourcePath], some("*.md"))
+      watcher = newWatchout(@[contentPath], some("*.md"))
       watcher.onChange = onChange
       watcher.onFound = onFound
       watcher.onDelete = onDelete
       watcher.start() # in the background (new thread)
 
       # initial scan of existing markdown files
-      for path in walkDirRec(contentSourcePath, {pcFile}):
-        let fpath = path.splitFile
-        if path.splitFile.ext != ".md": continue # only process markdown files
-        if fpath.name.startsWith("!"): continue # skip files prefixed with "!"
-        let hashedSlug = getSlugHash(contentSourcePath, path)
-        
-        if globalMarkdownService.pages.hasKey(hashedSlug[1]):
-          let md = globalMarkdownService.pages[hashedSlug[1]]
-          if md.lastEdited.isSome and md.lastEdited.get() >= getLastModificationTime(path):
-            continue # skip unchanged files
-        # parse markdown file and update the markdown service index
-        globalMarkdownService.parseMarkdownFile(contentSourcePath, path, some(hashedSlug))
+      scanMarkdownFiles(contentPath, dbPath, searchPath)
       
-      # write initial index to booyaka.db
-      writeFile(booyakaDatabasePath, compress(toFlatty(globalMarkdownService)))
-      writeFile(booyakaSearchPath, compress(toFlatty(searchInstance[])))
