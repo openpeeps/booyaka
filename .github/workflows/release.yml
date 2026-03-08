@@ -50,6 +50,10 @@ jobs:
           fi
         shell: bash
 
+      - name: Set DYLD_LIBRARY_PATH for Homebrew libraries (macOS only)
+        if: runner.os == 'macOS'
+        run: echo "DYLD_LIBRARY_PATH=$(brew --prefix)/lib" >> $GITHUB_ENV
+
       - run: nimble build -Y -d:release
 
       - name: Create artifact
