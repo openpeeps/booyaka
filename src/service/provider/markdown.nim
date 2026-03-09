@@ -13,7 +13,7 @@ import pkg/[nyml, htmlparser, supersnappy, flatty, jsony,
 
 import pkg/supranim/core/[servicemanager, application, paths]
 import pkg/supranim/network/http/webserver
-import pkg/supranim/network/ws/websocket
+import pkg/supranim/network/websocket
 import pkg/supranim/http/[request, response, autolink, router]
 import pkg/supranim/support/slug
 

@@ -8,25 +8,27 @@ srcDir        = "src"
 bin           = @["booyaka"]
 binDir        = "build"
 
-
 # Dependencies
 
 requires "nim >= 2.0.0"
 requires "supranim#head"
 requires "tim#head"
 requires "limiter#head"
-requires "bag#head"
-requires "jsony"
-requires "zippy"
 requires "marvdown#head"
+requires "jsony"
 requires "flatty"
 requires "supersnappy"
 requires "semver"
 requires "iconim"
-requires "https://github.com/supranim/supra"
 
-requires "htmlparser"
-requires "libffi"
+requires "htmlparser#head"
+requires "https://github.com/openpeeps/pluginkit"
+
+# Supra is not really a dependency but we want to ensure 
+# it's available when building the release version of Booyaka
+# so we can use Supra's CLI `bundle` command to bundle
+# static assets into the executable.
+requires "https://github.com/supranim/supra"
 
 task dev, "Generate a development build":
   exec "nimble build"
