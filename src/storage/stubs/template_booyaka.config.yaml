@@ -1,16 +1,14 @@
 metadata:
-  logo: "/assets/logo.png"
-  title: ""
-  description: ""
-  keywords:
-    - "docs"
-    - "booyaka"
+  logo: "/assets/booyaka.png"
+  title: "Booyaka Documentation"
+  description: "A documentation website built with Booyaka"
+  keywords: ["booyaka", "documentation", "docs"]
 
 appearance:
   show_theme_switcher: true
   default_theme: "system"
   show_toggle_left_sidebar: true
-  show_toggle_right_sidebar: false
+  show_toggle_right_sidebar: true
   container_width: "col-lg-10 mx-auto"
   content_width: "col-lg-7"
   background_noise_opacity: 0.03
@@ -45,11 +43,17 @@ content:
   share_ai_buttons: true
   share_buttons_ai_providers:
     - label: "ChatGPT"
-      url: "https://chat.openai.com/share?text={content}"
+      url: "https://chat.openai.com"
       description: "Share with ChatGPT"
     - label: "Claude"
-      url: "https://claude.ai/share?text={content}"
+      url: "https://claude.ai"
       description: "Share with Claude"
+    - label: "Gemini"
+      url: "https://gemini.google.com"
+      description: "Share with Gemini"
+    - label: "Copilot"
+      url: "https://github.com/copilot/"
+      description: "Share with GitHub Copilot"
 
 navbar:
   - title: "Home"

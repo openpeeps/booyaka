@@ -1,4 +1,5 @@
 div.col-7.mx-auto > div.row.vh-100 > div.col-12.align-self-center.text-center
-  h1.h3.fw-normal.text-center.d-block: "404 | Page Not Found"
-  p: "The page you are looking for does not exist."
-  a href="/": "Go back to first page"
+  p.text-muted.mb-1: "404"
+  h1.h1.fw-bold.text-center.d-block: "Page Not Found"
+  p.lead: "The page you are looking for does not exist."
+  a.btn.btn-outline-light.border-2 href="/": "Go back to first page"

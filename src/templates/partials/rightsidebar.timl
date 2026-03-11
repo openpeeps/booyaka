@@ -1,0 +1,13 @@
+div.sticky-top.sidebar-right.sticky-sidebar
+  if $this["markdown"].hasKey("toc")
+    div.pb-2
+      const tocItems = toKeys($this["markdown"]["toc"])
+      if len($tocItems) > 0:
+        h6.small.text-light: "Table of Contents"
+        ul.table-of-contents
+          for $k in $tocItems:
+            const key = toString($k)
+            li > a href="#" & $key: $this["markdown"]["toc"][toString($k)]
+  
+  for $widget in items($this["config"]["extra_sections"]["right_sidebar"]):
+    div.mb-4: $widget["content"]

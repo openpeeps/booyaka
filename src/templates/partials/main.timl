@@ -1,0 +1,87 @@
+if $this["config"]["appearance"]["show_toggle_left_sidebar"] == true:
+  div.position-absolute.start-0.top-0
+    button.btn.btn-sm.border-0 data-toggle-area="left"
+      span.icon-hide-sidebar
+        svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+            fill="currentColor" class="icon icon-tabler icons-tabler-filled icon-tabler-layout-sidebar-left-collapse"
+          path stroke="none" d="M0 0h24v24H0z" fill="none"
+          path d="M18 3a3 3 0 0 1 2.995 2.824l.005 .176v12a3 3 0 0 1 -2.824 2.995l-.176 .005h-12a3 3 0 0 1 -2.995 -2.824l-.005 -.176v-12a3 3 0 0 1 2.824 -2.995l.176 -.005h12zm0 2h-9v14h9a1 1 0 0 0 .993 -.883l.007 -.117v-12a1 1 0 0 0 -.883 -.993l-.117 -.007zm-2.293 4.293a1 1 0 0 1 .083 1.32l-.083 .094l-1.292 1.293l1.292 1.293a1 1 0 0 1 .083 1.32l-.083 .094a1 1 0 0 1 -1.32 .083l-.094 -.083l-2 -2a1 1 0 0 1 -.083 -1.32l.083 -.094l2 -2a1 1 0 0 1 1.414 0z"
+      span.icon-show-sidebar.d-none
+        svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+            fill="currentColor" class="icon icon-tabler icons-tabler-filled icon-tabler-layout-sidebar-left-expand"
+          path stroke="none" d="M0 0h24v24H0z" fill="none"
+          path d="M18 3a3 3 0 0 1 2.995 2.824l.005 .176v12a3 3 0 0 1 -2.824 2.995l-.176 .005h-12a3 3 0 0 1 -2.995 -2.824l-.005 -.176v-12a3 3 0 0 1 2.824 -2.995l.176 -.005h12zm0 2h-9v14h9a1 1 0 0 0 .993 -.883l.007 -.117v-12a1 1 0 0 0 -.883 -.993l-.117 -.007zm-4.387 4.21l.094 .083l2 2a1 1 0 0 1 .083 1.32l-.083 .094l-2 2a1 1 0 0 1 -1.497 -1.32l.083 -.094l1.292 -1.293l-1.292 -1.293a1 1 0 0 1 -.083 -1.32l.083 -.094a1 1 0 0 1 1.32 -.083z"
+
+div.px-lg-4.px-2 > div.container-fluid
+  div.row > div.col-12
+    div.row.align-items-center
+      div.col-6 > h6.my-0: $this["markdown"]["section"]
+      div.col-6.text-end
+        div.btn-group
+          button type="button" aria-label="Share this page" class="btn btn-dark btn-sm border-end rounded-start-3 d-flex align-items-center"
+            span.ms-1: "Share page"
+          button type="button" aria-label="Open share options" class="btn btn-dark btn-sm dropdown-toggle dropdown-toggle-split rounded-end-3" data-bs-toggle="dropdown" aria-expanded="false"
+            span class="visually-hidden": "Toggle Dropdown"
+          ul.dropdown-menu.dropdown-menu-sm.dropdown-menu-end.rounded-4.shadow-lg style="font-size:0.85em"
+            li
+              a.dropdown-item.d-flex.align-items-center.gap-2
+                div.d-flex.flex-column
+                  span.fw-bold.text-light: "Copy URL"
+                  small.text-muted: "Copy the URL of this page"
+            li
+              a.dropdown-item.d-flex.align-items-center.gap-2
+                div.d-flex.flex-column
+                  span.fw-bold.text-light: "Copy Markdown"
+                  small.text-muted: "Copy a markdown link to this page"
+            li: hr.dropdown-divider
+            for $shareOption in $this["config"]["content"]["share_buttons_ai_providers"]:
+              if hasKey($shareOption, "divider"):
+                li: hr.dropdown-divider
+              else:
+                li > a.dropdown-item.d-flex.align-items-center.gap-2 href=$shareOption["url"] aria-label=$shareOption["label"]
+                  div.d-flex.flex-column
+                    span.fw-bold.text-light: $shareOption["label"]
+                    small.text-muted: $shareOption["description"]
+    div.row > div.col-12
+      div.page-header.mb-4
+        h1.display-6.mt-3.fw-normal: $this["markdown"]["meta"]["title"]
+        p.lead.text-muted: $this["markdown"]["meta"]["description"]
+
+    div.row > div.col-12 > div.d-block.mb-3.px-3.py-2.border-top.border-bottom.border-dark
+      span: "Last updated"
+      time.ms-2 datetime=$this["markdown"]["last_updated"] title=$this["markdown"]["last_updated"]: $this["markdown"]["last_updated"]
+
+    // Main content area
+    div.row > div.col-12
+      article.container-content-area: $this["markdown"]["content"]
+
+    // Show bottom navigation if enabled
+    // This shows "Previous" and "Next" links at the bottom of the page
+    // You can disable this in the config file `content.bottom_navigation = false`
+    if $this["config"]["content"]["bottom_navigation"] == true:
+      div.row.g-3
+        div.col-lg-6.col-md-6
+          if $this["markdown"]["navigation"]["previous"] != nil:
+            const previousItem = $this["markdown"]["navigation"]["previous"]
+            a.btn.btn-outline-dark.border-2.rounded-4.px-4.py-3.w-100.text-start href=$previousItem["url"]
+              span.text-muted.small: "← Previous"
+              span.d-block.mt-1.h6.text-light: $previousItem["title"]
+        div.col-lg-6.col-md-6
+          if $this["markdown"]["navigation"]["next"] != nil:
+            const nextItem = $this["markdown"]["navigation"]["next"]
+            a.btn.btn-outline-dark.border-2.rounded-4.px-4.py-3.w-100.text-end href=$nextItem["url"]
+              span.text-muted.small: "Next →"
+              span.d-block.mt-1.h6.text-light: $nextItem["title"]
+
+// Toggle right sidebar area button
+if $this["config"]["appearance"]["show_toggle_right_sidebar"] == true:
+  div.position-absolute.end-0.top-0
+    button.btn.btn-sm.border-0 data-toggle-area="right"
+      span.icon-hide-sidebar
+        svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"
+          path stroke="none" d="M0 0h24v24H0z" fill="none"
+          path d="M18 3a3 3 0 0 1 2.995 2.824l.005 .176v12a3 3 0 0 1 -2.824 2.995l-.176 .005h-12a3 3 0 0 1 -2.995 -2.824l-.005 -.176v-12a3 3 0 0 1 2.824 -2.995l.176 -.005h12zm-3 2h-9a1 1 0 0 0 -.993 .883l-.007 .117v12a1 1 0 0 0 .883 .993l.117 .007h9v-14zm-5.387 4.21l.094 .083l2 2a1 1 0 0 1 .083 1.32l-.083 .094l-2 2a1 1 0 0 1 -1.497 -1.32l.083 -.094l1.292 -1.293l-1.292 -1.293a1 1 0 0 1 -.083 -1.32l.083 -.094a1 1 0 0 1 1.32 -.083z"
+      span.icon-show-sidebar.d-none
+        svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"
+          path stroke="none" d="M0 0h24v24H0z" fill="none"
+          path d="M18 3a3 3 0 0 1 2.995 2.824l.005 .176v12a3 3 0 0 1 -2.824 2.995l-.176 .005h-12a3 3 0 0 1 -2.995 -2.824l-.005 -.176v-12a3 3 0 0 1 2.824 -2.995l.176 -.005h12zm-3 2h-9a1 1 0 0 0 -.993 .883l-.007 .117v12a1 1 0 0 0 .883 .993l.117 .007h9v-14zm-3.293 4.293a1 1 0 0 1 .083 1.32l-.083 .094l-1.292 1.293l1.292 1.293a1 1 0 0 1 .083 1.32l-.083 .094a1 1 0 0 1 -1.32 .083l-.094 -.083l-2 -2a1 1 0 0 1 -.083 -1.32l.083 -.094l2 -2a1 1 0 0 1 1.414 0z"

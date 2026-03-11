@@ -1,0 +1,19 @@
+div.sidebar-navigation.sticky-top.sticky-sidebar
+  div.sidebar-navigation-scroll.mb-3
+    if len($this["config"]["sidebar_navigation"]) > 0:
+      for $section in items($this["config"]["sidebar_navigation"]):
+        if $section.hasKey("name"):
+          h6.small.text-light.mt-3.mb-2: $section["name"]
+        if len($section["items"]) > 0:
+          ul.list-unstyled.mb-4
+            for $item in items($section["items"]):
+              if $this["path"] == $item["url"]:
+                // the current page is active, highlight it in the sidebar
+                li > a.bg-dark href=$item["url"]: $item["title"]
+              else:
+                li > a href=$item["url"]: $item["title"]
+    else:
+      div.border-1.border-dark.rounded-4.p-4 style="border-style: dashed"
+        p.lh-sm.mb-0: "No navigation items available."
+  for $widget in items($this["config"]["extra_sections"]["left_sidebar"]):
+    div.mb-4: $widget["content"]
