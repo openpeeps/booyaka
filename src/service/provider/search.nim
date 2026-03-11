@@ -7,7 +7,7 @@
 import std/[strutils, tables, json, times, options, os]
 
 import pkg/[jsony, flatty, supersnappy]
-import pkg/supranim/core/[application, servicemanager, paths]
+import pkg/supranim/core/[application, services, paths]
 
 initService Spotlight[Singleton]:
   backend do:

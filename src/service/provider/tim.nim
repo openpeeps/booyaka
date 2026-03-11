@@ -2,7 +2,7 @@ import std/[macros, json, strutils, os,
         sequtils, httpcore, times, options]
 
 import pkg/supranim/support/slug
-import pkg/supranim/core/[servicemanager, paths]
+import pkg/supranim/core/[services, paths]
 
 import pkg/[tim, iconim, kapsis/cli]
 

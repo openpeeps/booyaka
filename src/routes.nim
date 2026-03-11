@@ -12,3 +12,8 @@ routes:
 
   get "/search"
     # GET route links to `getSearch` controller
+  
+  get "/{slug:anySlug}"
+    # A catch-all GET route that will match any path
+    # and pass it to the `getSlug` controller for 
+    # handling the markdown rendering based on the slug.

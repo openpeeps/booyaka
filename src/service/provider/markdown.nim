@@ -11,10 +11,9 @@ import pkg/checksums/sha1
 import pkg/[nyml, htmlparser, supersnappy, flatty, jsony,
             watchout, marvdown, semver, kapsis/cli]
 
-import pkg/supranim/core/[servicemanager, application, paths]
+import pkg/supranim/core/[services, application, paths]
 import pkg/supranim/network/http/webserver
 import pkg/supranim/network/websocket
-import pkg/supranim/http/[request, response, autolink, router]
 import pkg/supranim/support/slug
 
 import ./tim, ./search
@@ -37,8 +36,8 @@ initService Markdown[Global]:
       partialsPath: string
       buildStaticPath: string
       watcher*: Watchout
-      hasChanges: bool
-      globalMarkdownService*: MarkdownInstance
+      hasChanges : bool
+      gMarkdownService* : MarkdownInstance
       wsClients: seq[ptr WebSocketConnectionImpl]
       searchInstance: SpotlightInstance
     
@@ -71,9 +70,9 @@ initService Markdown[Global]:
     proc initMarkdownInstance*(app: Application, dbPath: string) =
       ## Initializes the markdown service instance, loading existing data from the database if it exists
       if fileExists(dbPath):
-        globalMarkdownService = fromFlatty(uncompress(readFile(dbPath)), MarkdownInstance)
+        gMarkdownService = fromFlatty(uncompress(readFile(dbPath)), MarkdownInstance)
       else:
-        globalMarkdownService = MarkdownInstance(
+        gMarkdownService = MarkdownInstance(
           pages: newTable[string, MarkdownPage](),
           index: newTable[string, string](), # map of original paths to hashed paths
         )
@@ -197,62 +196,38 @@ initService Markdown[Global]:
     proc onChange(file: watchout.File) =
       # Callback when a markdown file is changed
       let path = file.getPath()
-      globalMarkdownService.parseMarkdownFile(contentPath, path)
+      gMarkdownService.parseMarkdownFile(contentPath, path)
       notifyClients()
 
     proc onDelete(file: watchout.File) =
       # Callback when a markdown file is deleted
       echo "Markdown file deleted: ", file.getPath
 
-    proc getSlug*(req: var Request, res: var Response): void =
-      ## A Supranim route handler to serve markdown pages based on slug
-      ## This handler will be used to handle all requests to secondary pages
-      ## generated from markdown files.
-      {.gcsafe.}:
-        let slug = req.params["slug"]
-        if globalMarkdownService.index.hasKey(slug):
-          render("index", local = &*{
-            "markdown": globalMarkdownService.pages[globalMarkdownService.index[slug]],
-            "config": toJson(globalBooyakaConfig).fromJson()
-          })
-        else:
-          render("errors.4xx", local = &*{
-            "markdown": {
-              "meta": {
-                "title": "Page Not Found",
-                "description": "The page you are looking for does not exist."
-              },
-            },
-            "config": toJson(globalBooyakaConfig).fromJson()
-          }, httpCode = Http404)
-
     proc scanMarkdownFiles*(contentPath, dbPath, searchPath: string) =
+      ## Scans the content directory for markdown files, parses them, and
+      ## updates the markdown service index and search index accordingly.
       for path in walkDirRec(contentPath, {pcFile}):
         let fpath = path.splitFile
-        if path.splitFile.ext != ".md": continue # only process markdown files
-        if fpath.name.startsWith("!"): continue # skip files prefixed with "!"
+        if fpath.ext != ".md" or fpath.name.startsWith("!"):
+          # skip non-markdown files and temporary files prefixed with "!"
+          continue
         let hashedSlug = getSlugHash(contentPath, path)
-        
-        if globalMarkdownService.pages.hasKey(hashedSlug[1]):
-          let md = globalMarkdownService.pages[hashedSlug[1]]
+        if gMarkdownService.pages.hasKey(hashedSlug[1]):
+          let md = gMarkdownService.pages[hashedSlug[1]]
           if md.lastEdited.isSome and md.lastEdited.get() >= getLastModificationTime(path):
             continue # skip unchanged files
         
         # parse markdown file and update the markdown service index
-        globalMarkdownService.parseMarkdownFile(contentPath, path, some(hashedSlug))
+        gMarkdownService.parseMarkdownFile(contentPath, path, some(hashedSlug))
       
       # write initial index to booyaka.db
-      writeFile(dbPath, compress(toFlatty(globalMarkdownService)))
+      writeFile(dbPath, compress(toFlatty(gMarkdownService)))
       writeFile(searchPath, compress(toFlatty(searchInstance[])))
 
     # Setup the filesystem monitor
     const defaultHomePage = staticRead(storagePath / "stubs" / "index.md")
     proc init*(app: Application) =
       ## Initialize the Markdown service and start monitoring files
-      let autolinked: Autolinked =
-        autolink.autolinkController("/{slug:anySlug}", HttpGet)
-      app.router.registerRoute((autolinked[1], autolinked[2]), HttpGet, getSlug)
-
       contentPath = app.applicationPaths.getInstallationPath / "contents"
       buildPath = app.applicationPaths.getInstallationPath / "_build"
       partialsPath = buildPath / "partials"
