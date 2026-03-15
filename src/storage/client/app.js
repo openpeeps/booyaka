@@ -47,6 +47,11 @@ export default {
     this.initSmoothAnchors();
     this.initExternalLinksDecorator();
 
+    const fetchSwapCallback = function() {
+      opts.enableAnimatedAlerts && this.initAnimatedAlerts();
+      opts.fetchAndSwapCallback && opts.fetchAndSwapCallback();
+    }.bind(this) // bind 'this' to ensure the correct context inside the callback
+
     // Intercept clicks on internal links to enable SPA-like navigation without full page reloads.
     let sidebarNavigation = document.querySelector('.sidebar-navigation')
     document.addEventListener('click', (e) => {
@@ -60,7 +65,7 @@ export default {
           sidebarNavigation.querySelectorAll('a').forEach(link => link.classList.remove('active', 'bg-dark'));
           a.classList.add('active', 'bg-dark');
         }
-        this.fetchAndSwap(a.pathname + a.search, true, opts.fetchAndSwapCallback);
+        this.fetchAndSwap(a.pathname + a.search, true, fetchSwapCallback);
       }
     });
 
@@ -264,6 +269,7 @@ document.addEventListener('DOMContentLoaded', () => {
   UI.init({
     enableStickySidebar: true,
     enableTimeAgo: true,
+    enableAnimatedAlerts: true,
     fetchAndSwapCallback: (url, html) => {
       hljs.highlightAll();
     }

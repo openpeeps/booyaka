@@ -22,7 +22,8 @@ requires "semver"
 requires "iconim"
 
 requires "htmlparser#head"
-requires "https://github.com/openpeeps/pluginkit"
+# requires "https://github.com/openpeeps/pluginkit"
+requires "pluginkit"
 
 # Supra is not really a dependency but we want to ensure 
 # it's available when building the release version of Booyaka

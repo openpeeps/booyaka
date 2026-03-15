@@ -47,7 +47,13 @@ body:before {
   right: 0;
   pointer-events: none;
   z-index: 99999;
-  opacity: .32;
+  opacity: .50;
+}
+
+code {
+  background: #eeeeee17;
+  border-radius: 6px;
+  padding: 2px;
 }
 
 /* highlight text selection */
@@ -88,11 +94,11 @@ h1 {
 }
 
 h2 {
-  font-size: 1.5rem;
+  font-size: 1.7rem;
 }
 
 h3 {
-  font-size: 1.25rem;
+  font-size: 1.45rem;
 }
 
 h1 a[href^="#"],
