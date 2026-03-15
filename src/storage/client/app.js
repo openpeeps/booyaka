@@ -60,7 +60,7 @@ export default {
           sidebarNavigation.querySelectorAll('a').forEach(link => link.classList.remove('active', 'bg-dark'));
           a.classList.add('active', 'bg-dark');
         }
-        this.fetchAndSwap(a.pathname + a.search, false, opts.fetchAndSwapCallback);
+        this.fetchAndSwap(a.pathname + a.search, true, opts.fetchAndSwapCallback);
       }
     });
 
