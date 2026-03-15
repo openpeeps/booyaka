@@ -52,7 +52,7 @@ export default {
     document.addEventListener('click', (e) => {
       const a = e.target.closest('a');
       if (a &&  a.href &&  a.origin === location.origin && !a.hasAttribute('download') && 
-        !a.target &&  !a.href.startsWith('mailto:') &&  !a.href.startsWith('tel:')) {
+        !a.target &&  !a.href.startsWith('mailto:') &&  !a.href.startsWith('tel:') && !a.getAttribute('href').startsWith('#')) {
         e.preventDefault();
         // checking if the clicked element is part of the navigaiton menu
         // if so, we want to make the clicked item active and remove active from others
@@ -99,6 +99,7 @@ export default {
       const navbar = document.querySelector('.navbar-container-area');
       const navbarHeight = navbar ? navbar.offsetHeight : 0;
       const target = document.getElementById(hash);
+      console.log(target)
       if (target) {
         const targetPosition = target.getBoundingClientRect().top + window.pageYOffset;
         window.scrollTo({
@@ -267,6 +268,9 @@ document.addEventListener('DOMContentLoaded', () => {
       hljs.highlightAll();
     }
   });
+
+  // Initial syntax highlighting for code blocks
+  hljs.highlightAll();
 
   const toggleAreaBtns = document.querySelectorAll('button[data-toggle-area]');
   const mainArea = document.querySelector('div[data-area="main"]');
