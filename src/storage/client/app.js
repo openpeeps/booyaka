@@ -36,6 +36,7 @@ export default {
    * @param {Object} opts - Configuration options for initializing the app.
    * @param {boolean} opts.enableStickySidebar - Whether to enable sticky sidebars.
    * @param {boolean} opts.enableTimeAgo - Whether to enable "time ago" formatting.
+   * @param {callback} opts.fetchAndSwapCallback - Optional callback to override the default fetchAndSwap behavior.
    *
   */
   init: function(opts = defaultAppOpts) {
@@ -45,6 +46,23 @@ export default {
     if (opts.enableAnimatedAlerts) this.initAnimatedAlerts();
     this.initSmoothAnchors();
     this.initExternalLinksDecorator();
+
+    // Intercept clicks on internal links to enable SPA-like navigation without full page reloads.
+    let sidebarNavigation = document.querySelector('.sidebar-navigation')
+    document.addEventListener('click', (e) => {
+      const a = e.target.closest('a');
+      if (a &&  a.href &&  a.origin === location.origin && !a.hasAttribute('download') && 
+        !a.target &&  !a.href.startsWith('mailto:') &&  !a.href.startsWith('tel:')) {
+        e.preventDefault();
+        // checking if the clicked element is part of the navigaiton menu
+        // if so, we want to make the clicked item active and remove active from others
+        if (sidebarNavigation && sidebarNavigation.contains(a)) {
+          sidebarNavigation.querySelectorAll('a').forEach(link => link.classList.remove('active', 'bg-dark'));
+          a.classList.add('active', 'bg-dark');
+        }
+        this.fetchAndSwap(a.pathname + a.search, false, opts.fetchAndSwapCallback);
+      }
+    });
 
     document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
       checkbox.classList.add('form-check-input'); // the bootstrap class
@@ -113,6 +131,43 @@ export default {
         scrollToAnchorWithOffset(hash);
       }, 100);
     }
+  },
+
+
+  /**
+   * Fetches the given URL and swaps the content of the current
+   * view with the new view from the response.
+   * 
+   * If the fetch fails or the expected view container is not
+   * found in the response, it falls back to a full page reload.
+   * 
+   * @param {string} url - The URL to fetch and swap.
+   * @param {boolean} pushState - Whether to push the new URL to the browser history (default: true).
+   * @param {callback} callback - Optional callback to execute after successful content swap.
+   * @returns {void}
+  */
+  fetchAndSwap(url, pushState = true, callback) {
+    fetch(url, {headers: {'X-Requested-With': 'spa'}})
+      .then(resp => {
+        if (!resp.ok) throw new Error('Network error');
+        return resp.text();
+      })
+      .then(html => {
+        // parse the returned HTML and extract the new view
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const newView = doc.querySelector('[data-view]');
+        const currentView = document.querySelector('[data-view]');
+        if (newView && currentView) {
+          currentView.innerHTML = newView.innerHTML;
+          if (pushState) history.pushState(null, '', url);
+          window.scrollTo(0, 0);
+          callback && callback(url, newView);
+        } else {
+          console.warn('Could not find view container in the fetched HTML. Reloading the page as fallback.');
+          location.href = url;
+        }
+      }).catch(() => location.href = url);
   },
 
   initExternalLinksDecorator: function() {
@@ -205,7 +260,13 @@ export default {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  UI.init();
+  UI.init({
+    enableStickySidebar: true,
+    enableTimeAgo: true,
+    fetchAndSwapCallback: (url, html) => {
+      hljs.highlightAll();
+    }
+  });
 
   const toggleAreaBtns = document.querySelectorAll('button[data-toggle-area]');
   const mainArea = document.querySelector('div[data-area="main"]');

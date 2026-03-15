@@ -38,10 +38,10 @@ minify: true
   App.configs["tim"] = timConfig
   
 App.cli do:
-  new path(directory), ?bool(--json):
+  new path(directory), ?bool("--json"):
     ## Create a new Booyaka project in the specified directory
 
-  start path(directory), bool(--sync), ?port(--port):
+  start path(directory), bool("--sync"), ?port("--port"):
     ## Init the app with the given installation path
 
   build path(directory):
@@ -114,6 +114,9 @@ App.services do:
   # init Markdown Service
   markdown.init(App)
 
+  # init Pluggable Service
+  pluggable.init(App)
+
   when defined release: # init static assets
     assets.embedAssets("assets")
 
@@ -129,8 +132,7 @@ when defined release:
         # the local `/assets` directory
         if req.path.startsWith("/assets/"):
           hasFoundResource =
-            req.sendAssets(booyakaProjectPath, req.path, res.getHeaders())
-      
+            req.sendAssets(booyakaProjectPath, req.path, res.getHeaders())  
 
 #
 # Starts the application. This will start the HTTP
@@ -140,7 +142,7 @@ when defined release:
 #
 App.run do:
   # Booyaka WebSocket endpoint for live-reloading.
-  server.addCallback("/ws",
+  server.registerCallback("/ws",
     # TODO: allow for disabling WebSocket in config for
     # environments where it's not needed or causes issues
     proc (req: ptr evhttp_request, arg: pointer) {.cdecl.} =

@@ -10,6 +10,11 @@ import pkg/supranim/[controller, core/paths]
 import ../service/provider/[tim, markdown, search]
 import ../app/structs
 
+proc isSPARequest(req: var Request): bool =
+  # A simple heuristic to determine if the request is an AJAX request
+  # You can customize this based on your frontend framework's conventions
+  req.getHeaders().isSome and req.getHeaders().get().hasKey("X-Requested-With")
+
 ctrl getHomepage:
   ## renders the home page
   let markdownPage = gMarkdownService.pages[gMarkdownService.index["/"]]
@@ -41,10 +46,16 @@ ctrl getSlug:
   {.gcsafe.}:
     let slug = req.params["slug"]
     if gMarkdownService.index.hasKey(slug):
-      render("index", local = &*{
-        "markdown": gMarkdownService.pages[gMarkdownService.index[slug]],
-        "config": toJson(globalBooyakaConfig).fromJson()
-      })
+      if req.isSPARequest:
+        renderView("index", local = &*{
+          "markdown": gMarkdownService.pages[gMarkdownService.index[slug]],
+          "config": toJson(globalBooyakaConfig).fromJson()
+        })
+      else:
+        render("index", local = &*{
+          "markdown": gMarkdownService.pages[gMarkdownService.index[slug]],
+          "config": toJson(globalBooyakaConfig).fromJson()
+        })
     else:
       render("errors.4xx", local = &*{
         "markdown": {

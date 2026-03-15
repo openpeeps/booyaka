@@ -3,7 +3,7 @@ div.sticky-top.sidebar-right.sticky-sidebar
     div.pb-2
       const tocItems = toKeys($this["markdown"]["toc"])
       if len($tocItems) > 0:
-        h6.small.text-light: "Table of Contents"
+        h5.h6.text-light: "Table of Contents"
         ul.table-of-contents
           for $k in $tocItems:
             const key = toString($k)

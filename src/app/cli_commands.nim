@@ -4,6 +4,7 @@ from std/net import Port
 import pkg/[nyml, flatty, supersnappy]
 import pkg/supranim/core/[application, paths]
 import pkg/kapsis/[runtime, cli]
+import pkg/kapsis/interactive/prompts
 
 import pkg/tim
 import pkg/tim/engine/parser
@@ -71,9 +72,9 @@ proc buildCommand*(v: Values) =
   #   parser.parseScript(timAst, bookayaLayout, "")
   
   # Generate static HTML files for each markdown page
-  for path, index in globalMarkdownService.index:
+  for path, index in gMarkdownService.index:
     echo "Indexed: ", path, " -> ", index
-    let mdPage = globalMarkdownService.pages[index]
+    let mdPage = gMarkdownService.pages[index]
     if path == "/":
       writeFile(buildPath / "index.html", mdPage.content)
     else:

@@ -3,8 +3,10 @@ import std/[macros, json, strutils, os,
 
 import pkg/supranim/support/slug
 import pkg/supranim/core/[services, paths]
+import pkg/voodoo/language/value
+import pkg/[tim, iconim, kapsis/framework]
 
-import pkg/[tim, iconim, kapsis/cli]
+import pkg/kapsis/interactive/prompts
 
 export HttpCode, render, `&*`
 export times.now, times.format
@@ -34,19 +36,19 @@ initService Tim[Global]:
 
       # predefine foreign functions
       timInstance.userScript.addProc("slugify", @[paramDef("s", ttyString)], ttyString,
-        proc (args: StackView): Value =
+        proc (args: StackView): value.Value =
           ## Convert a string to a URL-friendly slug
           return initValue(slugify(args[0].stringVal[]))
         )
 
       timInstance.userScript.addProc("dashboard", @[paramDef("x", ttyString)], ttyString,
-        proc (args: StackView): Value =
+        proc (args: StackView): value.Value =
           # prefix a link with `/dashboard/`
           return initValue("/dashboard/" & args[0].stringVal[])
         )
 
       timInstance.userScript.addProc("icon", @[paramDef("name", ttyString)], ttyString,
-        proc (args: StackView): Value =
+        proc (args: StackView): value.Value =
           # Return an HTML string for an icon
           let iconName = args[0].stringVal[]
           return initValue($icon(iconName))
@@ -68,9 +70,6 @@ initService Tim[Global]:
       return timInstance
 
   client do:
-    macro staticRender*() = 
-      ## Traspiles the Tim template to Nim code for static site generation
-
     template render*(view: string, layout: string = "base",
                       httpCode = Http200, local: JsonNode = nil): untyped =
       ## Renders a Tim template and sends it as an HTTP response.
@@ -78,11 +77,22 @@ initService Tim[Global]:
       try:
         let output = render(timInstance, view, layout, local)
         respond(httpCode, output)
-      except:
-        let errMsg = getCurrentExceptionMsg()
-        displayError("<runtime.exception> " & errMsg)
-        try:
-          let errorLocal = %*{"error": errMsg}
-          respond(Http500, render(timInstance, "errors.5xx", layout, errorLocal))
-        except:
-          respond(Http500, "Internal Server Error: " & errMsg)
+      except TimEngineError as e:
+        displayError("<services.tim> " & e.msg)
+        respond(Http500, render(timInstance, "errors.5xx", layout, local))
+      except Exception as e:
+        displayError("<services.tim> " & e.msg)
+        respond(Http500, render(timInstance, "errors.5xx", layout, local))
+    
+    template renderView*(view: string, httpCode = Http200, local: JsonNode = nil): untyped =
+      ## Renders a Tim view without a layout and sends it as an HTTP response.
+      ## This can be used for rendering partials or standalone views.
+      try:
+        let output = renderView(timInstance, view, local)
+        respond(httpCode, output)
+      except TimEngineError as e:
+        displayError("<services.tim> " & e.msg)
+        respond(Http500, renderView(timInstance, "errors.5xx", local))
+      except Exception as e:
+        displayError("<services.tim> " & e.msg)
+        respond(Http500, renderView(timInstance, "errors.5xx", local))

@@ -47,7 +47,7 @@ body:before {
   right: 0;
   pointer-events: none;
   z-index: 99999;
-  opacity: .45;
+  opacity: .32;
 }
 
 /* highlight text selection */
@@ -196,6 +196,7 @@ mark {
   font-size: 0.9rem;
   width:100%;
   border-bottom: 1px solid rgba(200, 200, 200, 0.1);
+  box-shadow: 0px 20px 50px 10px rgba(0, 0, 0, 0.58);
 }
 
 .sidebar-navigation {
@@ -305,10 +306,6 @@ mark {
 
 .sidebar-right .table-of-contents li a:hover {
   color: #fff;
-}
-
-.sidebar-right .table-of-contents li {
-  font-size: 0.9rem;
 }
 
 .container-content-area strong {
