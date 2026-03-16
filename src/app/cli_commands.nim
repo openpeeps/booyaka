@@ -22,10 +22,13 @@ proc startCommand*(v: Values) =
   initStartCommand(v, createDirs = false)
 
   let
-    configPath = absolutePath($(v.get("directory").getPath)) / "booyaka.config"
+    projectPath = absolutePath($(v.get("directory").getPath))
+    configPath = projectPath / "booyaka.config"
+    assetsPath = projectPath / "assets"
     port = 
       if v.has("--port"): v.get("--port").getPort
       else: 3000.Port
+
   # Set the server port in the application configuration
   App.configs["server"].contents["port"] = newJInt(port.int)
 
@@ -38,6 +41,12 @@ proc startCommand*(v: Values) =
   else:
     display("No Booyaka Config found in the current directory (.yml/.yaml/.json)")
     QuitFailure.quit
+  
+  if dirExists(assetsPath):
+    # if the current Booyaka project provides a custom `assets` directory
+    # we copy its contents into application's memory filesystem
+    discard # TODO
+
   globalBooyakaConfig.ensureLeadingSlash()
   booyakaProjectPath = configPath.parentDir
 
