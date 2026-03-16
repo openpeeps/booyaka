@@ -51,6 +51,7 @@ export default {
     const fetchSwapCallback = function() {
       opts.enableAnimatedAlerts && this.initAnimatedAlerts();
       opts.fetchAndSwapCallback && opts.fetchAndSwapCallback();
+      opts.enableTimeAgo && this.initTimeAgo();
     }.bind(this) // bind 'this' to ensure the correct context inside the callback
 
     // Intercept clicks on internal links to enable SPA-like navigation without full page reloads.
@@ -70,11 +71,13 @@ export default {
       }
     });
 
+    // Apply Bootstrap classes to checkboxes for consistent styling
     document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
       checkbox.classList.add('form-check-input'); // the bootstrap class
     });
   },
 
+  // Initialize the spotlight search feature using Fuse.js for client-side fuzzy searching.
   initSpotlightSearch: function() {
     fetch("/results.json").then(response => response.json()).then(data => {
       if(!data) return;
@@ -367,9 +370,8 @@ export default {
       alert.style.position = 'relative';
       alert.insertAdjacentElement('afterbegin', anim);
 
-      // Set your desired offset here
-      const offsetX = 400; // pixels allowed to exceed horizontally
-      const offsetY = 400; // pixels allowed to exceed vertically
+      const offsetX = 400;
+      const offsetY = 400;
 
       document.body.addEventListener('mousemove', e => {
         const rect = alert.getBoundingClientRect();
