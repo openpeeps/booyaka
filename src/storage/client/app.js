@@ -41,9 +41,10 @@ export default {
   */
   init: function(opts = defaultAppOpts) {
     console.log("Booyaka Initialized");
-    if (opts.enableStickySidebar) this.initStickySidebar();
-    if (opts.enableTimeAgo) this.initTimeAgo();
-    if (opts.enableAnimatedAlerts) this.initAnimatedAlerts();
+    opts.enableStickySidebar ?? this.initStickySidebar();
+    opts.enableTimeAgo ?? this.initTimeAgo();
+    opts.enableAnimatedAlerts ?? this.initAnimatedAlerts();
+    
     this.initSmoothAnchors();
     this.initExternalLinksDecorator();
     this.initSpotlightSearch();
@@ -52,6 +53,18 @@ export default {
       opts.enableAnimatedAlerts && this.initAnimatedAlerts();
       opts.fetchAndSwapCallback && opts.fetchAndSwapCallback();
       opts.enableTimeAgo && this.initTimeAgo();
+    
+      this.initSmoothAnchors();
+      this.initExternalLinksDecorator();
+
+      sidebarNavigation.querySelectorAll('a').forEach(link => link.classList.remove('active', 'bg-dark'));
+      // after fetching new content, we want to make the current page's link active in the sidebar
+      const currentPath = location.pathname;
+      const activeLink = sidebarNavigation.querySelector(`a[href="${currentPath}"]`);
+      if (activeLink) {
+        activeLink.classList.add('active', 'bg-dark');
+      }
+
     }.bind(this) // bind 'this' to ensure the correct context inside the callback
 
     // Intercept clicks on internal links to enable SPA-like navigation without full page reloads.
@@ -61,12 +74,6 @@ export default {
       if (a &&  a.href &&  a.origin === location.origin && !a.hasAttribute('download') && 
         !a.target &&  !a.href.startsWith('mailto:') &&  !a.href.startsWith('tel:') && !a.getAttribute('href').startsWith('#')) {
         e.preventDefault();
-        // checking if the clicked element is part of the navigaiton menu
-        // if so, we want to make the clicked item active and remove active from others
-        if (sidebarNavigation && sidebarNavigation.contains(a)) {
-          sidebarNavigation.querySelectorAll('a').forEach(link => link.classList.remove('active', 'bg-dark'));
-          a.classList.add('active', 'bg-dark');
-        }
         this.fetchAndSwap(a.pathname + a.search, true, fetchSwapCallback);
       }
     });
