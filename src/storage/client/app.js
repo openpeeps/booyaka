@@ -164,13 +164,23 @@ export default {
         const doc = parser.parseFromString(html, 'text/html');
         const newView = doc.querySelector('[data-view]');
         const currentView = document.querySelector('[data-view]');
+        const newToc = doc.querySelector('[data-view-right]');
+        const currentToc = document.querySelector('[data-view-right]');
+        let swapped = false;
         if (newView && currentView) {
           currentView.innerHTML = newView.innerHTML;
+          swapped = true;
+        }
+        if (newToc && currentToc) {
+          currentToc.innerHTML = newToc.innerHTML;
+          swapped = true;
+        }
+        if (swapped) {
           if (pushState) history.pushState(null, '', url);
           window.scrollTo(0, 0);
-          callback && callback(url, newView);
+          callback && callback(url, newView, newToc);
         } else {
-          console.warn('Could not find view container in the fetched HTML. Reloading the page as fallback.');
+          console.warn('Could not find view containers in the fetched HTML. Reloading the page as fallback.');
           location.href = url;
         }
       }).catch(() => location.href = url);

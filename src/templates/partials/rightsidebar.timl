@@ -4,7 +4,7 @@ div.sticky-top.sidebar-right.sticky-sidebar
       const tocItems = toKeys($this["markdown"]["toc"])
       if len($tocItems) > 0:
         h5.h6.text-light: "Table of Contents"
-        ul.table-of-contents
+        ul.table-of-contents data-view-right
           for $k in $tocItems:
             const key = toString($k)
             li > a href="#" & $key: $this["markdown"]["toc"][toString($k)]
