@@ -296,6 +296,10 @@ mark {
   background-color: rgba(255, 255, 255, 0.1);
 }
 
+.spotlight-autocomplete-item.active {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
 /* Table of Contents */
 .sidebar-right .table-of-contents {
   padding-left: 0;

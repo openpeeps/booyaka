@@ -46,6 +46,7 @@ export default {
     if (opts.enableAnimatedAlerts) this.initAnimatedAlerts();
     this.initSmoothAnchors();
     this.initExternalLinksDecorator();
+    this.initSpotlightSearch();
 
     const fetchSwapCallback = function() {
       opts.enableAnimatedAlerts && this.initAnimatedAlerts();
@@ -71,6 +72,159 @@ export default {
 
     document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
       checkbox.classList.add('form-check-input'); // the bootstrap class
+    });
+  },
+
+  initSpotlightSearch: function() {
+    fetch("/results.json").then(response => response.json()).then(data => {
+      if(!data) return;
+      let spotlightForm = document.querySelector('.spotlight-form');
+      let spotlightAutocomplete = document.createElement('div');
+      spotlightAutocomplete.classList.add('position-fixed', 'border', 'border-dark', 'list-unstyled', 'w-100', 'rounded-4', 'p-2', 'd-none', 'spotlight-autocomplete');
+      spotlightAutocomplete.style.top = '68px'
+      spotlightAutocomplete.style.zIndex = '1050';
+      spotlightAutocomplete.style.maxWidth = spotlightForm.offsetWidth + 'px';
+      spotlightAutocomplete.style.left = spotlightForm.getBoundingClientRect().left + 'px';
+      spotlightAutocomplete.style.backgroundColor = 'rgba(10,14,14,0.60)';
+      spotlightAutocomplete.style.boxShadow = '0 30px 30px rgba(0,0,0,.8)';
+      spotlightAutocomplete.style.backdropFilter = 'blur(34px)';
+      
+      spotlightAutocomplete.style.maxHeight = '280px';
+
+      let spotlightInner = document.createElement('ul');
+      spotlightInner.classList.add('m-0', 'p-0', 'spotlight-autocomplete-list');
+      spotlightInner.style.overflowX = 'scroll';
+      spotlightInner.style.maxHeight = '260px';
+      
+      spotlightAutocomplete.appendChild(spotlightInner);
+      document.body.insertAdjacentElement('beforeend', spotlightAutocomplete);
+
+      // Create Fuse instance
+      let fuse = new Fuse(data.results, {
+        keys: ['title', 'description', 'headings'],
+        minMatchCharLength: 4, // Only match longer substrings
+        includeMatches: true,
+        threshold: 0.1, // Stricter matching
+        distance: 500,
+        useExtendedSearch: true, // Enable extended search
+        findAllMatches: false,   // Only best matches
+      });
+
+      // clicking outside the autocomplete closes it
+      document.addEventListener('click', function(event) {
+        if (!spotlightForm.contains(event.target)) {
+          spotlightAutocomplete.classList.add('d-none');
+        }
+      });
+      
+      // pressing cmd/ctrl + / focuses the search input
+      var isSpotlightFocused = false;
+      spotlightForm.querySelector('.spotlight').addEventListener('click', function() {
+        isSpotlightFocused = true;
+      });
+
+      document.addEventListener('keydown', function(event) {
+        if (event.key === '/' && (event.metaKey || event.ctrlKey)) {
+          event.preventDefault();
+          spotlightForm.querySelector('.spotlight').focus();
+          isSpotlightFocused = true;
+        }
+        // handle arrow keys and enter for navigating the autocomplete list
+        if (isSpotlightFocused) {
+          let items = spotlightAutocomplete.querySelectorAll('.spotlight-autocomplete-item');
+          var index = Array.from(items).findIndex(item => item.classList.contains('active'));
+          if (event.key === 'ArrowDown') {
+            event.preventDefault();
+            if (index < items.length - 1) {
+              if (index >= 0) items[index].classList.remove('active');
+              items[++index].classList.add('active');
+              items[index].scrollIntoView({ block: 'nearest' });
+            }
+          } else if (event.key === 'ArrowUp') {
+            event.preventDefault();
+            if (index > 0) {
+              items[index].classList.remove('active');
+              items[--index].classList.add('active');
+              items[index].scrollIntoView({ block: 'nearest' });
+            }
+          } else if (event.key === 'Enter') {
+            event.preventDefault();
+            if (index >= 0) {
+              // before navigating, we want to collect the page title
+              // and fill the search input with it, so that when user goes back,
+              // they see the title of the page they visited instead of the search query
+              let title = items[index].querySelector('span.d-block').textContent;
+              spotlightForm.querySelector('.spotlight').value = title;
+              // navigate to the selected page
+              items[index].click();
+            }
+          }
+        }
+      });
+
+      // Example search function
+      function searchDocs(query) {
+        const results = fuse.search(query);
+        // results is an array of objects: { item, refIndex, ... }
+        spotlightInner.innerHTML = '';
+        if(results.length === 0) {
+          spotlightAutocomplete.classList.add('d-none');
+          return;
+        }
+        spotlightAutocomplete.classList.remove('d-none');
+        for (let r of results) {
+          let li = document.createElement('li');
+          let a = document.createElement('a');
+          a.classList.add('d-block', 'rounded-4', 'py-2', 'px-3', 'border-0', 'text-decoration-none', 'spotlight-autocomplete-item');
+          a.href = r.item.url != '/' ? `/${r.item.url}` : '/';
+          a.innerHTML = `<span class="d-block">${r.item.title}</span><span class="text-muted small d-block lh-sm">${r.item.description}</span>`;
+          li.appendChild(a);
+
+          // use provided indices to highlight matched terms
+          for (let match of r.matches) {
+            if (match.key === 'title' || match.key === 'description') {
+              // Find the corresponding span for title/description
+              let spanSelector = match.key === 'title' ? 'span.d-block' : 'span.text-muted';
+              let span = a.querySelector(spanSelector);
+              if (span) {
+                let text = span.textContent;
+                let highlighted = '';
+                let lastIndex = 0;
+                for (let range of match.indices) {
+                  let start = range[0];
+                  let end = range[1] + 1;
+                  highlighted += text.slice(lastIndex, start);
+                  highlighted += '<mark>' + text.slice(start, end) + '</mark>';
+                  lastIndex = end;
+                }
+                highlighted += text.slice(lastIndex);
+                span.innerHTML = highlighted;
+              }
+            }
+          }
+          spotlightInner.appendChild(li);
+        }
+      }
+  
+      let spotlight = document.querySelector('.spotlight');
+
+      spotlight.addEventListener('keydown', function(event) {
+        if (event.key === '/' && (event.metaKey || event.ctrlKey)) {
+          event.preventDefault();
+          spotlight.focus();
+        } else if(event.key === 'Escape') {
+          spotlightAutocomplete.classList.add('d-none');
+        }
+      });
+  
+      spotlight.addEventListener('input', function(event) {
+        const query = event.target.value;
+        if(query.length <= 3) {
+          spotlightAutocomplete.classList.add('d-none');
+          return;
+        }
+        searchDocs(query);
+      });
     });
   },
   
