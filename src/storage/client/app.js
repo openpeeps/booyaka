@@ -41,18 +41,19 @@ export default {
   */
   init: function(opts = defaultAppOpts) {
     console.log("Booyaka Initialized");
-    opts.enableStickySidebar ?? this.initStickySidebar();
-    opts.enableTimeAgo ?? this.initTimeAgo();
-    opts.enableAnimatedAlerts ?? this.initAnimatedAlerts();
+    opts.enableStickySidebar && this.initStickySidebar();
+    opts.enableTimeAgo && this.initTimeAgo()
+    opts.enableAnimatedAlerts && this.initAnimatedAlerts();
     
     this.initSmoothAnchors();
     this.initExternalLinksDecorator();
     this.initSpotlightSearch();
 
     const fetchSwapCallback = function() {
-      opts.enableAnimatedAlerts && this.initAnimatedAlerts();
-      opts.fetchAndSwapCallback && opts.fetchAndSwapCallback();
+      opts.enableStickySidebar && this.initStickySidebar();
       opts.enableTimeAgo && this.initTimeAgo();
+      opts.fetchAndSwapCallback && opts.fetchAndSwapCallback(); // custom callback for additional initialization
+      opts.enableAnimatedAlerts && this.initAnimatedAlerts();
     
       this.initSmoothAnchors();
       this.initExternalLinksDecorator();
@@ -245,7 +246,6 @@ export default {
     const sidebars = document.querySelectorAll('.sticky-sidebar');
     const navbarHeight = document.querySelector('.navbar-container-area').offsetHeight;
     const extraPadding = 30; // px, adjust for pt-5 effect
-
     function updateSidebarTop() {
       for (const sidebar of sidebars) {
         const scrollY = window.scrollY || window.pageYOffset;
