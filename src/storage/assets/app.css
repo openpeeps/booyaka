@@ -360,7 +360,7 @@ mark {
 .alert-animation {
   content:"";
   transition: transform 0.95s cubic-bezier(.4,2,.3,1);
-  background-image: radial-gradient(18% 28% at 24% 50%,#cefaff 7%,#073AFF00 100%),radial-gradient(18% 28% at 18% 71%,#ffffff59 6%,#073AFF00 100%),radial-gradient(70% 53% at 36% 76%,#73f2ff 0,#073AFF00 100%),radial-gradient(42% 53% at 15% 94%,#fff 7%,#073AFF00 100%),radial-gradient(42% 53% at 34% 72%,#752c4e 7%,#073AFF00 100%),radial-gradient(18% 28% at 35% 87%,#fff 7%,#073AFF00 100%),radial-gradient(31% 43% at 7% 98%,#fff 24%,#073AFF00 100%),radial-gradient(21% 37% at 72% 23%,#86a73c9c 24%,#073AFF00 100%),radial-gradient(35% 56% at 91% 74%,#8a4ffff5 9%,#073AFF00 100%),radial-gradient(74% 86% at 67% 38%,#6dffaef5 24%,#073AFF00 100%),linear-gradient(125deg,#4eb5ff 1%,#4c00fc 100%);
+  background-image: radial-gradient(18% 28% at 24% 50%,#530fff 7%,#073AFF00 100%),radial-gradient(18% 28% at 18% 71%,#ffffff59 6%,#073AFF00 100%),radial-gradient(70% 53% at 36% 76%,#e1218e 0,#073AFF00 100%),radial-gradient(42% 53% at 15% 94%,#00b3ff 7%,#073AFF00 100%),radial-gradient(42% 53% at 34% 72%,#752c4e 7%,#073AFF00 100%),radial-gradient(18% 28% at 35% 87%,#fff 7%,#073AFF00 100%),radial-gradient(31% 43% at 7% 98%,#42c819 24%,#073AFF00 100%),radial-gradient(21% 37% at 72% 23%,#86a73c9c 24%,#073AFF00 100%),radial-gradient(35% 56% at 91% 74%,#8a4ffff5 9%,#073AFF00 100%),radial-gradient(74% 86% at 67% 38%,#6dffaef5 24%,#073AFF00 100%),linear-gradient(125deg,#4eb5ff 1%,#4c00fc 100%);
   background-size: cover;
   background-repeat: no-repeat;
   width:100%;
