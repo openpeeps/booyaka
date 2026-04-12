@@ -7,31 +7,6 @@ html[data-bs-theme='dark']:root {
 body {
   font-family: 'Inter', sans-serif;
   line-height: 1.8;
-  /* -moz-osx-font-smoothing: grayscale;
-  font-feature-settings: "ss01", "ss03", "ss04", "ss05"; */
-}
-
-body:after {
-  font-weight: 700;
-  letter-spacing: -35px;
-  content: "booyaka";
-  width: 100%;
-  font-size: clamp(15rem, 35vw, 40rem);
-  color: #141414;
-  display: flex;
-  justify-content: center;
-  align-items: start;
-  position: relative;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  pointer-events: none;
-  z-index: -1;
-  height: 300px;
-  margin-top: -250px;
-  overflow: hidden;
-  padding-bottom: 50px;
-  line-height: 23rem;
 }
 
 code {
