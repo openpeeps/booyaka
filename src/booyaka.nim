@@ -14,6 +14,8 @@ import ./app/[structs, cli_commands]
 #
 # Init core modules using `init` macro
 #
+var customCSSPath = getCurrentDir() / "assets" / "style.css"
+
 App.init(skipLocalConfig = true) do:
   # Booyaka does not use the default Supranim configuration
   # loading mechanism, so we define the required `server` config here.
@@ -21,19 +23,28 @@ App.init(skipLocalConfig = true) do:
   # This is necessary for the application to run, and will be
   # overridden by the user's local configuration when they run the app.
   App.configs = newOrderedTable[string, Document]()
-  let
-    serverConfig = yaml("""
+  let serverConfig = yaml("""
 type: AF_INET
 port: 8000
 address: "127.0.0.1"
 threads: 1""").toJson
-
-    timConfig = yaml("""source: "src"
+    
+  # setup tim configuration with defaults
+  let timConfig = yaml("""source: "src"
 source: ./templates
 output: ./storage/templates
 indent: 2
 minify: true
+""").toJson  
+
+  # setup booyaka runtime config for preloading
+  # user-defined static assets in production
+  if fileExists(customCSSPath):
+    let booyakaRuntimeLoader = yaml("""
+preload_assets: true
+
 """).toJson
+    App.configs["runtime"] = booyakaRuntimeLoader
   App.configs["server"] = serverConfig
   App.configs["tim"] = timConfig
   
@@ -103,8 +114,6 @@ App.services do:
           "url": "https://copilot.microsoft.com/"
         },
       ],
-      "homepage_cover": "/assets/photo-1579169703977-e4575236583c.jpeg",
-      "login_cover": "https://images.unsplash.com/flagged/photo-1562061162-254644341e89?q=80&w=1740&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
     }
   )
 
@@ -132,7 +141,7 @@ when defined release:
         # the local `/assets` directory
         if req.path.startsWith("/assets/"):
           hasFoundResource =
-            req.sendAssets(booyakaProjectPath, req.path, res.getHeaders())  
+            req.sendAssets(booyakaProjectPath, req.path, res.getHeaders())
 
 #
 # Starts the application. This will start the HTTP
@@ -142,9 +151,10 @@ when defined release:
 #
 App.run do:
   # Booyaka WebSocket endpoint for live-reloading.
-  server.registerCallback("/ws",
-    # TODO: allow for disabling WebSocket in config for
-    # environments where it's not needed or causes issues
-    proc (req: ptr evhttp_request, arg: pointer) {.cdecl.} =
-      discard websocketUpgrade(req, onOpenCallback, nil, onClose, onError)
-    )
+  if enableBrowserSync:
+    server.registerCallback("/ws",
+      # TODO: allow for disabling WebSocket in config for
+      # environments where it's not needed or causes issues
+      proc (req: ptr evhttp_request, arg: pointer) {.cdecl.} =
+        discard websocketUpgrade(req, onOpenCallback, nil, onClose, onError)
+      )

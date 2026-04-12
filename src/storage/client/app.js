@@ -1,3 +1,5 @@
+import nimSyntax from  "./hljsnim.js";
+
 /**
  * Booyaka Client App
  * 
@@ -65,7 +67,6 @@ export default {
       if (activeLink) {
         activeLink.classList.add('active', 'bg-dark');
       }
-
     }.bind(this) // bind 'this' to ensure the correct context inside the callback
 
     // Intercept clicks on internal links to enable SPA-like navigation without full page reloads.
@@ -444,11 +445,13 @@ document.addEventListener('DOMContentLoaded', () => {
     enableTimeAgo: true,
     enableAnimatedAlerts: true,
     fetchAndSwapCallback: (url, html) => {
+      hljs.registerLanguage('nim', nimSyntax)
       hljs.highlightAll();
     }
   });
 
   // Initial syntax highlighting for code blocks
+  hljs.registerLanguage('nim', nimSyntax)
   hljs.highlightAll();
 
   const toggleAreaBtns = document.querySelectorAll('button[data-toggle-area]');

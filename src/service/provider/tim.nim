@@ -36,19 +36,19 @@ initService Tim[Global]:
 
       # predefine foreign functions
       timInstance.userScript.addProc("slugify", @[paramDef("s", ttyString)], ttyString,
-        proc (args: StackView): value.Value =
+        proc (args: StackView, argc: int): value.Value =
           ## Convert a string to a URL-friendly slug
           return initValue(slugify(args[0].stringVal[]))
         )
 
       timInstance.userScript.addProc("dashboard", @[paramDef("x", ttyString)], ttyString,
-        proc (args: StackView): value.Value =
+        proc (args: StackView, argc: int): value.Value =
           # prefix a link with `/dashboard/`
           return initValue("/dashboard/" & args[0].stringVal[])
         )
 
       timInstance.userScript.addProc("icon", @[paramDef("name", ttyString)], ttyString,
-        proc (args: StackView): value.Value =
+        proc (args: StackView, argc: int): value.Value =
           # Return an HTML string for an icon
           let iconName = args[0].stringVal[]
           return initValue($icon(iconName))
@@ -59,6 +59,7 @@ initService Tim[Global]:
           "currentYear": now().format("yyyy"),
           "site": {
             "logo": globalBooyakaConfig.metadata.logo.get("/assets/booyaka.png"),
+            "hasLogo": globalBooyakaConfig.metadata.logo.isSome()
           }
         }
       timInstance.precompile()

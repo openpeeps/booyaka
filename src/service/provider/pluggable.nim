@@ -44,6 +44,7 @@ initService PluginManager[Singleton]:
       when defined(windows): ".dll"
       elif defined(macosx): ".dylib"
       else: ".so" # default to .so for Linux and other Unix-like systems
+      
     proc init*(app: Application) =
       # Initialize an instance of the PluginManager when the
       # service is initialized. This will allow plugins to be

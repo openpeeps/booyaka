@@ -20,7 +20,6 @@ const tpl = staticRead(storagePath / "stubs" / "template_booyaka.config.yaml")
 proc startCommand*(v: Values) =
   ## Kapsis `init` command handler
   initStartCommand(v, createDirs = false)
-
   let
     projectPath = absolutePath($(v.get("directory").getPath))
     configPath = projectPath / "booyaka.config"
@@ -29,6 +28,7 @@ proc startCommand*(v: Values) =
       if v.has("--port"): v.get("--port").getPort
       else: 3000.Port
 
+  enableBrowserSync = v.has("--sync")
   # Set the server port in the application configuration
   App.configs["server"].contents["port"] = newJInt(port.int)
 

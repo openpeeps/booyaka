@@ -3,7 +3,13 @@ div.navbar-container-area.sticky-top.user-select-none
     div.container.d-flex
       a.navbar-brand.fw-bold.py-0 href="/"
         img src=$this["site"]["logo"] height="32"
-        em
+        if $this["site"]["hasLogo"] != true or $this["config"]["metadata"]["logo_keep_gradient"] == true:
+          // this is used to draw the rounded square
+          // background with colorful gradient under
+          // the default booyaka logo. don't touch it!
+          // I'm joking. You can change it but don't
+          // make Booyaka look bad, I'm watching you!
+          em
 
       // When enabled, shows the search bar in the header
       if $this["config"]["header"]["search"]["enable"] == true:

@@ -51,7 +51,9 @@ type
     url*: string
       # The URL path the navigation item points to
     icon*: Option[string]
-      # An optional icon associated with the navigation item Represented as a string (e.g., icon class name or URL). Booyaka is using Tabler Icons - https://tabler-icons.io/
+      # An optional icon associated with the navigation item
+      # Represented as a string (e.g., icon class name or URL).
+      # Booyaka is using Tabler Icons - https://tabler-icons.io/
 
   NavigationSection* = ref object
     ## Represents a section in the sidebar navigation
@@ -73,6 +75,9 @@ type
       ## The base URL of the documentation site
     logo*: Option[string]
       ## URL or path to the logo image for the site
+    logo_keep_gradient*: bool
+      ## Whether to keep the original colors of the logo
+      ## (if false, the logo will be styled to match the theme)
     title*: Option[string]
       ## The title of the site
     description*: Option[string]
@@ -83,7 +88,9 @@ type
   ContentSettings* = object
     ## Settings related to Markdown processing in Booyaka
     allowedRawHtmlTags*: Option[seq[string]]
-      ## A list of allowed raw HTML tags in Markdown content if not specified, only safe tags will be allowed (e.g., "b", "i", "strong", "em", "a", "p", "ul", "ol", "li", etc.)
+      ## A list of allowed raw HTML tags in Markdown content if
+      ## not specified, only safe tags will be allowed (e.g.,
+      ## "b", "i", "strong", "em", "a", "p", "ul", "ol", "li", etc.)
     showLastUpdated*: bool
       ## Whether to show the "Last Updated" timestamp on pages
     lastDateUpdatedFormat*: string = "yyyy-MM-dd HH:mm:ss"
@@ -93,11 +100,13 @@ type
     bottom_navigation*: bool
       ## Whether to enable bottom navigation links on pages
     codeHighlightTheme*: string = "default"
-      ## The code syntax highlighting theme to use (e.g., "default", "dark", "funky", "okaidia", etc.)
+      ## The code syntax highlighting theme to use (e.g.,
+      ## "default", "dark", "funky", "okaidia", etc.)
     share_ai_buttons*: bool = true
       ## Whether to show AI share buttons in the page header of documentation pages
     share_buttons_ai_providers*: Option[seq[ShareProvider]]
-      ## A list of AI providers for share buttons (e.g., "ChatGPT", "Claude", "DeepSeek", etc.)
+      ## A list of AI providers for share buttons (e.g.,
+      ## "ChatGPT", "Claude", "DeepSeek", etc.)
   
   SidebarSection* = object
     ## Represents a section in the sidebar
@@ -187,6 +196,9 @@ type
       ## Footer configuration
 
 var
+  enableBrowserSync* = true
+    ## Whether to enable BrowserSync for live-reloading during
+    ## writing documentation
   booyakaProjectPath*: string
   globalBooyakaConfig*: BooyakaConfig
     ## Global variable to hold the Booyaka configuration loaded from the config file.
