@@ -1,7 +1,7 @@
 html data-bs-theme="dark"
   head
     meta charset="utf-8"
-    title: $this["markdown"]["meta"]["title"] & " &mdash; " & "Booyaka"
+    title: $this["markdown"]["meta"]["title"] & " &mdash; " & $this["config"]["metadata"]["title"]
     meta name="viewport" content="width=device-width, initial-scale=1"
     link rel="icon" href="/assets/favicon-32x32.png" type="image/x-icon"
     link rel="stylesheet" href="/assets/bootstrap.min.css"
