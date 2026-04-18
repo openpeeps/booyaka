@@ -153,6 +153,15 @@ export default function(hljs) {
         relevance: 10
       },
       {
+        className: 'echo-keyword',
+        begin: /\becho\b/
+      },
+      {
+        className: 'function-call',
+        begin: /\b\w+\s*(?=\()/,
+        relevance: 0
+      },
+      {
         className: 'string',
         begin: /[a-zA-Z]\w*"/,
         end: /"/,
@@ -179,7 +188,12 @@ export default function(hljs) {
           { begin: /\b(\d[_\d]*)('?[iIuUfF](8|16|32|64))?/ }
         ]
       },
-      hljs.HASH_COMMENT_MODE
+      hljs.HASH_COMMENT_MODE,
+      {
+        className: 'punctuation',
+        begin: /\./,
+        relevance: 0
+      },
     ]
   };
 }

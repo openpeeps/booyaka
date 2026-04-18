@@ -4,9 +4,8 @@
 #          Made by Humans from OpenPeeps
 #          https://github.com/openpeeps/booyaka
 
-import std/[strutils, tables, json, times, options, os]
-
-import pkg/[jsony, flatty, supersnappy]
+import std/[strutils, tables, times, options, os]
+import pkg/[flatty, supersnappy]
 import pkg/supranim/core/[application, services, paths]
 
 initService Spotlight[Singleton]:

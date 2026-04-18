@@ -1,7 +1,7 @@
 import livereload from 'rollup-plugin-livereload';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
-import { terser } from 'rollup-plugin-terser';
+import terser from '@rollup/plugin-terser';
 
 const isRelease = process.env.NODE_ENV === 'production';
 

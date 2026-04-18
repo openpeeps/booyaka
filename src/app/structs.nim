@@ -1,5 +1,5 @@
 import std/[options, json, times, tables]
-import pkg/jsony
+import pkg/openparser/json
 
 type
   SidebarType* = enum

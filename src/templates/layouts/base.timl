@@ -43,9 +43,9 @@ body:before {
           a href="https://openpeeps.dev": "OpenPeeps"
         p.mb-0: $this["currentYear"] & " &copy; OpenPeeps & Contributors | AGPLv3 License"
 
-    script src="/assets/fuse.min.js"
     script src="/assets/bootstrap.min.js"
     script src="/assets/highlight.min.js"
+    script type="text/javascript" src="/assets/app.js"
 
     // Connects to the Watchout server to listen
     // for file changes and reloads the page when a change is detected.

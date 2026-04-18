@@ -36,8 +36,4 @@ div.container-fluid.my-4 style="min-height:calc(100vh - 150px)"
       @include "main"
     div.col-lg-3.collapse.d-lg-block data-area="right"
       @include "rightsidebar"
-        
-
-link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/codepen-embed.min.css"
-script src="https://cdn.jsdelivr.net/npm/fuse.js/dist/fuse.js"
-script src="/assets/app.js"
+      

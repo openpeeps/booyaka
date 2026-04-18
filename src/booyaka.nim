@@ -24,29 +24,28 @@ App.init(skipLocalConfig = true) do:
   # overridden by the user's local configuration when they run the app.
   App.configs = newOrderedTable[string, Document]()
   let serverConfig = yaml("""
-type: AF_INET
+type: "AF_INET"
 port: 8000
 address: "127.0.0.1"
-threads: 1""").toJson
+threads: 1""")
     
   # setup tim configuration with defaults
-  let timConfig = yaml("""source: "src"
+  let timConfig = yaml("""
 source: ./templates
 output: ./storage/templates
 indent: 2
 minify: true
-""").toJson  
+""")
 
   # setup booyaka runtime config for preloading
   # user-defined static assets in production
   if fileExists(customCSSPath):
     let booyakaRuntimeLoader = yaml("""
 preload_assets: true
-
-""").toJson
-    App.configs["runtime"] = booyakaRuntimeLoader
-  App.configs["server"] = serverConfig
-  App.configs["tim"] = timConfig
+""")
+    App.configs["runtime"] = booyakaRuntimeLoader.toJson()
+  App.configs["server"] = serverConfig.toJson()
+  App.configs["tim"] = timConfig.toJson()
   
 App.cli do:
   new path(directory), ?bool("--json"):
@@ -152,9 +151,7 @@ when defined release:
 App.run do:
   # Booyaka WebSocket endpoint for live-reloading.
   if enableBrowserSync:
-    server.registerCallback("/ws",
-      # TODO: allow for disabling WebSocket in config for
-      # environments where it's not needed or causes issues
+    App.server.registerCallback("/ws",
       proc (req: ptr evhttp_request, arg: pointer) {.cdecl.} =
         discard websocketUpgrade(req, onOpenCallback, nil, onClose, onError)
       )

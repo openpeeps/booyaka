@@ -1,7 +1,7 @@
 import std/[os, sequtils, strutils, tables]
 from std/net import Port
 
-import pkg/[nyml, flatty, supersnappy]
+import pkg/[nyml, flatty, supersnappy, openparser/json]
 import pkg/supranim/core/[application, paths]
 import pkg/kapsis/[runtime, cli]
 import pkg/kapsis/interactive/prompts

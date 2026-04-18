@@ -1,4 +1,5 @@
 import nimSyntax from  "./hljsnim.js";
+import Fuse from 'fuse.js'
 
 /**
  * Booyaka Client App
