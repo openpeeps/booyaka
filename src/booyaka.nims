@@ -15,7 +15,7 @@ elif defined(linux):
 --define:webapp # todo supWebApp
 --define:ssl
 --define:supraFileserver
---define:supranimUseGlobalOnRequest
+# --define:supranimUseGlobalOnRequest
 
 when not defined release:
   --define:timHotCode

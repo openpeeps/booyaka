@@ -144,6 +144,9 @@ type
     ## General settings for Booyaka
     search*: HeaderSearchSettings
       ## Whether to enable search functionality
+    notification*: Option[string]
+      ## Optional HTML content for displaying a
+      ## notification banner in the header (e.g., for announcements)
   
   AppearanceSettings* = object
     ## Appearance-related settings for Booyaka

@@ -59,7 +59,8 @@ initService Tim[Global]:
           "currentYear": now().format("yyyy"),
           "site": {
             "logo": globalBooyakaConfig.metadata.logo.get("/assets/booyaka.png"),
-            "hasLogo": globalBooyakaConfig.metadata.logo.isSome()
+            "hasLogo": globalBooyakaConfig.metadata.logo.isSome(),
+            "hasNotifications": globalBooyakaConfig.header.notification.isSome()
           }
         }
       timInstance.precompile()
@@ -80,10 +81,26 @@ initService Tim[Global]:
         respond(httpCode, output)
       except TimEngineError as e:
         displayError("<services.tim> " & e.msg)
-        respond(Http500, render(timInstance, "errors.5xx", layout, local))
+        respond(Http500, render(timInstance, "errors.5xx", layout, data = &*{
+          "markdown": {
+            "meta": {
+              "title": "Page Not Found",
+              "description": "The page you are looking for does not exist."
+            },
+          },
+          "config": globalBooyakaConfig
+        }))
       except Exception as e:
         displayError("<services.tim> " & e.msg)
-        respond(Http500, render(timInstance, "errors.5xx", layout, local))
+        respond(Http500, render(timInstance, "errors.5xx", layout, data = &*{
+          "markdown": {
+            "meta": {
+              "title": "Page Not Found",
+              "description": "The page you are looking for does not exist."
+            },
+          },
+          "config": globalBooyakaConfig
+        }))
     
     template renderView*(view: string, httpCode = Http200, local: JsonNode = nil): untyped =
       ## Renders a Tim view without a layout and sends it as an HTTP response.
@@ -93,7 +110,23 @@ initService Tim[Global]:
         respond(httpCode, output)
       except TimEngineError as e:
         displayError("<services.tim> " & e.msg)
-        respond(Http500, renderView(timInstance, "errors.5xx", local))
+        respond(Http500, renderView(timInstance, "errors.5xx", data = &*{
+          "markdown": {
+            "meta": {
+              "title": "Page Not Found",
+              "description": "The page you are looking for does not exist."
+            },
+          },
+          "config": globalBooyakaConfig
+        }))
       except Exception as e:
         displayError("<services.tim> " & e.msg)
-        respond(Http500, renderView(timInstance, "errors.5xx", local))
+        respond(Http500, renderView(timInstance, "errors.5xx", data = &*{
+          "markdown": {
+            "meta": {
+              "title": "Page Not Found",
+              "description": "The page you are looking for does not exist."
+            },
+          },
+          "config": globalBooyakaConfig
+        }))
