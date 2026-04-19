@@ -1,7 +1,7 @@
 
 div.navbar-container-area.sticky-top.user-select-none
   if $this["site"]["hasNotifications"] == true:
-  div.text-center.border-bottom.border-dark.p-1.small: $this["config"]["header"]["notification"]
+    div.text-center.border-bottom.border-dark.p-1.small: $this["config"]["header"]["notification"]
   nav.navbar.navbar-expand-lg.py-1
     div.container.d-flex
       a.navbar-brand.fw-bold.py-0 href="/"
