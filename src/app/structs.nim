@@ -1,4 +1,4 @@
-import std/[options, json, times, tables]
+import std/[options, times, tables]
 import pkg/openparser/json
 
 type
@@ -202,7 +202,9 @@ var
   enableBrowserSync* = true
     ## Whether to enable BrowserSync for live-reloading during
     ## writing documentation
+
   booyakaProjectPath*: string
+
   globalBooyakaConfig*: BooyakaConfig
     ## Global variable to hold the Booyaka configuration loaded from the config file.
     ## This variable is accessible throughout the application and contains all the

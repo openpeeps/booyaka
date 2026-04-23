@@ -8,7 +8,7 @@ import pkg/kapsis/interactive/prompts
 
 import pkg/tim
 import pkg/tim/engine/parser
-import pkg/voodoo/language/[ast, codegen]
+import pkg/vancode/interpreter/[ast, codegen]
 
 import ./structs
 import ../service/provider/[markdown, tim]
@@ -30,7 +30,8 @@ proc startCommand*(v: Values) =
 
   enableBrowserSync = v.has("--sync")
   # Set the server port in the application configuration
-  App.configs["server"].contents["port"] = newJInt(port.int)
+  App.configs["server"].put("port", newYamlInteger(port.int))
+  echo App.configs["tim"]
 
   if fileExists(configPath & ".yml"):
     globalBooyakaConfig = fromYaml(readFile(configPath & ".yml"), BooyakaConfig)

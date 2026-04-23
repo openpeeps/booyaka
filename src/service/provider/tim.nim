@@ -3,7 +3,7 @@ import std/[macros, json, strutils, os,
 
 import pkg/supranim/support/slug
 import pkg/supranim/core/[services, paths]
-import pkg/voodoo/language/value
+import pkg/vancode/interpreter/value
 import pkg/[tim, iconim, kapsis/framework]
 
 import pkg/kapsis/interactive/prompts
@@ -33,6 +33,12 @@ initService Tim[Global]:
         basePath = basePath,
         globalData = global
       )
+
+      # timInstance = newTim(
+      #   views: staticAssets().getTextAssets(),
+      #   layouts: staticAssets().getTextAssets(),
+      #   partials: staticAssets().getTextAssets(),
+      # )
 
       # predefine foreign functions
       timInstance.userScript.addProc("slugify", @[paramDef("s", ttyString)], ttyString,

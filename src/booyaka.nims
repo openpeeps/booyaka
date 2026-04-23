@@ -15,7 +15,7 @@ elif defined(linux):
 --define:webapp # todo supWebApp
 --define:ssl
 --define:supraFileserver
-# --define:supranimUseGlobalOnRequest
+--define:supranimUseGlobalOnRequest
 
 when not defined release:
   --define:timHotCode
@@ -25,3 +25,14 @@ else:
   let assetsPath = absolutePath(joinPath(getProjectPath() / "storage", "assets"))
   if dirExists(assetsPath):
     exec "supra bundle.assets \"" & assetsPath & "\" \"" & outputEmbedAssets & "\""
+
+  for dir in ["views", "layouts", "partials"]:
+    let outputEmbedTemplates = getProjectPath().parentDir() / ".cache" / "embed_template_" & dir & ".nim"
+    let templatesPath = absolutePath(joinPath(getProjectPath() / "templates" / dir))
+    if dirExists(templatesPath):
+      exec "supra bundle.assets \"" & templatesPath & "\" \"" & outputEmbedTemplates & "\""
+
+  let outputSVGIcons = getProjectPath().parentDir() / ".cache" / "embed_icons.nim"
+  let iconsPath = absolutePath(joinPath(getProjectPath() / "storage", "icons"))
+  if dirExists(iconsPath):
+    exec "supra bundle.assets \"" & iconsPath & "\" \"" & outputSVGIcons & "\""

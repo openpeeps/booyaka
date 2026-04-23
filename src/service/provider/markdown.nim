@@ -8,13 +8,14 @@ import std/[os, tables, httpcore, strutils,
           json, options, sequtils, macros, times, net]
 
 import pkg/checksums/sha1
-import pkg/[nyml, htmlparser, supersnappy, flatty, jsony,
-            watchout, marvdown, semver, kapsis/cli]
+import pkg/openparser/[yaml, json]
+import pkg/[htmlparser, supersnappy, flatty,
+              watchout, marvdown, semver, kapsis/cli]
 
 import pkg/supranim/core/[services, application, paths]
-import pkg/supranim/network/http/webserver
-import pkg/supranim/network/websocket
+import pkg/supranim/network/[webserver, websocket]
 import pkg/supranim/support/slug
+import pkg/threading/rwlock
 
 import ./tim, ./search
 import ../../app/structs
@@ -40,7 +41,7 @@ initService Markdown[Global]:
       gMarkdownService* : MarkdownInstance
       wsClients: seq[ptr WebSocketConnectionImpl]
       searchInstance: SpotlightInstance
-    
+      changeLocker = createRwLock()
     let
       markdownOptions = MarkdownOptions(
         allowed: @[
@@ -89,19 +90,25 @@ initService Markdown[Global]:
 
     proc onOpenCallback*(c: ptr WebSocketConnectionImpl) =
       {.gcsafe.}:
-        wsClients.add(c)
+        writeWith changeLocker:
+          sendText(c, "Markdown Service WebSocket Connected")
+          wsClients.add(c)
 
     proc onClose*(c: ptr WebSocketConnectionImpl, code: int, reason: string) =
       {.gcsafe.}:
-        wsClients = wsClients.filterIt(it[].id != c[].id)
+        writeWith changeLocker:
+          wsClients = wsClients.filterIt(it[].id != c[].id)
 
     proc onError*(c: ptr WebSocketConnectionImpl, err: string) =
       discard
 
     proc notifyClients() =
-      for ws in wsClients:
-        ws.sendText("1") # notify clients of change
-      hasChanges = false
+      {.gcsafe.}:
+        writeWith changeLocker:
+          hasChanges = false
+        readWith changeLocker:
+          for ws in wsClients:
+            ws.sendText("1") # notify clients of change
 
     proc getSlugHash(basePath, path: string): (string, string) =
       # Computes the slug and its secure hash for a given markdown file path
@@ -149,16 +156,17 @@ initService Markdown[Global]:
         # get previous and next navigation items
         (prev, next) = getPrevNext(globalBooyakaConfig.sidebar_navigation, slugHash[0])
         htmlContent: string = md.toHtml()   # convert markdown to HTML
-        meta: JsonNode = md.getHeader()     # retrieve page metadata
+      let
+        meta: JsonNode = toJson(md.getHeader()).fromJson()
       searchInstance.addEntry(
         slugHash[1],
         slugHash[0],
         title =
-          (if meta != nil and meta.hasKey"title":
-              meta["title"].getStr
+          (if meta.kind == JObject and meta.hasKey"title":
+              meta["title"].getStr()
           else: md.getTitle()),
         description = (
-          if meta != nil and meta.hasKey"description":
+          if meta.kind == JObject and meta.hasKey"description":
               some(meta["description"].getStr)
             else: none(string)
           ),

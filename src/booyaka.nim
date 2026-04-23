@@ -22,15 +22,15 @@ App.init(skipLocalConfig = true) do:
   #
   # This is necessary for the application to run, and will be
   # overridden by the user's local configuration when they run the app.
-  App.configs = newOrderedTable[string, Document]()
-  let serverConfig = yaml("""
+  App.configs = newOrderedTable[string, YamlObject]()
+  let serverConfig = parseYaml("""
 type: "AF_INET"
 port: 8000
 address: "127.0.0.1"
 threads: 1""")
     
   # setup tim configuration with defaults
-  let timConfig = yaml("""
+  let timConfig = parseYaml("""
 source: ./templates
 output: ./storage/templates
 indent: 2
@@ -40,12 +40,12 @@ minify: true
   # setup booyaka runtime config for preloading
   # user-defined static assets in production
   if fileExists(customCSSPath):
-    let booyakaRuntimeLoader = yaml("""
+    let booyakaRuntimeLoader = parseYaml("""
 preload_assets: true
 """)
-    App.configs["runtime"] = booyakaRuntimeLoader.toJson()
-  App.configs["server"] = serverConfig.toJson()
-  App.configs["tim"] = timConfig.toJson()
+    App.configs["runtime"] = booyakaRuntimeLoader
+  App.configs["server"] = serverConfig
+  App.configs["tim"] = timConfig
   
 App.cli do:
   new path(directory), ?bool("--json"):
@@ -125,12 +125,23 @@ App.services do:
   # init Pluggable Service
   pluggable.init(App)
 
-  when defined release: # init static assets
-    assets.embedAssets("assets")
+  when defined release:
+    # init static assets
+    assets.embedDirectory("assets", "assets")
+    
+    # embed Tim Engine templates directly into the binary for production
+    assets.embedDirectory("layouts", "templates/layouts")
+    assets.embedDirectory("views", "templates/views")
+    assets.embedDirectory("partials", "templates/partials")
+
+    # embed Tabler SVG icons directly into the binary for production
+    assets.embedDirectory("storage/icons", "icons")
 
 when defined release:
   # Preload embedded assets into memory for faster access in production
-  assets.preloadAssets()
+  assets.preloadBundle("assets")
+  assets.preloadBundle("icons")
+
   App.withAssetsHandler:
     proc (req: var Request, res: var Response, hasFoundResource: var bool) =
       # Serve static assets from the embedded StaticBundle
