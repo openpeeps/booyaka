@@ -31,7 +31,6 @@ proc startCommand*(v: Values) =
   enableBrowserSync = v.has("--sync")
   # Set the server port in the application configuration
   App.configs["server"].put("port", newYamlInteger(port.int))
-  echo App.configs["tim"]
 
   if fileExists(configPath & ".yml"):
     globalBooyakaConfig = fromYaml(readFile(configPath & ".yml"), BooyakaConfig)
