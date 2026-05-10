@@ -4,7 +4,7 @@
 # It initializes the application, loads configurations,
 # and sets up the necessary services and middlewares.
 #
-import std/[os, sequtils, tables]
+import std/[os, tables]
 
 import pkg/supranim
 import pkg/supranim/core/paths
@@ -74,45 +74,7 @@ App.services do:
       "isDev": (when defined release: false else: true),
       "browserSync": {
         "appPort": App.config("server.port").getInt,
-      },
-      "share_options": [
-        {
-          "title": "Copy Text",
-          "description": "Copy multi-line text for LLMs",
-          "url": ""
-        },
-        {
-          "title": "Copy Markdown",
-          "description": "Content as Markdown for LLMs",
-          "url": ""
-        },
-        {"divider": true},
-        {
-          "title": "ChatGPT",
-          "description": "Opens ChatGPT with page content",
-          "url": "https://chat.openai.com"
-        },
-        {
-          "title": "Claude",
-          "description": "Ask Claude AI with page content",
-          "url": "https://claude.ai"
-        },
-        {
-          "title": "DeepSeek",
-          "description": "Ask DeepSeek AI with page content",
-          "url": "https://deepseek.com"
-        },
-        {
-          "title": "DuckAI",
-          "description": "Ask DuckDuckGo AI with page content",
-          "url": "https://duck.ai"
-        },
-        {
-          "title": "Microsoft Copilot",
-          "description": "Ask Microsoft Copilot with page content",
-          "url": "https://copilot.microsoft.com/"
-        },
-      ],
+      }
     }
   )
 
@@ -122,17 +84,14 @@ App.services do:
   # init Markdown Service
   markdown.init(App)
 
-  # init Pluggable Service
-  pluggable.init(App)
-
   when defined release:
     # init static assets
     assets.embedDirectory("assets", "assets")
     
     # embed Tim Engine templates directly into the binary for production
-    assets.embedDirectory("layouts", "templates/layouts")
-    assets.embedDirectory("views", "templates/views")
-    assets.embedDirectory("partials", "templates/partials")
+    assets.embedDirectory("templates/layouts", "templates/layouts")
+    assets.embedDirectory("templates/views", "templates/views")
+    assets.embedDirectory("templates/partials", "templates/partials")
 
     # embed Tabler SVG icons directly into the binary for production
     assets.embedDirectory("storage/icons", "icons")
@@ -141,6 +100,10 @@ when defined release:
   # Preload embedded assets into memory for faster access in production
   assets.preloadBundle("assets")
   assets.preloadBundle("icons")
+
+  assets.preloadBundle("templates/layouts")
+  assets.preloadBundle("templates/views")
+  assets.preloadBundle("templates/partials")
 
   App.withAssetsHandler:
     proc (req: var Request, res: var Response, hasFoundResource: var bool) =
