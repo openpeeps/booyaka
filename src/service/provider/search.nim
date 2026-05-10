@@ -4,6 +4,14 @@
 #          Made by Humans from OpenPeeps
 #          https://github.com/openpeeps/booyaka
 
+## This module implements the Spotlight search provider service for Booyaka.
+## 
+## It defines a Spotlight service that maintains a search index of documentation entries,
+## allowing for efficient search and retrieval of content based on URLs, titles, descriptions, and headings
+## 
+## The service provides methods to add new entries to the search index and retrieve all indexed entries.
+## The search index is stored in a flat file database for persistence across application restarts.
+
 import std/[strutils, tables, times, options, os]
 import pkg/[flatty, supersnappy]
 import pkg/supranim/core/[application, services, paths]
