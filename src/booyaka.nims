@@ -12,10 +12,15 @@ elif defined(linux):
   --passC:"-I /usr/include"
 
 --mm:arc
+--deepCopy:on
 --define:webapp # todo supWebApp
 --define:ssl
 --define:supraFileserver
 --define:supranimUseGlobalOnRequest
+
+--define:supraBundleSkipPrefix
+  # When defined, this flag tells Supra (Supranim's CLI) to skip prefixing
+  # asset keys with the directory name when embedding assets
 
 when not defined release:
   --define:timHotCode
@@ -27,12 +32,12 @@ else:
     exec "supra bundle.assets \"" & assetsPath & "\" \"" & outputEmbedAssets & "\""
 
   for dir in ["views", "layouts", "partials"]:
-    let outputEmbedTemplates = getProjectPath().parentDir() / ".cache" / "embed_template_" & dir & ".nim"
+    let outputEmbedTemplates = getProjectPath().parentDir() / ".cache" / "embed_templates_" & dir & ".nim"
     let templatesPath = absolutePath(joinPath(getProjectPath() / "templates" / dir))
     if dirExists(templatesPath):
-      exec "supra bundle.assets \"" & templatesPath & "\" \"" & outputEmbedTemplates & "\""
+      exec "supra bundle.assets \"" & templatesPath & "\" \"" & outputEmbedTemplates & "\" --skip-prefix" 
 
-  let outputSVGIcons = getProjectPath().parentDir() / ".cache" / "embed_icons.nim"
+  let outputSVGIcons = getProjectPath().parentDir() / ".cache" / "embed_storage_icons.nim"
   let iconsPath = absolutePath(joinPath(getProjectPath() / "storage", "icons"))
   if dirExists(iconsPath):
     exec "supra bundle.assets \"" & iconsPath & "\" \"" & outputSVGIcons & "\""

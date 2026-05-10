@@ -4,8 +4,22 @@
 #          Made by Humans from OpenPeeps
 #          https://github.com/openpeeps/booyaka
 
+## This Service provides Markdown parsing and rendering capabilities for the Booyaka.
+## 
+## It monitors the content directory for markdown files, parses them into HTML, and serves the rendered content.
+## It also maintains an index of markdown files and their corresponding rendered HTML for search and navigation purposes.
+## 
+## Key Features:
+## - Real-time monitoring of markdown files for changes, additions, and deletions using Watchout
+## - Parsing markdown files into HTML using Marvdown with configurable options
+## - Extraction of metadata from markdown files (e.g., title, description) for enhanced search capabilities
+## - Generation of unique slugs and secure hashes for markdown file paths to ensure URL safety and uniqueness
+## - Integration with the Spotlight search service to index markdown content for fast retrieval
+## - WebSocket support to notify connected clients of content changes in real-time
+## - Efficient handling of markdown content with caching and incremental updates to minimize processing overhead
+
 import std/[os, tables, httpcore, strutils,
-          json, options, sequtils, macros, times, net]
+          options, sequtils, macros, times, net]
 
 import pkg/checksums/sha1
 import pkg/openparser/[yaml, json]
@@ -156,8 +170,12 @@ initService Markdown[Global]:
         # get previous and next navigation items
         (prev, next) = getPrevNext(globalBooyakaConfig.sidebar_navigation, slugHash[0])
         htmlContent: string = md.toHtml()   # convert markdown to HTML
-      let
-        meta: JsonNode = toJson(md.getHeader()).fromJson()
+      
+      # extract available metadata from the markdown file,
+      # prioritizing YAML front matter if present
+      let meta: JsonNode = toJson(md.getHeader()).fromJson()
+      
+      # add/update the search index with the new content
       searchInstance.addEntry(
         slugHash[1],
         slugHash[0],
@@ -172,13 +190,19 @@ initService Markdown[Global]:
           ),
         headings = some(md.getSelectorsList())
       )
+
+      # update the markdown instance index with the new slug and hash mapping
       mdInstance.index[slugHash[0]] = slugHash[1]
+
+      # determine the section name for the current page based
+      # on the sidebar navigation configuration
       var sectionName: string
       for section in globalBooyakaConfig.sidebar_navigation:
         for item in section.items:
           if item.url == "/" & slugHash[0]:
             sectionName = section.name
             break
+      
       # update the markdown instance with the new page content
       mdInstance.pages[slugHash[1]] =
         MarkdownPage(
@@ -191,8 +215,10 @@ initService Markdown[Global]:
           navigation: MarkdownPageBottomNavigation(previous: prev, next: next),
           lastEdited: some(now().toTime)
         )
+
       # write the parsed markdown content to disk
-      # we write to a hashed filename to avoid issues with special characters in URLs and to ensure uniqueness
+      # we write to a hashed filename to avoid issues with special
+      # characters in URLs and to ensure uniqueness
       let hashedPath = partialsPath / toLowerAscii(slugHash[1])  & ".html"
       writeFile(hashedPath, htmlContent) #
       hasChanges = true
