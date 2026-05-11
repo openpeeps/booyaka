@@ -29,7 +29,7 @@ requires "pluginkit"
 # it's available when building the release version of Booyaka
 # so we can use Supra's CLI `bundle` command to bundle
 # static assets into the executable.
-requires "https://github.com/supranim/supra"
+requires "supra#head"
 
 task dev, "Generate a development build":
   exec "nimble build"

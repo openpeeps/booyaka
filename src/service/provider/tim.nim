@@ -12,12 +12,14 @@ export HttpCode, render, `&*`
 export times.now, times.format
 
 import ../../app/structs
+import ./assets, ./logger
 
 initService Tim[Global]:
   # A singleton service that wraps the Tim Engine
   # and provides a simple interface to render HTML pages
   backend do:
     var timInstance*: TimEngine
+    var timInstanceEmbedded*: TimEngine
     
     Icon.init(
       source = storagePath / "icons",
@@ -27,6 +29,7 @@ initService Tim[Global]:
 
     proc init*(src, output, basePath: string; global = newJObject()) =
       ## Initialize Tim Engine as a singleton service
+      logger("Service Tim: Initializing Tim Engine (backend + frontend)")
       timInstance = newTim(
         src = src,
         output = output,
@@ -34,11 +37,7 @@ initService Tim[Global]:
         globalData = global
       )
 
-      # timInstance = newTim(
-      #   views: staticAssets().getTextAssets(),
-      #   layouts: staticAssets().getTextAssets(),
-      #   partials: staticAssets().getTextAssets(),
-      # )
+      # timInstanceEmbedded = newTim(globalData = global)
 
       # predefine foreign functions
       timInstance.userScript.addProc("slugify", @[paramDef("s", ttyString)], ttyString,
@@ -69,7 +68,13 @@ initService Tim[Global]:
             "hasNotifications": globalBooyakaConfig.header.notification.isSome()
           }
         }
+
       timInstance.precompile()
+      # timInstanceEmbedded.precompile(
+      #   views = staticAssets().directory("views"),
+      #   layouts = staticAssets().directory("layouts"),
+      #   partials = staticAssets().directory("partials"),
+      # )
 
     proc getTimInstance*: TimEngine =
       # Returns the singleton instance of the Tim Engine
@@ -115,7 +120,7 @@ initService Tim[Global]:
         let output = renderView(timInstance, view, local)
         respond(httpCode, output)
       except TimEngineError as e:
-        displayError("<services.tim> " & e.msg)
+        logger("Tim Engine: " & e.msg, ERROR)
         respond(Http500, renderView(timInstance, "errors.5xx", data = &*{
           "markdown": {
             "meta": {
@@ -126,7 +131,7 @@ initService Tim[Global]:
           "config": globalBooyakaConfig
         }))
       except Exception as e:
-        displayError("<services.tim> " & e.msg)
+        logger("Tim Engine: " & e.msg, ERROR)
         respond(Http500, renderView(timInstance, "errors.5xx", data = &*{
           "markdown": {
             "meta": {
@@ -136,3 +141,4 @@ initService Tim[Global]:
           },
           "config": globalBooyakaConfig
         }))
+      return # blocks further execution in the route handler after rendering the view

@@ -64,7 +64,9 @@ App.cli do:
 # `config/` directory.
 #
 App.services do:
-
+  # init Logger Service
+  logger.init()
+  
   # init Tim Engine
   tim.init(
     App.config("tim.source").getStr,

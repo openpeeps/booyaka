@@ -1,4 +1,2 @@
-# Imports the built-in Logger Service
-
-import supranim/service/logger
+import pkg/supranim/service/logger
 export logger
