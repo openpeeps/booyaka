@@ -36,7 +36,7 @@ body:before {
         // The `@view` macro is a special macro that injects
         // the content of the specific view into this layout.
         @view
-      footer.row > div.col-12.text-center.opacity-50 > small > small
+      footer.row.mb-4 > div.col-12.text-center.opacity-50 > small > small
         p.mt-4.mb-0: "Powered by "
           a href="https://github.com/openpeeps/booyaka": "Booyaka"
           " &mdash; Made by Humans from "
@@ -54,7 +54,7 @@ body:before {
       {
         let addrs = ["ws://127.0.0.1:9000", "ws://127.0.0.1:3000/ws"]
         addrs.forEach(function(addr) {
-          function connectWatchoutServer() {      
+          function connectWatchoutServer() {
             const watchout = new WebSocket(addr);
             watchout.addEventListener('message', (e) => {
               if(e.data == '1') location.reload()
