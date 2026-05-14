@@ -66,7 +66,7 @@ App.cli do:
 App.services do:
   # init Logger Service
   logger.init()
-  
+
   # init Tim Engine
   tim.init(
     App.config("tim.source").getStr,
@@ -96,12 +96,12 @@ App.services do:
     assets.embedDirectory("templates/partials", "templates/partials")
 
     # embed Tabler SVG icons directly into the binary for production
-    assets.embedDirectory("storage/icons", "icons")
+    assets.embedDirectory("storage/icons", "storage/icons")
 
 when defined release:
   # Preload embedded assets into memory for faster access in production
   assets.preloadBundle("assets")
-  assets.preloadBundle("icons")
+  assets.preloadBundle("storage/icons")
 
   assets.preloadBundle("templates/layouts")
   assets.preloadBundle("templates/views")

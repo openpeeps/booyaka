@@ -11,12 +11,16 @@ elif defined(linux):
   # --passL:"/usr/lib/x86_64-linux-gnu/libevent_pthreads.a"
   --passC:"-I /usr/include"
 
---mm:arc
+--mm:atomicArc
 --deepCopy:on
 --define:webapp # todo supWebApp
 --define:ssl
 --define:supraFileserver
 --define:supranimUseGlobalOnRequest
+
+--define:avx2
+--passC:"-mavx2"
+--passL:"-mavx2"
 
 --define:supraBundleSkipPrefix
   # When defined, this flag tells Supra (Supranim's CLI) to skip prefixing
