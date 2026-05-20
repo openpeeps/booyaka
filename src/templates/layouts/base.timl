@@ -52,22 +52,39 @@ body:before {
     if $app["isDev"] == true:
       script: """
       {
-        let addrs = ["ws://127.0.0.1:9000", "ws://127.0.0.1:3000/ws"]
-        addrs.forEach(function(addr) {
-          function connectWatchoutServer() {
-            const watchout = new WebSocket(addr);
-            watchout.addEventListener('message', (e) => {
-              if(e.data == '1') location.reload()
-            });
+        function connectWatchoutServer() {
+          const watchout = new WebSocket("ws://127.0.0.1:9000");
+          watchout.addEventListener('message', (e) => {
+            if(e.data == '1') location.reload()
+          });
 
-            watchout.addEventListener('close', () => {
-              setTimeout(() => {
-                console.log('Watchout WebSocket is closed. Try again...')
-                connectWatchoutServer()
-              }, 300)
-            })
-          }
-          connectWatchoutServer()
-        });
+          watchout.addEventListener('close', () => {
+            setTimeout(() => {
+              console.log('Watchout WebSocket is closed. Try again...')
+              connectWatchoutServer()
+            }, 300)
+          })
+        }
+        connectWatchoutServer()
+      }
+      """
+
+    if $app["enableMarkdownSync"] == true:
+      script: """
+      {
+        function connectWatchoutServer() {
+          const watchout = new WebSocket("http://127.0.0.1:3000/ws");
+          watchout.addEventListener('message', (e) => {
+            if(e.data == '1') location.reload()
+          });
+
+          watchout.addEventListener('close', () => {
+            setTimeout(() => {
+              console.log('Watchout WebSocket is closed. Try again...')
+              connectWatchoutServer()
+            }, 300)
+          })
+        }
+        connectWatchoutServer()
       }
       """

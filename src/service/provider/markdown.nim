@@ -103,6 +103,7 @@ initService Markdown[Global]:
           sendText(c, "echo: " & s)
 
     proc onOpenCallback*(c: ptr WebSocketConnectionImpl) =
+      echo "WebSocket client connected: ", c[].id
       {.gcsafe.}:
         writeWith changeLocker:
           sendText(c, "Markdown Service WebSocket Connected")
@@ -114,7 +115,7 @@ initService Markdown[Global]:
           wsClients = wsClients.filterIt(it[].id != c[].id)
 
     proc onError*(c: ptr WebSocketConnectionImpl, err: string) =
-      discard
+      echo "WebSocket error: ", err
 
     proc notifyClients() =
       {.gcsafe.}:

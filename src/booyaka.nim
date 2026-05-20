@@ -34,7 +34,6 @@ threads: 1""")
 source: ./templates
 output: ./storage/templates
 indent: 2
-minify: true
 """)
 
   # setup booyaka runtime config for preloading
@@ -74,6 +73,7 @@ App.services do:
     supranim.basePath,
     global = %*{
       "isDev": (when defined release: false else: true),
+      "enableMarkdownSync": App.config("tim.sync").getBool,
       "browserSync": {
         "appPort": App.config("server.port").getInt,
       }

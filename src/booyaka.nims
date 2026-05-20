@@ -16,7 +16,7 @@ elif defined(linux):
 --define:webapp # todo supWebApp
 --define:ssl
 --define:supraFileserver
---define:supranimUseGlobalOnRequest
+# --define:supranimUseGlobalOnRequest
 
 --define:avx2
 --passC:"-mavx2"
