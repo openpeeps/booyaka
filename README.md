@@ -93,7 +93,6 @@ Here are some planned features and improvements for future releases:
 ### ❤ Contributions & Support
 - 🐛 Found a bug? [Create a new Issue](https://github.com/openpeeps/booyaka/issues)
 - 👋 Wanna help? [Fork it!](https://github.com/openpeeps/booyaka/fork)
-- 😎 [Get €20 in cloud credits from Hetzner](https://hetzner.cloud/?ref=Hm0mYGM9NxZ4)
 
 ### 🎩 License
 AGPLv3 license. [Made by Humans from OpenPeeps](https://github.com/openpeeps).<br>
