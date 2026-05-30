@@ -1,3 +1,9 @@
+style: """
+.share-svg-icon svg {
+  width: 16px;
+  height: 16px;
+}
+"""
 if $this["config"]["appearance"]["show_toggle_left_sidebar"] == true:
   div.position-absolute.start-0.top-0
     button.btn.btn-sm.border-0 data-toggle-area="left"
@@ -25,23 +31,30 @@ div.px-lg-4.px-2 > div.container-fluid data-view
           ul.dropdown-menu.dropdown-menu-sm.dropdown-menu-end.rounded-4.shadow-lg style="font-size:0.85em"
             li
               a.dropdown-item.d-flex.align-items-center.gap-2
-                div.d-flex.flex-column
-                  span.fw-bold.text-light: "Copy URL"
-                  small.text-muted: "Copy the URL of this page"
+                div.d-flex.flex-row
+                  div.share-svg-icon.me-2: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-link"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M9 15l6 -6" /><path d="M11 6l.463 -.536a5 5 0 0 1 7.071 7.072l-.534 .464" /><path d="M13 18l-.397 .534a5.068 5.068 0 0 1 -7.127 0a4.972 4.972 0 0 1 0 -7.071l.524 -.463" /></svg>'
+                  div.d-flex.flex-column
+                    span.fw-bold.text-light: "Copy URL"
+                    small.text-muted: "Copy the URL of this page"
             li
               a.dropdown-item.d-flex.align-items-center.gap-2
-                div.d-flex.flex-column
-                  span.fw-bold.text-light: "Copy Markdown"
-                  small.text-muted: "Copy a markdown link to this page"
+                div.d-flex.flex-row
+                  div.share-svg-icon.me-2: '<svg viewBox="0 0 208 128" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" ><path fill="none" stroke="#FFF" stroke-width="10" d="M15 5h178a10 10 0 0 1 10 10v98a10 10 0 0 1-10 10H15a10 10 0 0 1-10-10V15A10 10 0 0 1 15 5z"/><path fill="#FFF" d="M30 98V30h20l20 25 20-25h20v68H90V59L70 84 50 59v39H30zm125 0-30-33h20V30h20v35h20l-30 33z"/></svg>'
+                  div.d-flex.flex-column
+                    span.fw-bold.text-light: "Copy as Markdown"
+                    small.text-muted: "Copy page content as Markdown"
             li: hr.dropdown-divider
             for $shareOption in $this["config"]["content"]["share_buttons_ai_providers"]:
-              if hasKey($shareOption, "divider"):
+              if $shareOption.hasKey("divider"):
                 li: hr.dropdown-divider
               else:
-                li > a.dropdown-item.d-flex.align-items-center.gap-2 href=$shareOption["url"] aria-label=$shareOption["label"]
-                  div.d-flex.flex-column
-                    span.fw-bold.text-light: $shareOption["label"]
-                    small.text-muted: $shareOption["description"]
+                li > a.dropdown-item.d-flex.align-items-center.gap-3.py-2 href=$shareOption["url"] aria-label=$shareOption["label"]
+                  div.d-flex.flex-row
+                    if $shareOption.hasKey("icon"):
+                      div.share-svg-icon.me-2: toString($shareOption["icon"])
+                    div.d-flex.flex-column
+                      span.fw-bold.text-light: $shareOption["label"]
+                      small.text-muted: $shareOption["description"]
     div.row > div.col-12
       div.page-header.mb-4
         h1.display-6.mt-3.fw-normal: $this["markdown"]["meta"]["title"]
