@@ -11,25 +11,21 @@ binDir        = "build"
 # Dependencies
 
 requires "nim >= 2.0.0"
-requires "supranim#head"
-requires "tim#head"
-requires "limiter#head"
-requires "marvdown#head"
-requires "jsony"
-requires "flatty"
-requires "supersnappy"
-requires "semver"
-requires "iconim"
-
-requires "htmlparser#head"
-# requires "https://github.com/openpeeps/pluginkit"
-requires "pluginkit"
+requires "supranim >= 0.1.0"
+requires "tim >= 0.2.1"
+requires "limiter >= 0.1.0"
+requires "marvdown >= 0.1.0"
+requires "jsony >= 1.1.6"
+requires "flatty >= 0.4.0"
+requires "semver >= 1.2.3"
+requires "iconim >= 0.1.0"
+requires "pluginkit >= 0.1.0"
 
 # Supra is not really a dependency but we want to ensure 
 # it's available when building the release version of Booyaka
 # so we can use Supra's CLI `bundle` command to bundle
 # static assets into the executable.
-requires "supra#head"
+requires "supra >= 0.1.0"
 
 task dev, "Generate a development build":
   exec "nimble build"
