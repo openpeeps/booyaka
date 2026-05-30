@@ -16,7 +16,7 @@ elif defined(linux):
 --define:webapp # todo supWebApp
 --define:ssl
 --define:supraFileserver
-# --define:supranimUseGlobalOnRequest
+--define:supranimUseGlobalOnRequest
 
 --define:avx2
 --passC:"-mavx2"
@@ -25,6 +25,13 @@ elif defined(linux):
 --define:supraBundleSkipPrefix
   # When defined, this flag tells Supra (Supranim's CLI) to skip prefixing
   # asset keys with the directory name when embedding assets
+
+when defined supranimDebug:
+  --define:checkBounds
+  --define:assertions
+  --define:useMalloc
+  --passC:"-fsanitize=address -fno-omit-frame-pointer"
+  --passL:"-fsanitize=address"
 
 when not defined release:
   --define:timHotCode

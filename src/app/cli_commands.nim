@@ -1,7 +1,7 @@
 import std/[os, sequtils, strutils, tables]
 from std/net import Port
 
-import pkg/[nyml, flatty, supersnappy, openparser/json]
+import pkg/openparser/[json, yaml]
 import pkg/supranim/core/[application, paths]
 import pkg/kapsis/[runtime, cli]
 import pkg/kapsis/interactive/prompts
@@ -34,9 +34,9 @@ proc startCommand*(v: Values) =
   App.configs["tim"].put("sync", newYamlBoolean(enableBrowserSync))
 
   if fileExists(configPath & ".yml"):
-    globalBooyakaConfig = fromYaml(readFile(configPath & ".yml"), BooyakaConfig)
+    globalBooyakaConfig = parseYAML(readFile(configPath & ".yml"), BooyakaConfig)
   elif fileExists(configPath & ".yaml"):
-    globalBooyakaConfig = fromYaml(readFile(configPath & ".yaml"), BooyakaConfig)
+    globalBooyakaConfig = parseYAML(readFile(configPath & ".yaml"), BooyakaConfig)
   elif fileExists(configPath & ".json"):
     globalBooyakaConfig = fromJson(readFile(configPath & ".json"), BooyakaConfig)
   else:
@@ -60,7 +60,7 @@ proc newCommand*(v: Values) =
     if walkDir(dirPath).toSeq().len > 0:
       displayError("Directory is not empty.", quitProcess = true)
   if v.has("--json"):
-    writeFile(dirPath / "booyaka.config.json", yaml(tpl).toJsonStr(prettyPrint = true))
+    writeFile(dirPath / "booyaka.config.json", parseYaml(tpl).toJson())
   else:
     writeFile(dirPath / "booyaka.config.yaml", tpl)
 

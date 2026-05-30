@@ -22,9 +22,8 @@ import std/[os, tables, httpcore, strutils,
           options, sequtils, macros, times, net]
 
 import pkg/checksums/sha1
-import pkg/openparser/[yaml, json]
-import pkg/[htmlparser, supersnappy, flatty,
-              watchout, marvdown, semver, kapsis/cli]
+import pkg/openparser/[yaml, json, html/ast]
+import pkg/[flatty, watchout, marvdown, semver, kapsis/cli]
 
 import pkg/supranim/core/[services, application, paths]
 import pkg/supranim/network/[webserver, websocket]
@@ -56,15 +55,14 @@ initService Markdown[Global]:
       wsClients: seq[ptr WebSocketConnectionImpl]
       searchInstance: SpotlightInstance
       changeLocker = createRwLock()
-    let
+      allowedTags = @[tagA, tagAbbr, tagB, tagBlockquote, tagBr,
+                    tagCode, tagDel, tagEm, tagH1, tagH2, tagH3, tagH4, tagH5, tagH6,
+                    tagHr, tagI, tagImg, tagLi, tagOl, tagP, tagPre, tagStrong, tagTable,
+                    tagTbody, tagTd, tagTh, tagThead, tagTr, tagUl, tagMark, tagSmall,
+                    tagSub, tagSup, tagDiv]
+
+    var
       markdownOptions = MarkdownOptions(
-        allowed: @[
-          tagA, tagAbbr, tagB, tagBlockquote, tagBr,
-          tagCode, tagDel, tagEm, tagH1, tagH2, tagH3, tagH4, tagH5, tagH6,
-          tagHr, tagI, tagImg, tagLi, tagOl, tagP, tagPre, tagStrong, tagTable,
-          tagTbody, tagTd, tagTh, tagThead, tagTr, tagUl, tagMark, tagSmall,
-          tagSub, tagSup, tagDiv
-        ],
         allowTagsByType: none(TagType),
         allowInlineStyle: false,
         allowHtmlAttributes: false,
@@ -86,7 +84,7 @@ initService Markdown[Global]:
     proc initMarkdownInstance*(app: Application, dbPath: string) =
       ## Initializes the markdown service instance, loading existing data from the database if it exists
       if fileExists(dbPath):
-        gMarkdownService = fromFlatty(uncompress(readFile(dbPath)), MarkdownInstance)
+        gMarkdownService = fromFlatty(readFile(dbPath), MarkdownInstance)
       else:
         gMarkdownService = MarkdownInstance(
           pages: newTable[string, MarkdownPage](),
@@ -103,7 +101,6 @@ initService Markdown[Global]:
           sendText(c, "echo: " & s)
 
     proc onOpenCallback*(c: ptr WebSocketConnectionImpl) =
-      echo "WebSocket client connected: ", c[].id
       {.gcsafe.}:
         writeWith changeLocker:
           sendText(c, "Markdown Service WebSocket Connected")
@@ -115,7 +112,7 @@ initService Markdown[Global]:
           wsClients = wsClients.filterIt(it[].id != c[].id)
 
     proc onError*(c: ptr WebSocketConnectionImpl, err: string) =
-      echo "WebSocket error: ", err
+      discard
 
     proc notifyClients() =
       {.gcsafe.}:
@@ -257,8 +254,8 @@ initService Markdown[Global]:
         gMarkdownService.parseMarkdownFile(contentPath, path, some(hashedSlug))
       
       # write initial index to booyaka.db
-      writeFile(dbPath, compress(toFlatty(gMarkdownService)))
-      writeFile(searchPath, compress(toFlatty(searchInstance[])))
+      writeFile(dbPath, toFlatty(gMarkdownService))
+      writeFile(searchPath, toFlatty(searchInstance[]))
 
     # Setup the filesystem monitor
     const defaultHomePage = staticRead(storagePath / "stubs" / "index.md")
@@ -275,6 +272,16 @@ initService Markdown[Global]:
       if not fileExists(contentPath / "index.md"):
         # ensure there's at least an index.md to start with
         writeFile(contentPath / "index.md", defaultHomePage)
+
+      # add extra allowed HTML tags from the configuration,
+      # ensuring that the final list of allowed tags includes both the
+      # defaults and any user-specified tags
+      var allowedHtmlTags: seq[HtmlTag]
+      if isSome(globalBooyakaConfig.content.allowedRawHtmlTags):
+        allowedHtmlTags = concat(allowedTags, globalBooyakaConfig.content.allowedRawHtmlTags.get())
+      else:
+        allowedHtmlTags = allowedTags
+      markdownOptions.allowed = allowedHtmlTags
 
       let dbPath = app.applicationPaths.getInstallationPath / "booyaka.db"
       let searchPath = app.applicationPaths.getInstallationPath / "booyaka.search.db"

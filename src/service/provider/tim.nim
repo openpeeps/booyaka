@@ -58,6 +58,7 @@ initService Tim[Global]:
           let iconName = args[0].stringVal[]
           return initValue($icon(iconName))
         )
+
       tim.initCommonStorage:
         {
           "path": req.getUrl(),

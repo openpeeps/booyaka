@@ -13,7 +13,7 @@
 ## The search index is stored in a flat file database for persistence across application restarts.
 
 import std/[strutils, tables, times, options, os]
-import pkg/[flatty, supersnappy]
+import pkg/flatty
 import pkg/supranim/core/[application, services, paths]
 
 initService Spotlight[Singleton]:
@@ -45,7 +45,7 @@ initService Spotlight[Singleton]:
       let spotlight = getSpotlightInstance(
         proc(instance: SpotlightInstance) = 
           if fileExists(booyakaSearchPath):
-            instance[] = fromFlatty(uncompress(readFile(booyakaSearchPath)), Spotlight)
+            instance[] = fromFlatty(readFile(booyakaSearchPath), Spotlight)
           else:
             instance.index = newTable[string, int]()
       )

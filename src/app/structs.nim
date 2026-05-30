@@ -1,5 +1,5 @@
 import std/[options, times, tables]
-import pkg/openparser/json
+import pkg/openparser/[json, html]
 
 type
   SidebarType* = enum
@@ -87,7 +87,7 @@ type
   
   ContentSettings* = object
     ## Settings related to Markdown processing in Booyaka
-    allowedRawHtmlTags*: Option[seq[string]]
+    allowedRawHtmlTags*: Option[seq[HtmlTag]]
       ## A list of allowed raw HTML tags in Markdown content if
       ## not specified, only safe tags will be allowed (e.g.,
       ## "b", "i", "strong", "em", "a", "p", "ul", "ol", "li", etc.)
@@ -128,6 +128,8 @@ type
       ## The name of the AI provider (e.g., "ChatGPT", "Claude", etc.)
     url*: string
       ## The URL template for sharing content with the provider
+    icon*: Option[string]
+      ## An optional icon for the provider (e.g., icon class name or URL)
     description*: string
       ## A short description of the provider
 
