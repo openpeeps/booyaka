@@ -44,7 +44,6 @@ Booyaka supports live reloading of the documentation website when changes are ma
 ### 🤟 Contributions & Support
 - 🐛 Found a bug? [Create a new Issue](https://github.com/openpeeps/booyaka/issues)
 - 👋 Wanna help? [Fork it!](https://github.com/openpeeps/booyaka/fork)
-- 😎 [Get €20 in cloud credits from Hetzner](https://hetzner.cloud/?ref=Hm0mYGM9NxZ4)
 
 ### 🎩 License
 Booyaka is licensed under the AGPLv3 License. See the [LICENSE](https://github.com/openpeeps/booyaka/blob/main/LICENSE) file for more information.
