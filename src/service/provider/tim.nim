@@ -84,6 +84,11 @@ initService Tim[Global]:
       return timInstance
 
   client do:
+
+    proc error*(message: string, exception: ref Exception) =
+      echo message
+      echo exception.getStackTrace()
+
     template render*(view: string, layout: string = "base",
                       httpCode = Http200, local: JsonNode = nil): untyped =
       ## Renders a Tim template and sends it as an HTTP response.
@@ -104,6 +109,7 @@ initService Tim[Global]:
         }))
       except Exception as e:
         displayError("<services.tim> " & e.msg)
+        error("error", getCurrentException())
         respond(Http500, render(timInstance, "errors.5xx", layout, data = &*{
           "markdown": {
             "meta": {
@@ -133,6 +139,7 @@ initService Tim[Global]:
         }))
       except Exception as e:
         logger("Tim Engine: " & e.msg, ERROR)
+        error("error", getCurrentException())
         respond(Http500, renderView(timInstance, "errors.5xx", data = &*{
           "markdown": {
             "meta": {

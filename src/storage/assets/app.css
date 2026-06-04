@@ -44,7 +44,7 @@ h1, h2, h3, h4, h5, h6 {
   line-height: 1.2;
   margin-top: 2.1rem;
   margin-bottom: 0.7rem;
-  display: flex;
+  display: block;
   align-content: center;
 }
 
@@ -91,7 +91,7 @@ a.external {
   position: relative;
 }
 
-a.external::after {
+a.external:not(.no-external)::after {
   content: "";
   display: inline-block;
   margin-left: 0.2em;

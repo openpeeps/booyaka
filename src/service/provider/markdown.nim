@@ -22,7 +22,7 @@ import std/[os, tables, httpcore, strutils,
           options, sequtils, macros, times, net]
 
 import pkg/checksums/sha1
-import pkg/openparser/[yaml, json, html/ast]
+import pkg/openparser/[yaml, json, html]
 import pkg/[flatty, watchout, marvdown, semver, kapsis/cli]
 
 import pkg/supranim/core/[services, application, paths]

@@ -20,6 +20,7 @@ requires "flatty >= 0.4.0"
 requires "semver >= 1.2.3"
 requires "iconim >= 0.1.0"
 requires "pluginkit >= 0.1.0"
+requires "openparser >= 0.1.2"
 
 # Supra is not really a dependency but we want to ensure 
 # it's available when building the release version of Booyaka
