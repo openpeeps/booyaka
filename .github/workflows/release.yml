@@ -75,8 +75,6 @@ jobs:
           ls -lah "${LIBPQ_PREFIX}/lib/libpq.dylib"
 
       - run: nimble build -Y -d:release
-      - run: find . -maxdepth 2 -type f -perm +111 | head -20
-        shell: bash
 
       - name: Create artifact
         run: |
