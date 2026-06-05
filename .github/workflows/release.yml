@@ -75,21 +75,20 @@ jobs:
           ls -lah "${LIBPQ_PREFIX}/lib/libpq.dylib"
 
       - run: nimble build -Y -d:release
+      - run: find . -maxdepth 2 -type f -perm +111 | head -20
+        shell: bash
 
       - name: Create artifact
         run: |
           os="${{ runner.os }}"
           arch="${{ matrix.arch }}"
           suffix="$os${arch:+-$arch}"
-          # Lowercase suffix in a portable way
           assets="${{ env.APP_NAME }}_$(echo "$suffix" | tr '[:upper:]' '[:lower:]')"
-          echo "$assets"
           mkdir -p "dist/$assets"
-          cp -r build LICENSE README.* "dist/$assets/"
+          cp booyaka LICENSE README.* "dist/$assets/"   # copy binary directly
           (
             cd dist
             tar czf "$assets.tar.gz" "$assets"
-            ls -lah *.*
           )
         shell: bash
 
