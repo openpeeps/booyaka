@@ -5,11 +5,10 @@ html data-bs-theme="dark"
     meta name="viewport" content="width=device-width, initial-scale=1"
     link rel="icon" href="/assets/favicon-32x32.png" type="image/x-icon"
     link rel="stylesheet" href="/assets/bootstrap.min.css"
-    // link rel="preconnect" href="https://fonts.googleapis.com"
-    // link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""
-    // link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet"
     link rel="stylesheet" href="/assets/app.css"
     link rel="stylesheet" href="/assets/style.css"
+    link rel="stylesheet" href="/assets/print.css" media="print"
+
     const bgNoise = toFloat($this["config"]["appearance"]["background_noise_opacity"])
     if $bgNoise > 0:
       style: """
