@@ -83,6 +83,44 @@ initService Tim[Global]:
         raise newException(ValueError, "Tim Engine not initialized")
       return timInstance
 
+    proc buildSetup*(src, output, basePath: string; global = newJObject()) =
+      echo "  Building Tim Engine templates..."
+      timInstance = newTim(
+        src = src,
+        output = output,
+        basePath = basePath,
+        globalData = global
+      )
+      timInstance.userScript.addProc("slugify", @[paramDef("s", ttyString)], ttyString,
+        proc (args: StackView, argc: int): value.Value =
+          return initValue(slugify(args[0].stringVal[]))
+      )
+      timInstance.userScript.addProc("dashboard", @[paramDef("x", ttyString)], ttyString,
+        proc (args: StackView, argc: int): value.Value =
+          return initValue("/dashboard/" & args[0].stringVal[])
+      )
+      timInstance.userScript.addProc("icon", @[paramDef("name", ttyString)], ttyString,
+        proc (args: StackView, argc: int): value.Value =
+          let iconName = args[0].stringVal[]
+          return initValue($icon(iconName))
+      )
+      timInstance.precompile()
+
+    proc buildRender*(path: string, local: JsonNode): string =
+      if timInstance == nil:
+        raise newException(ValueError, "Tim Engine not initialized. Call buildSetup first.")
+      var data = newJObject()
+      data["path"] = newJString(path)
+      data["currentYear"] = newJString(now().format("yyyy"))
+      var site = newJObject()
+      site["logo"] = newJString(globalBooyakaConfig.metadata.logo.get("/assets/booyaka.png"))
+      site["hasLogo"] = newJBool(globalBooyakaConfig.metadata.logo.isSome())
+      site["hasNotifications"] = newJBool(globalBooyakaConfig.header.notification.isSome())
+      data["site"] = site
+      for key, val in local.pairs:
+        data[key] = val
+      result = render(timInstance, "index", "base", data)
+
   client do:
 
     proc error*(message: string, exception: ref Exception) =

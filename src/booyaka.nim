@@ -34,6 +34,7 @@ threads: 1""")
 source: ./templates
 output: ./storage/templates
 indent: 2
+sync: false
 """)
 
   # setup booyaka runtime config for preloading
@@ -126,8 +127,11 @@ when defined release:
 #
 App.run do:
   # Booyaka WebSocket endpoint for live-reloading.
-  if enableBrowserSync:
-    App.server.registerCallback("/ws",
-      proc (req: ptr evhttp_request, arg: pointer) {.cdecl.} =
-        discard websocketUpgrade(req, onOpenCallback, nil, onClose, onError)
-      )
+  when defined supraNative:
+    discard # TODO
+  else:
+    if enableBrowserSync:
+      App.server.registerCallback("/ws",
+        proc (req: ptr evhttp_request, arg: pointer) {.cdecl.} =
+          discard websocketUpgrade(req, onOpenCallback, nil, onClose, onError)
+        )
