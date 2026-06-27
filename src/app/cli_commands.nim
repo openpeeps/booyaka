@@ -118,6 +118,10 @@ proc buildCommand*(v: Values) =
   else:
     display("No built-in assets found, skipping asset copy")
 
+  let projectAssetsCss = projectPath / "assets" / "style.css"
+  if fileExists(projectAssetsCss):
+    copyFile(projectAssetsCss, outputPath / "assets" / "style.css")
+
   for pagePath, pageHash in gMarkdownService.index:
     let mdPage = gMarkdownService.pages[pageHash]
     var mdJson = newJObject()
