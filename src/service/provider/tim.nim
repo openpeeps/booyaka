@@ -19,8 +19,7 @@ initService Tim[Global]:
   # and provides a simple interface to render HTML pages
   backend do:
     var timInstance*: TimEngine
-    var timInstanceEmbedded*: TimEngine
-    
+
     Icon.init(
       source = storagePath / "icons",
       default = "filled",
@@ -30,31 +29,30 @@ initService Tim[Global]:
     proc init*(src, output, basePath: string; global = newJObject()) =
       ## Initialize Tim Engine as a singleton service
       logger("Service Tim: Initializing Tim Engine (backend + frontend)")
-      timInstance = newTim(
-        src = src,
-        output = output,
-        basePath = basePath,
-        globalData = global
-      )
-
-      # timInstanceEmbedded = newTim(globalData = global)
+      when defined release:
+        timInstance = newTim(globalData = global)
+      else:
+        timInstance = newTim(globalData = global)
+        # timInstance = newTim(
+        #   src = src,
+        #   output = output,
+        #   basePath = basePath,
+        #   globalData = global
+        # )
 
       # predefine foreign functions
       timInstance.userScript.addProc("slugify", @[paramDef("s", ttyString)], ttyString,
         proc (args: StackView, argc: int): value.Value =
-          ## Convert a string to a URL-friendly slug
           return initValue(slugify(args[0].stringVal[]))
         )
 
       timInstance.userScript.addProc("dashboard", @[paramDef("x", ttyString)], ttyString,
         proc (args: StackView, argc: int): value.Value =
-          # prefix a link with `/dashboard/`
           return initValue("/dashboard/" & args[0].stringVal[])
         )
 
       timInstance.userScript.addProc("icon", @[paramDef("name", ttyString)], ttyString,
         proc (args: StackView, argc: int): value.Value =
-          # Return an HTML string for an icon
           let iconName = args[0].stringVal[]
           return initValue($icon(iconName))
         )
@@ -70,12 +68,14 @@ initService Tim[Global]:
           }
         }
 
-      timInstance.precompile()
-      # timInstanceEmbedded.precompile(
-      #   views = staticAssets().directory("views"),
-      #   layouts = staticAssets().directory("layouts"),
-      #   partials = staticAssets().directory("partials"),
-      # )
+      when defined release:
+        timInstance.precompile(
+          views = staticAssets().directory("views"),
+          layouts = staticAssets().directory("layouts"),
+          partials = staticAssets().directory("partials"),
+        )
+      else:
+        timInstance.precompile()
 
     proc getTimInstance*: TimEngine =
       # Returns the singleton instance of the Tim Engine
@@ -85,12 +85,15 @@ initService Tim[Global]:
 
     proc buildSetup*(src, output, basePath: string; global = newJObject()) =
       echo "  Building Tim Engine templates..."
-      timInstance = newTim(
-        src = src,
-        output = output,
-        basePath = basePath,
-        globalData = global
-      )
+      when defined release:
+        timInstance = newTim(globalData = global)
+      else:
+        timInstance = newTim(
+          src = src,
+          output = output,
+          basePath = basePath,
+          globalData = global
+        )
       timInstance.userScript.addProc("slugify", @[paramDef("s", ttyString)], ttyString,
         proc (args: StackView, argc: int): value.Value =
           return initValue(slugify(args[0].stringVal[]))
@@ -104,7 +107,14 @@ initService Tim[Global]:
           let iconName = args[0].stringVal[]
           return initValue($icon(iconName))
       )
-      timInstance.precompile()
+      when defined release:
+        timInstance.precompile(
+          views = staticAssets().directory("views"),
+          layouts = staticAssets().directory("layouts"),
+          partials = staticAssets().directory("partials"),
+        )
+      else:
+        timInstance.precompile()
 
     proc buildRender*(path: string, local: JsonNode): string =
       if timInstance == nil:
