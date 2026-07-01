@@ -52,7 +52,7 @@ initService Markdown[Global]:
       watcher*: Watchout
       hasChanges : bool
       gMarkdownService* : MarkdownInstance
-      wsClients: seq[ptr WebSocketConnectionImpl]
+      wsClients: seq[WsConnection]
       searchInstance: SpotlightInstance
       changeLocker = createRwLock()
       allowedTags = @[tagA, tagAbbr, tagB, tagBlockquote, tagBr,
@@ -94,24 +94,24 @@ initService Markdown[Global]:
       searchInstance = getSpotlightInstance()
 
     # WebSocket Connection - Callbacks
-    proc onMessageCallback(c: ptr WebSocketConnectionImpl, code: int, data: openArray[byte]) =
+    proc onMessageCallback(ws: WsConnection, kind: WsFrameKind, data: openArray[byte]) =
       {.gcsafe.}:
-        if code == 0x1: # text
+        if kind == wsText:
           let s = cast[string](data.toSeq)
-          sendText(c, "echo: " & s)
+          ws.sendText("echo: " & s)
 
-    proc onOpenCallback*(c: ptr WebSocketConnectionImpl) =
+    proc onOpenCallback*(ws: WsConnection) =
       {.gcsafe.}:
         writeWith changeLocker:
-          sendText(c, "Markdown Service WebSocket Connected")
-          wsClients.add(c)
+          ws.sendText("Markdown Service WebSocket Connected")
+          wsClients.add(ws)
 
-    proc onClose*(c: ptr WebSocketConnectionImpl, code: int, reason: string) =
+    proc onClose*(ws: WsConnection, code: int, reason: string) =
       {.gcsafe.}:
         writeWith changeLocker:
-          wsClients = wsClients.filterIt(it[].id != c[].id)
+          wsClients = wsClients.filterIt(it != ws)
 
-    proc onError*(c: ptr WebSocketConnectionImpl, err: string) =
+    proc onError*(ws: WsConnection, err: string) =
       discard
 
     proc notifyClients() =
@@ -120,7 +120,7 @@ initService Markdown[Global]:
           hasChanges = false
         readWith changeLocker:
           for ws in wsClients:
-            ws.sendText("1") # notify clients of change
+            ws.sendText("1")
 
     proc getSlugHash(basePath, path: string): (string, string) =
       # Computes the slug and its secure hash for a given markdown file path

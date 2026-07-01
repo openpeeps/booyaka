@@ -8,6 +8,8 @@ import std/[os, tables]
 
 import pkg/supranim
 import pkg/supranim/core/paths
+when defined(supraNative):
+  import pkg/powpow as pw
 
 import ./app/[structs, cli_commands]
 
@@ -127,11 +129,21 @@ when defined release:
 #
 App.run do:
   # Booyaka WebSocket endpoint for live-reloading.
-  when defined supraNative:
-    discard # TODO
-  else:
-    if enableBrowserSync:
-      App.server.registerCallback("/ws",
-        proc (req: ptr evhttp_request, arg: pointer) {.cdecl.} =
-          discard websocketUpgrade(req, onOpenCallback, nil, onClose, onError)
-        )
+  if enableBrowserSync:
+    App.server.registerCallback("/ws",
+      proc (req: pointer, arg: pointer) {.cdecl, gcsafe.} =
+        {.gcsafe.}:
+          when defined supraNative:
+            let ppReq = cast[pw.HttpRequest](req)
+            let ppRes = cast[pw.HttpResponse](arg)
+            discard websocketUpgrade(ppRes, ppReq,
+              onOpen = onOpenCallback,
+              onClose = onClose,
+              onError = onError)
+          else:
+            let evReq = cast[ptr evhttp_request](req)
+            discard websocketUpgrade(evReq,
+              onOpen = onOpenCallback,
+              onClose = onClose,
+              onError = onError)
+    )
