@@ -9,7 +9,7 @@ import pkg/kapsis/interactive/prompts
 
 
 import ./structs
-import ../service/provider/[markdown, tim, search]
+import ../service/provider/[markdown, tim, search, assets]
 
 const tpl = staticRead(storagePath / "stubs" / "template_booyaka.config.yaml")
   # a static template for the default Booyaka config file, used when creating new projects
@@ -106,17 +106,31 @@ proc buildCommand*(v: Values) =
   discard existsOrCreateDir(outputPath)
   discard existsOrCreateDir(outputPath / "assets")
 
-  let assetsSrc = supranim.basePath / "storage" / "assets"
-  if dirExists(assetsSrc):
-    for kind, fpath in walkDir(assetsSrc):
-      if kind == pcFile:
-        let (_, name, ext) = splitFile(fpath)
-        try:
-          copyFile(fpath, outputPath / "assets" / name & ext)
-        except:
-          display("Could not copy asset: " & name & ext)
+  when defined release:
+    # In release builds, assets are embedded in the binary;
+    # write them out to disk so the static site has them
+    let sta = staticAssets()
+    let assetKeys = sta.listAssetsDir("/assets")
+    for key in assetKeys:
+      let relPath = key.strip(chars={'/'}, leading=true)
+      let dest = outputPath / relPath
+      createDir(dest.parentDir)
+      if sta.hasAsset(key):
+        writeFile(dest, cast[string](sta.get(key)))
+      else:
+        writeFile(dest, sta.directory("assets")[key])
   else:
-    display("No built-in assets found, skipping asset copy")
+    let assetsSrc = supranim.basePath / "storage" / "assets"
+    if dirExists(assetsSrc):
+      for kind, fpath in walkDir(assetsSrc):
+        if kind == pcFile:
+          let (_, name, ext) = splitFile(fpath)
+          try:
+            copyFile(fpath, outputPath / "assets" / name & ext)
+          except:
+            display("Could not copy asset: " & name & ext)
+    else:
+      display("No built-in assets found, skipping asset copy")
 
   let projectAssetsCss = projectPath / "assets" / "style.css"
   if fileExists(projectAssetsCss):
