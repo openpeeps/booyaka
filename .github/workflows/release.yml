@@ -83,7 +83,7 @@ jobs:
           suffix="$os${arch:+-$arch}"
           assets="${{ env.APP_NAME }}_$(echo "$suffix" | tr '[:upper:]' '[:lower:]')"
           mkdir -p "dist/$assets"
-          cp booyaka LICENSE README.* "dist/$assets/"
+          cp build/booyaka LICENSE README.* "dist/$assets/"
           (
             cd dist
             tar czf "$assets.tar.gz" "$assets"
