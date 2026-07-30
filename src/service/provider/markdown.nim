@@ -67,7 +67,9 @@ initService Markdown[Global]:
         allowInlineStyle: false,
         allowHtmlAttributes: false,
         enableAnchors: true,
-        htmlTableClasses: some(@["table", "table-hover"])
+        htmlTableClasses: some(@["table", "table-hover"]),
+        enableComponents: true,
+        componentBaseDir: contentPath
       )
 
     proc `%`(opt: Option[Time]): JsonNode =

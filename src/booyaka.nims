@@ -11,11 +11,11 @@ elif defined(linux):
   # --passL:"/usr/lib/x86_64-linux-gnu/libevent_pthreads.a"
   --passC:"-I /usr/include"
 
+--define:ssl
+--deepCopy:on
 --define:supraNative
 --mm:atomicArc
---deepCopy:on
 --define:webapp # todo supWebApp
---define:ssl
 --define:supraFileserver
 --define:supranimUseGlobalOnRequest
 

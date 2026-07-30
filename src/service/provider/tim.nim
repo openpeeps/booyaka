@@ -32,13 +32,12 @@ initService Tim[Global]:
       when defined release:
         timInstance = newTim(globalData = global)
       else:
-        timInstance = newTim(globalData = global)
-        # timInstance = newTim(
-        #   src = src,
-        #   output = output,
-        #   basePath = basePath,
-        #   globalData = global
-        # )
+        timInstance = newTim(
+          src = src,
+          output = output,
+          basePath = basePath,
+          globalData = global
+        )
 
       # predefine foreign functions
       timInstance.userScript.addProc("slugify", @[paramDef("s", ttyString)], ttyString,
