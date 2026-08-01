@@ -284,6 +284,9 @@ initService Markdown[Global]:
       else:
         allowedHtmlTags = allowedTags
       markdownOptions.allowed = allowedHtmlTags
+      markdownOptions.lazyloadIframes = globalBooyakaConfig.content.lazyloadIframes
+      markdownOptions.lazyloadVideos = globalBooyakaConfig.content.lazyloadVideos
+      markdownOptions.lazyloadImages = globalBooyakaConfig.content.lazyloadImages
 
       let dbPath = app.applicationPaths.getInstallationPath / "booyaka.db"
       let searchPath = app.applicationPaths.getInstallationPath / "booyaka.search.db"

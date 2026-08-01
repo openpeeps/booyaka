@@ -30,6 +30,12 @@ const defaultAppOpts = {
   enableAnimatedAlerts: true
 }
 
+/**
+ * Callbacks registered via `UI.onReload` that run every time a page is
+ * loaded or swapped via SPA navigation.
+ */
+const reloadCallbacks = [];
+
 export default {
   /**
    * Initialize the application with the given options.
@@ -68,6 +74,8 @@ export default {
       if (activeLink) {
         activeLink.classList.add('active', 'bg-dark');
       }
+
+      this.triggerReload();
     }.bind(this) // bind 'this' to ensure the correct context inside the callback
 
     // Intercept clicks on internal links to enable SPA-like navigation without full page reloads.
@@ -84,6 +92,29 @@ export default {
     // Apply Bootstrap classes to checkboxes for consistent styling
     document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
       checkbox.classList.add('form-check-input'); // the bootstrap class
+    });
+
+    // Fire reload callbacks once on initial page load
+    this.triggerReload();
+  },
+
+  /**
+   * Register a callback that runs every time a page is loaded or swapped.
+   * This is useful for lazily initializing features (e.g., lazy-loading
+   * iframes) that need to be re-applied to newly fetched content.
+   *
+   * @param {callback} callback - Function to run on every page load/swap.
+   */
+  onReload: function(callback) {
+    reloadCallbacks.push(callback);
+  },
+
+  /**
+   * Run all registered `onReload` callbacks.
+   */
+  triggerReload: function() {
+    reloadCallbacks.forEach(cb => {
+      try { cb() } catch (e) { console.error(e) }
     });
   },
 

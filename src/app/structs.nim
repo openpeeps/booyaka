@@ -107,6 +107,15 @@ type
     share_buttons_ai_providers*: Option[seq[ShareProvider]]
       ## A list of AI providers for share buttons (e.g.,
       ## "ChatGPT", "Claude", "DeepSeek", etc.)
+    lazyloadIframes*: bool
+      ## Whether to lazyload iframes in Markdown content by
+      ## rewriting `src` to `data-src` (default: false)
+    lazyloadVideos*: bool
+      ## Whether to lazyload videos and audio in Markdown content by
+      ## rewriting `src` to `data-src` (default: false)
+    lazyloadImages*: bool
+      ## Whether to lazyload images in Markdown content by
+      ## rewriting `src` to `data-src` (default: false)
   
   SidebarSection* = object
     ## Represents a section in the sidebar
