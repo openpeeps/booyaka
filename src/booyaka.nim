@@ -8,7 +8,7 @@ import std/[os, tables]
 
 import pkg/supranim
 import pkg/supranim/core/paths
-when defined(supraNative):
+when defined(features.supranim.powpow):
   import pkg/powpow as pw
 
 import ./app/[structs, cli_commands]
@@ -133,7 +133,7 @@ App.run do:
     App.server.registerCallback("/ws",
       proc (req: pointer, arg: pointer) {.cdecl, gcsafe.} =
         {.gcsafe.}:
-          when defined supraNative:
+          when defined(features.supranim.powpow):
             let ppReq = cast[pw.HttpRequest](req)
             let ppRes = cast[pw.HttpResponse](arg)
             discard websocketUpgrade(ppRes, ppReq,

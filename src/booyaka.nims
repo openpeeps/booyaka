@@ -13,7 +13,6 @@ elif defined(linux):
 
 --define:ssl
 --deepCopy:on
---define:supraNative
 --mm:atomicArc
 --define:webapp # todo supWebApp
 --define:supraFileserver
