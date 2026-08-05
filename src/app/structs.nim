@@ -39,6 +39,8 @@ type
       ## The last updated timestamp of the page (formatted as a string)
     toc*: OrderedTableRef[string, string]
       ## Table of contents for the page (mapping section titles to anchors)
+    tocHtml*: string
+      ## Pre-rendered nested table of contents HTML for the page
     navigation*: MarkdownPageBottomNavigation
       ## Navigation information for the page (previous/next links)
     lastEdited*: Option[Time]

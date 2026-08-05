@@ -158,6 +158,39 @@ initService Markdown[Global]:
       let next = if idx < flat.len - 1: some(flat[idx + 1]) else: none(BooyakaNavItem)
       (prev, next)
 
+    proc buildTocHtml(items: seq[tuple[level: int, anchor, title: string]]): string =
+      # Builds a nested `<ul>`/`<li>` table of contents HTML from flat
+      # heading items (in document order), nesting items based on their
+      # heading level relative to the first (top-most) heading.
+      if items.len == 0:
+        return ""
+      var stack: seq[int]
+      for item in items:
+        let level = item.level
+        # close lists strictly deeper than the current level
+        while stack.len > 0 and stack[^1] > level:
+          discard stack.pop()
+          if stack.len > 0:
+            result.add("</li></ul>")
+        if stack.len == 0:
+          if result.len > 0:
+            result.add("</li>")
+          result.add("<li>")
+          stack.add(level)
+        elif stack[^1] == level:
+          result.add("</li><li>")
+        else:
+          # opening a deeper nested list
+          result.add("<ul><li>")
+          stack.add(level)
+        result.add("<a href=\"#" & item.anchor & "\">" & item.title & "</a>")
+      # close any remaining open items/lists
+      while stack.len > 0:
+        result.add("</li>")
+        discard stack.pop()
+        if stack.len > 0:
+          result.add("</ul>")
+
     proc parseMarkdownFile(mdInstance: MarkdownInstance, basePath,
                     path: string, hashedSlug: Option[(string, string)] = none((string, string))) = 
       # Parses a markdown file and updates the markdown instance
@@ -212,6 +245,7 @@ initService Markdown[Global]:
           content: htmlContent,
           last_updated: now().format("yyyy-MM-dd HH:mm:ss"),
           toc: md.getSelectors(),
+          tocHtml: buildTocHtml(md.getSelectorItems()),
           navigation: MarkdownPageBottomNavigation(previous: prev, next: next),
           lastEdited: some(now().toTime)
         )

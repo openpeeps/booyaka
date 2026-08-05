@@ -155,6 +155,7 @@ proc buildCommand*(v: Values) =
     for k, v in mdPage.toc:
       tocJson[k] = newJString(v)
     mdJson["toc"] = tocJson
+    mdJson["tocHtml"] = newJString(mdPage.tocHtml)
     var navJson = newJObject()
     if mdPage.navigation.previous.isSome:
       var prev = newJObject()

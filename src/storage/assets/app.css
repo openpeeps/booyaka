@@ -265,10 +265,24 @@ mark {
   overflow-y: auto;
 }
 
+.sidebar-right .table-of-contents ul {
+  padding-left: 1rem;
+  list-style: none;
+}
+
 .sidebar-right .table-of-contents li a {
   border-bottom: 0;
   color: var(--bs-body-color);
   background-color: transparent;
+  display: block;
+  padding: 0.125rem 0;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.sidebar-right .table-of-contents ul li a {
+  font-size: 0.8rem;
+  opacity: 0.75;
 }
 
 .sidebar-right .table-of-contents li a:hover {
