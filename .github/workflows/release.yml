@@ -76,16 +76,6 @@ jobs:
 
       - run: nimble install -Y
 
-      - name: Install deps dropped by nimble resolver (workaround)
-        run: nimble install -Y valido
-
-      - name: Build booyaka (nim c)
-        run: |
-          mkdir -p build
-          nim c -d:release \
-            -d:features.supranim.powpow -d:features.emitter.powpow \
-            -o:build/booyaka src/booyaka.nim
-
       - name: Create artifact
         run: |
           os="${{ runner.os }}"
@@ -93,7 +83,7 @@ jobs:
           suffix="$os${arch:+-$arch}"
           assets="${{ env.APP_NAME }}_$(echo "$suffix" | tr '[:upper:]' '[:lower:]')"
           mkdir -p "dist/$assets"
-          cp build/booyaka LICENSE README.* "dist/$assets/"
+          cp ~/.nimble/bin/booyaka LICENSE README.* "dist/$assets/"
           (
             cd dist
             tar czf "$assets.tar.gz" "$assets"
