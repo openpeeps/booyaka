@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 env:
   APP_NAME: 'booyaka'
-  NIM_VERSION: 'stable'
+  NIM_VERSION: '2.2.10'
   MAINTAINER: 'OpenPeeps'
 
 jobs:
@@ -73,6 +73,8 @@ jobs:
           echo "DYLD_FALLBACK_LIBRARY_PATH=${LIBPQ_PREFIX}/lib:${BREW_PREFIX}/lib" >> "$GITHUB_ENV"
           echo "PKG_CONFIG_PATH=${LIBPQ_PREFIX}/lib/pkgconfig:${BREW_PREFIX}/lib/pkgconfig" >> "$GITHUB_ENV"
           ls -lah "${LIBPQ_PREFIX}/lib/libpq.dylib"
+
+      - run: nimble install -Y
 
       - run: nimble build -Y -d:release
 
