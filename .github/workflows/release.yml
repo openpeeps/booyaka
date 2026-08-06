@@ -40,9 +40,6 @@ jobs:
           nim-version: ${{ env.NIM_VERSION }}
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upgrade nimble
-        run: nimble install -Y nimble
-
       - name: Install C library dependencies
         run: |
           if [[ "${{ runner.os }}" == "Linux" ]]; then
@@ -79,7 +76,15 @@ jobs:
 
       - run: nimble install -Y
 
-      - run: nimble build -Y -d:release
+      - name: Install deps dropped by nimble resolver (workaround)
+        run: nimble install -Y valido
+
+      - name: Build booyaka (nim c)
+        run: |
+          mkdir -p build
+          nim c -d:release \
+            -d:features.supranim.powpow -d:features.emitter.powpow \
+            -o:build/booyaka src/booyaka.nim
 
       - name: Create artifact
         run: |
