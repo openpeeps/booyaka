@@ -41,6 +41,10 @@ type
       ## Table of contents for the page (mapping section titles to anchors)
     tocHtml*: string
       ## Pre-rendered nested table of contents HTML for the page
+    markdownSourceJson*: string
+      ## Script-safe JSON-encoded raw Markdown source of the page,
+      ## embedded in a `<script type="application/json">` tag for the
+      ## "Copy as Markdown" share action
     navigation*: MarkdownPageBottomNavigation
       ## Navigation information for the page (previous/next links)
     lastEdited*: Option[Time]
@@ -118,6 +122,9 @@ type
     lazyloadImages*: bool
       ## Whether to lazyload images in Markdown content by
       ## rewriting `src` to `data-src` (default: false)
+    pageReferences*: bool
+      ## Whether to render `@<page>.md` references in Markdown content as
+      ## rich page cards (default: false)
   
   SidebarSection* = object
     ## Represents a section in the sidebar

@@ -151,6 +151,7 @@ proc buildCommand*(v: Values) =
     mdJson["section"] = newJString(mdPage.section)
     mdJson["content"] = newJString(mdPage.content)
     mdJson["last_updated"] = newJString(mdPage.last_updated)
+    mdJson["markdownSourceJson"] = newJString(mdPage.markdownSourceJson)
     var tocJson = newJObject()
     for k, v in mdPage.toc:
       tocJson[k] = newJString(v)

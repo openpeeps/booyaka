@@ -12,9 +12,7 @@
   <img src="https://github.com/openpeeps/booyaka/workflows/test/badge.svg" alt="Github Actions">  <img src="https://github.com/openpeeps/booyaka/workflows/docs/badge.svg" alt="Github Actions">
 </p>
 
-<p align="center">
-  <img src="https://github.com/openpeeps/booyaka/blob/main/.github/booyaka_readme.jpg" width="100%" alt="Booyaka Documentation Preview"><br>
-</p>
+![Booyaka Homepage Preview](https://github.com/openpeeps/booyaka/blob/main/.github/booyaka_preview.png)
 
 ## Key Features
 - Compiled, lightweight, and fast; fully self-hosted
@@ -37,10 +35,7 @@
 - Optional Git-based versioning and contributors information
 - Print-friendly layout for PDF export
 - SEO metadata support
-- Open Source, AGPLv3 License
-- Written in Nim, Made by Humans from OpenPeeps
-
-![Booyaka Homepage Preview](https://github.com/openpeeps/booyaka/blob/main/.github/booyaka_preview.png)
+- Open Source | AGPLv3 License
 
 > [!NOTE]
 > Booyaka is still in active development. Expect frequent updates and new features as we work towards a stable release.

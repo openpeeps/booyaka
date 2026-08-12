@@ -83,8 +83,105 @@ initService Markdown[Global]:
       s.fromFlatty(i, unix)
       x = unix.fromUnix
 
+    proc escapeHtmlText(s: string): string =
+      ## Escapes HTML special characters for safe text/attribute output
+      result = s.multiReplace(("&", "&amp;"), ("<", "&lt;"), (">", "&gt;"),
+                              ("\"", "&quot;"), ("'", "&#39;"))
+
+    proc pageCardHtml(page: MarkdownPage, url: string): string =
+      ## Builds the HTML card rendered for a `@<page>.md` reference
+      var title = page.title
+      var description = ""
+      if page.meta != nil and page.meta.kind == JObject:
+        if page.meta.hasKey("title"):
+          title = page.meta["title"].getStr()
+        if page.meta.hasKey("description"):
+          description = page.meta["description"].getStr()
+      result = "<div class=\"post-ref\"><a class=\"post-ref__link\" href=\"" &
+        url & "\">"
+      result.add("<div class=\"post-ref__body\">")
+      result.add("<h3 class=\"post-ref__title\">" &
+        escapeHtmlText(title) & "</h3>")
+      if description.len > 0:
+        result.add("<p class=\"post-ref__excerpt\">" &
+          escapeHtmlText(description) & "</p>")
+      result.add("</div></a></div>")
+
+    proc findPageRef(target: string): (string, MarkdownPage) =
+      ## Resolves a `@<target>.md` reference to a page (url, page). Unknown
+      ## references return an empty string url so they stay as plain text.
+      if gMarkdownService.isNil:
+        return ("", MarkdownPage())
+      # normalize: strip the leading slash and `.md` extension
+      var refName = target.replace(".md", "")
+      if refName.startsWith("/"):
+        refName = refName[1 .. ^1]
+      # a page can be referenced by its basename (`@tcp.md`) or its full
+      # slug path (`@net/tcp.md`); iterate the index to find a match
+      for slug, hash in gMarkdownService.index:
+        let slugName = slug.strip(chars = {'/'})
+        if slugName == refName or slugName.split('/')[^1] == refName:
+          if gMarkdownService.pages.hasKey(hash):
+            return ("/" & slugName, gMarkdownService.pages[hash])
+      # fall back to the source file so references resolve regardless of the
+      # scan order (e.g. the very first build). Parse with a local options copy
+      # that has no customTransform, so resolving a reference can never recurse
+      # into resolving that file's own references.
+      let refPath = contentPath / target
+      if fileExists(refPath):
+        var opts = markdownOptions
+        opts.customTransform = nil
+        var md = newMarkdown(readFile(refPath), opts)
+        let meta: JsonNode = toJson(md.getHeader()).fromJson()
+        return ("/" & refName, MarkdownPage(meta: meta, title: md.getTitle()))
+      result = ("", MarkdownPage())
+
+    proc pageReferenceTransform(line: string): string =
+      ## Custom marvdown parsing hook: replaces `@<page>.md` references with a
+      ## page card when the referenced markdown file exists as a page. Unknown
+      ## references (e.g. `@somebrand.md`) are left as plain text.
+      result = newStringOfCap(line.len)
+      var i = 0
+      while i < line.len:
+        if line[i] == '@' and (i == 0 or line[i - 1] != '\\'):
+          var j = i + 1
+          var name = ""
+          while j < line.len and line[j] in {'a'..'z', 'A'..'Z', '0'..'9',
+                                             '.', '_', '-', '/'}:
+            name.add(line[j])
+            inc j
+          if name.endsWith(".md") and name.len > 3 and
+             (j >= line.len or line[j] notin {'a'..'z', 'A'..'Z', '0'..'9', '_', '-'}):
+            let (url, page) = findPageRef(name)
+            if url.len > 0:
+              result.add(pageCardHtml(page, url))
+              i = j
+              continue
+        result.add(line[i])
+        inc i
+
+    proc setupMarkdownOptions() =
+      ## Configures the Marvdown options based on the Booyaka configuration.
+      ## Called from `initMarkdownInstance` so both `start` and `build` paths
+      ## apply the same settings (allowed tags, lazy loading, page references).
+      var allowedHtmlTags: seq[HtmlTag]
+      if isSome(globalBooyakaConfig.content.allowedRawHtmlTags):
+        allowedHtmlTags = concat(allowedTags, globalBooyakaConfig.content.allowedRawHtmlTags.get())
+      else:
+        allowedHtmlTags = allowedTags
+      markdownOptions.allowed = allowedHtmlTags
+      markdownOptions.lazyloadIframes = globalBooyakaConfig.content.lazyloadIframes
+      markdownOptions.lazyloadVideos = globalBooyakaConfig.content.lazyloadVideos
+      markdownOptions.lazyloadImages = globalBooyakaConfig.content.lazyloadImages
+      markdownOptions.customTransform =
+        if globalBooyakaConfig.content.pageReferences:
+          pageReferenceTransform
+        else:
+          nil
+
     proc initMarkdownInstance*(app: Application, dbPath: string) =
       ## Initializes the markdown service instance, loading existing data from the database if it exists
+      setupMarkdownOptions()
       if fileExists(dbPath):
         gMarkdownService = fromFlatty(readFile(dbPath), MarkdownInstance)
       else:
@@ -194,7 +291,19 @@ initService Markdown[Global]:
     proc parseMarkdownFile(mdInstance: MarkdownInstance, basePath,
                     path: string, hashedSlug: Option[(string, string)] = none((string, string))) = 
       # Parses a markdown file and updates the markdown instance
-      var md = newMarkdown(readFile(path), markdownOptions)
+      # Keep the module-level `contentPath` in sync so the `@<page>.md`
+      # reference fallback can resolve files in the `build` path (which calls
+      # this proc via `scanMarkdownFiles` instead of going through `init`).
+      contentPath = basePath
+      let rawContent = readFile(path)
+      var md = newMarkdown(rawContent, markdownOptions)
+      # script-safe JSON string of the raw markdown for the
+      # "Copy as Markdown" share action (`<`/`>`/`&` are escaped
+      # so the value can never break out of a `<script>` tag).
+      # Tim Engine only accepts literal content inside `script` tags,
+      # so the complete `<script type="application/json">` element is
+      # pre-built here and injected into the template as raw HTML.
+      let encodedMarkdown = $(newJString(rawContent))
       let
         # compute slug and hash
         slugHash =
@@ -203,6 +312,7 @@ initService Markdown[Global]:
         # get previous and next navigation items
         (prev, next) = getPrevNext(globalBooyakaConfig.sidebar_navigation, slugHash[0])
         htmlContent: string = md.toHtml()   # convert markdown to HTML
+        markdownSourceJson: string = encodedMarkdown
       
       # extract available metadata from the markdown file,
       # prioritizing YAML front matter if present
@@ -246,6 +356,7 @@ initService Markdown[Global]:
           last_updated: now().format("yyyy-MM-dd HH:mm:ss"),
           toc: md.getSelectors(),
           tocHtml: buildTocHtml(md.getSelectorItems()),
+          markdownSourceJson: markdownSourceJson,
           navigation: MarkdownPageBottomNavigation(previous: prev, next: next),
           lastEdited: some(now().toTime)
         )
@@ -308,19 +419,6 @@ initService Markdown[Global]:
       if not fileExists(contentPath / "index.md"):
         # ensure there's at least an index.md to start with
         writeFile(contentPath / "index.md", defaultHomePage)
-
-      # add extra allowed HTML tags from the configuration,
-      # ensuring that the final list of allowed tags includes both the
-      # defaults and any user-specified tags
-      var allowedHtmlTags: seq[HtmlTag]
-      if isSome(globalBooyakaConfig.content.allowedRawHtmlTags):
-        allowedHtmlTags = concat(allowedTags, globalBooyakaConfig.content.allowedRawHtmlTags.get())
-      else:
-        allowedHtmlTags = allowedTags
-      markdownOptions.allowed = allowedHtmlTags
-      markdownOptions.lazyloadIframes = globalBooyakaConfig.content.lazyloadIframes
-      markdownOptions.lazyloadVideos = globalBooyakaConfig.content.lazyloadVideos
-      markdownOptions.lazyloadImages = globalBooyakaConfig.content.lazyloadImages
 
       let dbPath = app.applicationPaths.getInstallationPath / "booyaka.db"
       let searchPath = app.applicationPaths.getInstallationPath / "booyaka.search.db"

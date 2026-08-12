@@ -57,6 +57,7 @@ export default {
     this.initSmoothAnchors();
     this.initExternalLinksDecorator();
     this.initSpotlightSearch();
+    this.initShareButtons();
 
     const fetchSwapCallback = function() {
       opts.enableStickySidebar && this.initStickySidebar();
@@ -272,6 +273,86 @@ export default {
     });
   },
   
+  /**
+   * Copy the given text to the clipboard using the async Clipboard API,
+   * falling back to a hidden textarea + execCommand in non-secure contexts.
+   */
+  copyTextToClipboard: function(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+      return navigator.clipboard.writeText(text);
+    }
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    try { document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(textarea);
+    return Promise.resolve();
+  },
+
+  /**
+   * The current page URL without query string or hash.
+   */
+  getCleanUrl: function() {
+    return location.origin + location.pathname;
+  },
+
+  /**
+   * Initializes the share dropdown interactions:
+   * - strips the `{$refUrl}` placeholder from AI provider share links
+   *   so clicking one opens the AI chat in a new tab
+   * - wires the "Copy URL" and "Copy as Markdown" actions
+   *
+   * Click handlers are delegated on `document` so they keep working after
+   * SPA content swaps. The `{$refUrl}` cleanup runs on every page
+   * load/swap through `UI.onReload`.
+   */
+  initShareButtons: function() {
+    this.onReload(() => {
+      document.querySelectorAll('a[data-ai-share]').forEach(link => {
+        const href = link.getAttribute('href');
+        if (href && href.includes('{$refUrl}')) {
+          link.setAttribute('href', href.replace(/\{\$refUrl\}/g, ''));
+        }
+      });
+    });
+
+    document.addEventListener('click', (e) => {
+      const copyUrlItem = e.target.closest('[data-share="copy-url"]');
+      if (copyUrlItem) {
+        e.preventDefault();
+        this.copyTextToClipboard(this.getCleanUrl());
+        this.flashCopied(copyUrlItem);
+        return;
+      }
+      const copyMarkdownItem = e.target.closest('[data-share="copy-markdown"]');
+      if (copyMarkdownItem) {
+        e.preventDefault();
+        const script = document.querySelector('script[data-markdown-source]');
+        if (script) {
+          let markdown = '';
+          try { markdown = JSON.parse(script.textContent); } catch (err) { markdown = ''; }
+          this.copyTextToClipboard(markdown);
+          this.flashCopied(copyMarkdownItem);
+        }
+        return;
+      }
+    });
+  },
+
+  /**
+   * Briefly replaces the label of a share item with "Copied!".
+   */
+  flashCopied: function(item) {
+    const label = item.querySelector('[data-share-copy-label]');
+    if (!label) return;
+    const original = label.textContent;
+    label.textContent = 'Copied!';
+    setTimeout(() => { label.textContent = original; }, 1200);
+  },
+
   /**
    * Make sidebars sticky so they remain visible when scrolling down the page.
    */

@@ -5,3 +5,4 @@ nimcache/
 nimblecache/
 htmldocs/
 /src/storage/templates/*
+node_modules/
