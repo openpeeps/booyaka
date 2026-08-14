@@ -2,7 +2,7 @@ import std/[macros, os]
 
 --define:ssl
 --deepCopy:on
---mm:atomicArc
+--mm:arc
 --define:webapp # todo supWebApp
 --define:supraFileserver
 --define:supranimUseGlobalOnRequest

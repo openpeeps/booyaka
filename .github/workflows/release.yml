@@ -1,121 +1,13 @@
 name: release
 on:
   push:
-    tags:
-      - '*.*.*'
+    tags: ['*.*.*']
   workflow_dispatch:
-env:
-  APP_NAME: 'booyaka'
-  NIM_VERSION: '2.2.10'
-  MAINTAINER: 'OpenPeeps'
-
 jobs:
-  build-artifact:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-latest
-            arch: x86_64
-          - os: macos-14
-            arch: arm64
-          - os: macos-15-intel
-            arch: x86_64
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Cache nimble
-        id: cache-nimble
-        uses: actions/cache@v4
-        with:
-          path: ~/.nimble
-          key: ${{ runner.os }}-${{ runner.arch }}-nim-${{ env.NIM_VERSION }}-nimble-${{ hashFiles('**/*.nimble', '**/nimble.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-${{ runner.arch }}-nim-${{ env.NIM_VERSION }}-nimble-
-            ${{ runner.os }}-${{ runner.arch }}-nimble-
-        if: runner.os != 'Windows'
-
-      - uses: georgelemon/setup-nim-action@master
-        with:
-          nim-version: ${{ env.NIM_VERSION }}
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Install C library dependencies
-        run: |
-          if [[ "${{ runner.os }}" == "Linux" ]]; then
-            sudo apt-get update
-            sudo apt-get install -y --no-install-recommends \
-              pkg-config libevent-dev libpcre3-dev libpq-dev
-          elif [[ "${{ runner.os }}" == "macOS" ]]; then
-            brew install pkgconfig libevent pcre libpq
-          fi
-        shell: bash
-
-      - name: Create /opt/local aliases for libevent (macOS only)
-        if: runner.os == 'macOS'
-        run: |
-          LIBEVENT_PREFIX="$(brew --prefix libevent)"
-
-          sudo mkdir -p /opt/local/include /opt/local/lib
-          sudo ln -sfn "${LIBEVENT_PREFIX}/include/event2" /opt/local/include/event2
-          sudo ln -sfn "${LIBEVENT_PREFIX}/lib/libevent.a" /opt/local/lib/libevent.a
-
-          ls -lah /opt/local/include/event2
-          ls -lah /opt/local/lib/libevent.a
-
-      - name: Export Homebrew library paths (macOS only)
-        if: runner.os == 'macOS'
-        run: |
-          BREW_PREFIX="$(brew --prefix)"
-          LIBPQ_PREFIX="$(brew --prefix libpq)"
-          echo "PATH=${LIBPQ_PREFIX}/bin:${BREW_PREFIX}/bin:${PATH}" >> "$GITHUB_ENV"
-          echo "DYLD_LIBRARY_PATH=${LIBPQ_PREFIX}/lib:${BREW_PREFIX}/lib" >> "$GITHUB_ENV"
-          echo "DYLD_FALLBACK_LIBRARY_PATH=${LIBPQ_PREFIX}/lib:${BREW_PREFIX}/lib" >> "$GITHUB_ENV"
-          echo "PKG_CONFIG_PATH=${LIBPQ_PREFIX}/lib/pkgconfig:${BREW_PREFIX}/lib/pkgconfig" >> "$GITHUB_ENV"
-          ls -lah "${LIBPQ_PREFIX}/lib/libpq.dylib"
-
-      - run: nimble install -Y
-
-      - name: Create artifact
-        run: |
-          os="${{ runner.os }}"
-          arch="${{ matrix.arch }}"
-          suffix="$os${arch:+-$arch}"
-          assets="${{ env.APP_NAME }}_$(echo "$suffix" | tr '[:upper:]' '[:lower:]')"
-          mkdir -p "dist/$assets"
-          cp ~/.nimble/bin/booyaka LICENSE README.* "dist/$assets/"
-          (
-            cd dist
-            tar czf "$assets.tar.gz" "$assets"
-          )
-        shell: bash
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: artifact-${{ matrix.os }}-${{ matrix.arch }}
-          path: dist/*.tar.gz
-
   release:
-    runs-on: ubuntu-latest
-    if: github.ref_type == 'tag'
     permissions:
       contents: write
-    needs:
-      - build-artifact
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          pattern: artifact-*
-          path: dist
-          merge-multiple: true
-
-      - name: Create Release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh release create "${{ github.ref_name }}" \
-            --title "${{ github.ref_name }}" \
-            --notes "Release" \
-            --draft=false \
-            --prerelease=false \
-            dist/*.tar.gz
+    uses: nimbase/setup-nim-action/.github/workflows/release.yml@main
+    with:
+      nim-version: stable
+      app-name: booyaka

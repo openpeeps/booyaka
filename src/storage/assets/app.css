@@ -154,14 +154,12 @@ mark {
 
 /* Menu navigation */
 .navbar-container-area {
-  box-shadow: 0 -40px 20px 20px rgb(0, 0, 0); /* shadow up */
   background-color: rgba(10,14,14,0.30);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   font-size: 0.9rem;
   width:100%;
   border-bottom: 1px solid rgba(200, 200, 200, 0.1);
-  box-shadow: 0px 20px 50px 10px rgba(0, 0, 0, 0.58);
 }
 
 .sidebar-navigation {
