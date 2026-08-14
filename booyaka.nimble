@@ -11,7 +11,7 @@ binDir        = "build"
 # Dependencies
 
 requires "nim >= 2.0.0"
-requires "supranim >= 0.1.8[powpow]"
+requires "supranim >= 0.1.9[powpow]"
 requires "powpow >= 0.1.8"
 requires "tim >= 0.2.6"
 requires "marvdown >= 0.1.3"
