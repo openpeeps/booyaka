@@ -3,7 +3,7 @@ div.navbar-container-area.sticky-top.user-select-none
     div.text-center.border-bottom.border-dark.p-1.small: $this["config"]["header"]["notification"]
   nav.navbar.navbar-expand-lg.py-1
     div.container.d-flex
-      a.navbar-brand.fw-bold.py-0 href="/"
+      a.navbar-brand.fw-bold.py-0 href=toString($this["version"]["path"]) & "/"
         img src=$this["site"]["logo"] height="32"
         if $this["site"]["hasLogo"] != true or $this["config"]["metadata"]["logo_keep_gradient"] == true:
           // this is used to draw the rounded square
@@ -16,9 +16,30 @@ div.navbar-container-area.sticky-top.user-select-none
       // When enabled, shows the search bar in the header
       if $this["config"]["header"]["search"]["enable"] == true:
         div.col-6.col-lg-4
-          form.spotlight-form.d-flex.ms-3.mb-0.position-relative action="/search" method="GET"
+          form.spotlight-form.d-flex.ms-3.mb-0.position-relative action=toString($this["version"]["path"]) & "/search" method="GET"
             input.form-control.form-control-sm.px-3.rounded-4.spotlight.border-2.me-2 type="search" name="q" placeholder="Search the docs..." aria-label="Search the docs"
             button.btn.btn-sm.text-muted.position-absolute.me-2.border-0 type="submit" style="margin-top:2px; right:10px;": "⌘/"
+
+      // When git versioning is enabled, shows a version switcher dropdown
+      if $this["versions"]["enable"] == true:
+        div.btn-group.ms-auto
+          button.btn.btn-sm.btn-dark.dropdown-toggle.rounded-4.border-0 type="button" data-bs-toggle="dropdown" aria-expanded="false": toString($this["version"]["label"])
+            span.icon-brand-git.me-1
+              svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                path stroke="none" d="M0 0h24v24H0z" fill="none"
+                path d="M16 12h-5"
+                path d="M6 3m0 1a1 1 0 0 1 1 -1h2a1 1 0 0 1 1 1v3a1 1 0 0 1 -1 1h-2a1 1 0 0 1 -1 -1z"
+                path d="M6 15m0 1a1 1 0 0 1 1 -1h2a1 1 0 0 1 1 1v3a1 1 0 0 1 -1 1h-2a1 1 0 0 1 -1 -1z"
+                path d="M17 7m0 1a1 1 0 0 1 1 -1h2a1 1 0 0 1 1 1v3a1 1 0 0 1 -1 1h-2a1 1 0 0 1 -1 -1z"
+                path d="M6 7v8"
+                path d="M16 12l-2 -2"
+                path d="M16 12l-2 2"
+          ul.dropdown-menu.dropdown-menu-end.rounded-3.shadow-lg
+            for $version in items($this["versions"]["items"]):
+              if toString($this["version"]["label"]) == toString($version["label"]):
+                li > span.dropdown-item.active.fw-bold: $version["label"]
+              else:
+                li > a.dropdown-item href=$version["path"]: $version["label"]
 
       div#navbarSupportedContent.collapse.navbar-collapse
         // Makes the navbar items defined in the config file.
@@ -28,7 +49,7 @@ div.navbar-container-area.sticky-top.user-select-none
           ul.navbar-nav.ms-auto.mb-2.mb-lg-0
             for $navItem in items($this["config"]["navbar"]):
               li.nav-item.mx-1
-                a.nav-link.fw-medium href=$navItem["url"]: $navItem["title"]
+                a.nav-link.fw-medium href=toString($this["version"]["path"]) & $navItem["url"]: $navItem["title"]
 
 div.container-fluid.my-4 style="min-height:calc(100vh - 150px)"
   div.row > div.col-lg-12.col-xl-10.mx-auto > div.row

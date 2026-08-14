@@ -59,7 +59,6 @@ div.px-lg-4.px-2 > div.container-fluid data-view
       // Raw Markdown source of the current page, embedded as JSON in a
       // `<script type="application/json">` element so the "Copy as Markdown"
       // share action can copy it to the clipboard.
-      // div: $this["markdown"]["markdownSourceJson"]
       script type="application/json": toJson({})
 
       div.page-header.mb-4
@@ -82,13 +81,13 @@ div.px-lg-4.px-2 > div.container-fluid data-view
         div.col-lg-6.col-md-6
           if $this["markdown"]["navigation"]["previous"] != nil:
             const previousItem = $this["markdown"]["navigation"]["previous"]
-            a.btn.btn-outline-dark.border-2.rounded-4.px-4.py-3.w-100.text-start href=$previousItem["url"]
+            a.btn.btn-outline-dark.border-2.rounded-4.px-4.py-3.w-100.text-start href=toString($this["version"]["path"]) & $previousItem["url"]
               span.text-muted.small: "← Previous"
               span.d-block.mt-1.h6.text-light: $previousItem["title"]
         div.col-lg-6.col-md-6
           if $this["markdown"]["navigation"]["next"] != nil:
             const nextItem = $this["markdown"]["navigation"]["next"]
-            a.btn.btn-outline-dark.border-2.rounded-4.px-4.py-3.w-100.text-end href=$nextItem["url"]
+            a.btn.btn-outline-dark.border-2.rounded-4.px-4.py-3.w-100.text-end href=toString($this["version"]["path"]) & $nextItem["url"]
               span.text-muted.small: "Next →"
               span.d-block.mt-1.h6.text-light: $nextItem["title"]
 

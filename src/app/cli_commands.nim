@@ -9,8 +9,7 @@ import pkg/kapsis/interactive/prompts
 
 
 import ./structs
-import ../service/provider/[markdown, tim, search, assets]
-
+import ../service/provider/[markdown, tim, search, assets, git]
 const tpl = staticRead(storagePath / "stubs" / "template_booyaka.config.yaml")
   # a static template for the default Booyaka config file, used when creating new projects
 
@@ -49,8 +48,7 @@ proc startCommand*(v: Values) =
   globalBooyakaConfig.ensureLeadingSlash()
   booyakaProjectPath = configPath.parentDir
 
-proc newCommand*(v: Values) =
-  ## Create a new Booyaka project in the specified directory
+proc newCommand*(v: Values) =  ## Create a new Booyaka project in the specified directory
   ## If the directory is not empty, the command will fail with an error message.
   let dirPath = absolutePath($(v.get("directory").getPath))
   if dirExists(dirPath):
@@ -61,6 +59,7 @@ proc newCommand*(v: Values) =
     writeFile(dirPath / "booyaka.config.json", parseYaml(tpl).toJson())
   else:
     writeFile(dirPath / "booyaka.config.yaml", tpl)
+  display("Booyaka project created at: " & dirPath)
 
 proc buildCommand*(v: Values) =
   ## Build the app for production - generates static HTML website
@@ -91,6 +90,7 @@ proc buildCommand*(v: Values) =
 
   app.initMarkdownInstance(dbPath)
   scanMarkdownFiles(contentPath, dbPath, searchPath)
+  initVersions(projectPath)
 
   tim.buildSetup(
     src = App.config("tim.source").getStr,
@@ -136,55 +136,105 @@ proc buildCommand*(v: Values) =
   if fileExists(projectAssetsCss):
     copyFile(projectAssetsCss, outputPath / "assets" / "style.css")
 
-  for pagePath, pageHash in gMarkdownService.index:
-    let mdPage = gMarkdownService.pages[pageHash]
-    var mdJson = newJObject()
-    if mdPage.meta != nil and mdPage.meta.kind == JObject:
-      mdJson["meta"] = mdPage.meta
-    else:
-      mdJson["meta"] = newJObject()
-    if not mdJson["meta"].hasKey("title"):
-      mdJson["meta"]["title"] = newJString(mdPage.title)
-    if not mdJson["meta"].hasKey("description"):
-      mdJson["meta"]["description"] = newJString("")
-    mdJson["title"] = newJString(mdPage.title)
-    mdJson["section"] = newJString(mdPage.section)
-    mdJson["content"] = newJString(mdPage.content)
-    mdJson["last_updated"] = newJString(mdPage.last_updated)
-    mdJson["markdownSourceJson"] = newJString(mdPage.markdownSourceJson)
-    var tocJson = newJObject()
-    for k, v in mdPage.toc:
-      tocJson[k] = newJString(v)
-    mdJson["toc"] = tocJson
-    mdJson["tocHtml"] = newJString(mdPage.tocHtml)
-    var navJson = newJObject()
-    if mdPage.navigation.previous.isSome:
-      var prev = newJObject()
-      prev["title"] = newJString(mdPage.navigation.previous.get.title)
-      prev["url"] = newJString(mdPage.navigation.previous.get.url)
-      navJson["previous"] = prev
-    else:
-      navJson["previous"] = newJNull()
-    if mdPage.navigation.next.isSome:
-      var next = newJObject()
-      next["title"] = newJString(mdPage.navigation.next.get.title)
-      next["url"] = newJString(mdPage.navigation.next.get.url)
-      navJson["next"] = next
-    else:
-      navJson["next"] = newJNull()
-    mdJson["navigation"] = navJson
-    var localData = newJObject()
-    localData["markdown"] = mdJson
-    localData["config"] = toJson(globalBooyakaConfig).fromJson()
-    let html = tim.buildRender(pagePath, localData)
-    if pagePath == "/":
-      writeFile(outputPath / "index.html", html)
-    else:
-      let cleanPath = pagePath.strip(chars = {'/'}, leading = true)
-      let pageDir = outputPath / cleanPath
-      createDir(pageDir)
-      writeFile(pageDir / "index.html", html)
-  
+  proc renderPages(instance: MarkdownInstance, destPath: string,
+      version = "") =
+    ## Renders every page of `instance` into `destPath` as static HTML.
+    ## The version switcher data links each entry to the same page in that
+    ## version when it exists, falling back to the version index.
+    proc switcherItems(currentSlug: string): JsonNode =
+      var versions = newJArray()
+      for label in @[globalBooyakaConfig.git.latest_label] & gVersionList:
+        var target =
+          if label == globalBooyakaConfig.git.latest_label: ""
+          else: "/" & label
+        if currentSlug.len > 0 and currentSlug != "/":
+          let slugPath = currentSlug.strip(chars = {'/'}, leading = true)
+          let hasPage =
+            if label == globalBooyakaConfig.git.latest_label:
+              gMarkdownService.index.hasKey(currentSlug)
+            else:
+              not gMarkdownVersions.isNil and gMarkdownVersions.hasKey(label) and
+                gMarkdownVersions[label].index.hasKey(currentSlug)
+          if hasPage:
+            target = target & "/" & slugPath
+        versions.add(%*{
+          "label": label,
+          "path": target
+        })
+      versions
+    for pagePath, pageHash in instance.index:
+      let mdPage = instance.pages[pageHash]
+      var mdJson = newJObject()
+      if mdPage.meta != nil and mdPage.meta.kind == JObject:
+        mdJson["meta"] = mdPage.meta
+      else:
+        mdJson["meta"] = newJObject()
+      if not mdJson["meta"].hasKey("title"):
+        mdJson["meta"]["title"] = newJString(mdPage.title)
+      if not mdJson["meta"].hasKey("description"):
+        mdJson["meta"]["description"] = newJString("")
+      mdJson["title"] = newJString(mdPage.title)
+      mdJson["section"] = newJString(mdPage.section)
+      mdJson["content"] = newJString(mdPage.content)
+      mdJson["last_updated"] = newJString(mdPage.last_updated)
+      mdJson["markdownSourceJson"] = newJString(mdPage.markdownSourceJson)
+      var tocJson = newJObject()
+      for k, v in mdPage.toc:
+        tocJson[k] = newJString(v)
+      mdJson["toc"] = tocJson
+      mdJson["tocHtml"] = newJString(mdPage.tocHtml)
+      var navJson = newJObject()
+      if mdPage.navigation.previous.isSome:
+        var prev = newJObject()
+        prev["title"] = newJString(mdPage.navigation.previous.get.title)
+        prev["url"] = newJString(mdPage.navigation.previous.get.url)
+        navJson["previous"] = prev
+      else:
+        navJson["previous"] = newJNull()
+      if mdPage.navigation.next.isSome:
+        var next = newJObject()
+        next["title"] = newJString(mdPage.navigation.next.get.title)
+        next["url"] = newJString(mdPage.navigation.next.get.url)
+        navJson["next"] = next
+      else:
+        navJson["next"] = newJNull()
+      mdJson["navigation"] = navJson
+      var localData = newJObject()
+      localData["markdown"] = mdJson
+      localData["config"] = toJson(globalBooyakaConfig).fromJson()
+      localData["version"] = %*{
+        "label": version,
+        "path": if version.len > 0: "/" & version else: ""
+      }
+      localData["versions"] = %*{
+        "enable": globalBooyakaConfig.git.enable_versioning,
+        "items": switcherItems(pagePath)
+      }
+      let html = tim.buildRender(pagePath, localData)
+      if pagePath == "/":
+        writeFile(destPath / "index.html", html)
+      else:
+        let cleanPath = pagePath.strip(chars = {'/'}, leading = true)
+        let pageDir = destPath / cleanPath
+        createDir(pageDir)
+        writeFile(pageDir / "index.html", html)
+
+  renderPages(gMarkdownService, outputPath)
+
+  # emit `/llms.txt` from the root `llms.md` file when present
+  let llmsSource = contentPath / "llms.md"
+  if fileExists(llmsSource):
+    writeFile(outputPath / "llms.txt", readFile(llmsSource))
+
+  if globalBooyakaConfig.git.enable_versioning:
+    # build a static site for every semver git tag under `<output>/<tag>/`
+    for tag in getSemverTags(projectPath):
+      if gMarkdownVersions.isNil or not gMarkdownVersions.hasKey(tag):
+        continue
+      let versionPath = outputPath / tag
+      discard existsOrCreateDir(versionPath)
+      renderPages(gMarkdownVersions[tag], versionPath, version = tag)
+
   let searchEntries = spotlight().getEntries()
   var resultsArray = newJArray()
   for entry in searchEntries:

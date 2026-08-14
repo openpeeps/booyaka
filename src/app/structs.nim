@@ -192,6 +192,9 @@ type
       ## will detect Git tags/branches and allow users to switch between different versions of the documentation site.
     enable_contributors_info*: bool
       ## Whether to show contributors information on pages based on Git commit history.
+    latest_label*: string = "main"
+      ## The label of the root version (the current working tree / default branch).
+      ## Used by the version switcher and `versionPath` to detect the current version.
 
   BooyakaConfig* = object
     ## Configuration options for Booyaka This object is automatically populated from `booyaka.config.yaml` or `booyaka.config.json` file in the current directory.

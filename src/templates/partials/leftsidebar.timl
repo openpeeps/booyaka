@@ -9,9 +9,9 @@ div.sidebar-navigation.sticky-top.sticky-sidebar
             for $item in items($section["items"]):
               if $this["path"] == $item["url"]:
                 // the current page is active, highlight it in the sidebar
-                li > a.bg-dark href=$item["url"]: $item["title"]
+                li > a.bg-dark href=toString($this["version"]["path"]) & $item["url"]: $item["title"]
               else:
-                li > a href=$item["url"]: $item["title"]
+                li > a href=toString($this["version"]["path"]) & $item["url"]: $item["title"]
     else:
       div.border-1.border-dark.rounded-4.p-4 style="border-style: dashed"
         p.lh-sm.mb-0: "No navigation items available."

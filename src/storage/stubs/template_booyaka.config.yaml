@@ -13,6 +13,7 @@ appearance:
 git:
   enable_versioning: false
   enable_contributors_info: false
+  latest_label: "main"
 header:
   search:
     enable: true

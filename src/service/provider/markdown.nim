@@ -30,7 +30,7 @@ import pkg/supranim/network/[webserver, websocket]
 import pkg/supranim/support/slug
 import pkg/threading/rwlock
 
-import ./tim, ./search
+import ./tim, ./search, ./git
 import ../../app/structs
 
 export structs
@@ -52,6 +52,11 @@ initService Markdown[Global]:
       watcher*: Watchout
       hasChanges : bool
       gMarkdownService* : MarkdownInstance
+      gMarkdownVersions*: TableRef[string, MarkdownInstance]
+        ## Map of version label -> MarkdownInstance, populated when
+        ## `git.enable_versioning` is enabled (see `initVersionedMarkdown`)
+      gVersionList*: seq[string]
+        ## Sorted list of version labels (latest first) for the version switcher
       wsClients: seq[WsConnection]
       searchInstance: SpotlightInstance
       changeLocker = createRwLock()
@@ -289,7 +294,8 @@ initService Markdown[Global]:
           result.add("</ul>")
 
     proc parseMarkdownFile(mdInstance: MarkdownInstance, basePath,
-                    path: string, hashedSlug: Option[(string, string)] = none((string, string))) = 
+                    path: string, hashedSlug: Option[(string, string)] = none((string, string)),
+                    addToSearch: bool = true) = 
       # Parses a markdown file and updates the markdown instance
       # Keep the module-level `contentPath` in sync so the `@<page>.md`
       # reference fallback can resolve files in the `build` path (which calls
@@ -319,20 +325,21 @@ initService Markdown[Global]:
       let meta: JsonNode = toJson(md.getHeader()).fromJson()
       
       # add/update the search index with the new content
-      searchInstance.addEntry(
-        slugHash[1],
-        slugHash[0],
-        title =
-          (if meta.kind == JObject and meta.hasKey"title":
-              meta["title"].getStr()
-          else: md.getTitle()),
-        description = (
-          if meta.kind == JObject and meta.hasKey"description":
-              some(meta["description"].getStr)
-            else: none(string)
-          ),
-        headings = some(md.getSelectorsList())
-      )
+      if addToSearch and not searchInstance.isNil:
+        searchInstance.addEntry(
+          slugHash[1],
+          slugHash[0],
+          title =
+            (if meta.kind == JObject and meta.hasKey"title":
+                meta["title"].getStr()
+            else: md.getTitle()),
+          description = (
+            if meta.kind == JObject and meta.hasKey"description":
+                some(meta["description"].getStr)
+              else: none(string)
+            ),
+          headings = some(md.getSelectorsList())
+        )
 
       # update the markdown instance index with the new slug and hash mapping
       mdInstance.index[slugHash[0]] = slugHash[1]
@@ -404,6 +411,49 @@ initService Markdown[Global]:
       writeFile(dbPath, toFlatty(gMarkdownService))
       writeFile(searchPath, toFlatty(searchInstance[]))
 
+    proc scanVersion*(projectPath, tag: string): MarkdownInstance =
+      ## Extracts `tag` from the git repository at `projectPath`, scans its
+      ## `contents` directory into a fresh MarkdownInstance (not added to the
+      ## global search index) and registers it in `gMarkdownVersions`.
+      let
+        tagContentsPath = getTagContentsPath(projectPath, tag)
+        instance = MarkdownInstance(
+          pages: newTable[string, MarkdownPage](),
+          index: newTable[string, string](),
+          version: parseVersion(tag)
+        )
+      extractTag(projectPath, tag, getVersionsCachePath(projectPath) / tag)
+      if not dirExists(tagContentsPath):
+        return instance
+      # `parseMarkdownFile` mutates the module-level `contentPath`; keep the
+      # real one intact so the watchout watcher keeps working.
+      let prevContentPath = contentPath
+      contentPath = tagContentsPath
+      for path in walkDirRec(tagContentsPath, {pcFile}):
+        let fpath = path.splitFile
+        if fpath.ext != ".md" or fpath.name.startsWith("!"):
+          continue
+        let hashedSlug = getSlugHash(tagContentsPath, path)
+        instance.parseMarkdownFile(tagContentsPath, path, some(hashedSlug),
+          addToSearch = false)
+      contentPath = prevContentPath
+      gMarkdownVersions[tag] = instance
+      gVersionList.add(tag)
+      result = instance
+
+    proc initVersions*(projectPath: string) =
+      ## Detects semver git tags in `projectPath` and scans each one into a
+      ## versioned MarkdownInstance. No-op when versioning is disabled, the
+      ## directory is not a git repository, or there are no semver tags.
+      if not globalBooyakaConfig.git.enable_versioning:
+        return
+      if gMarkdownVersions.isNil:
+        gMarkdownVersions = newTable[string, MarkdownInstance]()
+      for tag in getSemverTags(projectPath):
+        if gMarkdownVersions.hasKey(tag):
+          continue
+        discard scanVersion(projectPath, tag)
+
     # Setup the filesystem monitor
     const defaultHomePage = staticRead(storagePath / "stubs" / "index.md")
     proc init*(app: Application) =
@@ -433,4 +483,8 @@ initService Markdown[Global]:
 
       # initial scan of existing markdown files
       scanMarkdownFiles(contentPath, dbPath, searchPath)
+
+      # scan versioned documentation from git tags (when enabled)
+      if booyakaProjectPath.len > 0:
+        initVersions(booyakaProjectPath)
       
