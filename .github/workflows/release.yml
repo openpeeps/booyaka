@@ -12,3 +12,4 @@ jobs:
       nim-version: stable
       app-name: booyaka
       use-clue: true
+      bin-directory: build
