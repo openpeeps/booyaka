@@ -11,5 +11,7 @@ jobs:
     with:
       nim-version: stable
       app-name: booyaka
-      use-clue: true
       bin-directory: build
+      build-command: |
+        clue install supra
+        clue build --verbose --release
