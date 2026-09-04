@@ -10,8 +10,7 @@ jobs:
     uses: nimbase/setup-nim-action/.github/workflows/release.yml@main
     with:
       nim-version: stable
-      app-name: booyaka
-      bin-directory: build
-      build-command: |
+      app-name: marvdown
+      pre-build-command: |
         clue install supra
-        clue build --verbose --release
+        clue build --verbose -d:release
