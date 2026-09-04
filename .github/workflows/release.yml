@@ -12,5 +12,5 @@ jobs:
       nim-version: stable
       app-name: booyaka
       pre-build-command: |
-        clue install supra
+        clue install supra --build
         clue build --verbose -d:release
