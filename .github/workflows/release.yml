@@ -7,10 +7,10 @@ jobs:
   release:
     permissions:
       contents: write
-    uses: nimbase/setup-nim-action/.github/workflows/release.yml@main
+    uses: nimbase/setup-nim-action/.github/workflows/release_clue.yml@main
     with:
       nim-version: stable
-      app-name: marvdown
+      app-name: booyaka
       pre-build-command: |
         clue install supra
         clue build --verbose -d:release
