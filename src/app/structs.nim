@@ -218,7 +218,7 @@ type
       ## Type of the right sidebar
     extra_sections*: BooyakaExtraSections
       ## Extra sections for future extensions
-    footer: BooyakaFooter
+    footer*: BooyakaFooter
       ## Footer configuration
 
 var
