@@ -130,12 +130,8 @@ App.run do:
   # Booyaka WebSocket endpoint for live-reloading.
   if enableBrowserSync:
     App.server.registerCallback("/ws",
-      proc (req: pointer, arg: pointer) {.cdecl, gcsafe.} =
+      proc (req: HttpRequest, res: HttpResponse) {.gcsafe.} =
         {.gcsafe.}:
-          let ppReq = cast[pw.HttpRequest](req)
-          let ppRes = cast[pw.HttpResponse](arg)
-          discard websocketUpgrade(ppRes, ppReq,
-            onOpen = onOpenCallback,
-            onClose = onClose,
-            onError = onError)
+          discard websocketUpgrade(res, req, onOpen = onOpenCallback,
+                        onClose = onClose, onError = onError)
     )
