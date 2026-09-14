@@ -12,7 +12,7 @@ binDir        = "build"
 
 requires "nim >= 2.0.0"
 requires "supranim >= 0.1.9"
-requires "powpow >= 0.1.8"
+requires "powpow >= 0.2.0"
 requires "tim >= 0.2.6"
 requires "marvdown >= 0.1.4"
 requires "semver >= 1.2.3"
