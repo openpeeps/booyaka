@@ -260,3 +260,4 @@ proc buildCommand*(v: Values) =
   results["results"] = resultsArray
   writeFile(outputPath / "results.json", $results)
   displaySuccess("Build complete: " & outputPath)
+  quit(0)
