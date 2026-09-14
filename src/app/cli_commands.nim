@@ -18,7 +18,7 @@ proc startCommand*(v: Values) =
   ## Kapsis `init` command handler
   initStartCommand(v, createDirs = false)
   let
-    projectPath = absolutePath($(v.get("directory").getPath))
+    projectPath = absolutePath($(v.get("project").getPath))
     configPath = projectPath / "booyaka.config"
     assetsPath = projectPath / "assets"
     port = 
@@ -50,7 +50,7 @@ proc startCommand*(v: Values) =
 
 proc newCommand*(v: Values) =  ## Create a new Booyaka project in the specified directory
   ## If the directory is not empty, the command will fail with an error message.
-  let dirPath = absolutePath($(v.get("directory").getPath))
+  let dirPath = absolutePath($(v.get("project").getPath))
   if dirExists(dirPath):
     # checking if the directory is empty
     if walkDir(dirPath).toSeq().len > 0:
@@ -65,7 +65,7 @@ proc buildCommand*(v: Values) =
   ## Build the app for production - generates static HTML website
   initStartCommand(v, createDirs = false)
   let
-    projectPath = absolutePath($(v.get("directory").getPath))
+    projectPath = absolutePath($(v.get("project").getPath))
     configPath = projectPath / "booyaka.config"
 
   if fileExists(configPath & ".yml"):
@@ -163,6 +163,9 @@ proc buildCommand*(v: Values) =
         })
       versions
     for pagePath, pageHash in instance.index:
+      if pagePath.strip(chars = {'/'}, leading = true, trailing = true).toLowerAscii() == "llms":
+        # reserved root `llms.md` only emits `/llms.txt`, never `/llms`
+        continue
       let mdPage = instance.pages[pageHash]
       var mdJson = newJObject()
       if mdPage.meta != nil and mdPage.meta.kind == JObject:
@@ -221,9 +224,13 @@ proc buildCommand*(v: Values) =
 
   renderPages(gMarkdownService, outputPath)
 
-  # emit `/llms.txt` from the root `llms.md` file when present
-  let llmsSource = contentPath / "llms.md"
-  if fileExists(llmsSource):
+  # emit `/llms.txt` from the root `llms.md` file when present (any case)
+  var llmsSource = ""
+  for kind, path in walkDir(contentPath):
+    if kind == pcFile and extractFilename(path).toLowerAscii() == "llms.md":
+      llmsSource = path
+      break
+  if llmsSource.len > 0:
     writeFile(outputPath / "llms.txt", readFile(llmsSource))
 
   if globalBooyakaConfig.git.enable_versioning:

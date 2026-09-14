@@ -23,14 +23,15 @@ import std/[os, tables, httpcore, strutils,
 
 import pkg/checksums/sha1
 import pkg/openparser/[yaml, json, html]
-import pkg/[flatty, watchout, marvdown, semver, kapsis/cli]
+import pkg/[watchout, marvdown, semver, kapsis/cli]
+import pkg/openparser/fbe
 
 import pkg/supranim/core/[services, application, paths]
 import pkg/supranim/network/[webserver, websocket]
 import pkg/supranim/support/slug
 import pkg/threading/rwlock
 
-import ./tim, ./search, ./git
+import ./tim, ./search, ./git, ./dbcodec
 import ../../app/structs
 
 export structs
@@ -80,14 +81,6 @@ initService Markdown[Global]:
     proc `%`(opt: Option[Time]): JsonNode =
       %*(opt.get().toUnix)
 
-    proc toFlatty(s: var string, x: Time) =
-      s.toFlatty(x.toUnix)
-
-    proc fromFlatty(s: string, i: var int, x: var Time) =
-      var unix: int64
-      s.fromFlatty(i, unix)
-      x = unix.fromUnix
-
     proc escapeHtmlText(s: string): string =
       ## Escapes HTML special characters for safe text/attribute output
       result = s.multiReplace(("&", "&amp;"), ("<", "&lt;"), (">", "&gt;"),
@@ -115,6 +108,9 @@ initService Markdown[Global]:
     proc findPageRef(target: string): (string, MarkdownPage) =
       ## Resolves a `@<target>.md` reference to a page (url, page). Unknown
       ## references return an empty string url so they stay as plain text.
+      ## The reserved root `llms.md` (`/llms.txt` only) never resolves.
+      if target.strip().toLowerAscii().strip(chars = {'/', '.'}, leading = true, trailing = false) == "llms.md":
+        return ("", MarkdownPage())
       if gMarkdownService.isNil:
         return ("", MarkdownPage())
       # normalize: strip the leading slash and `.md` extension
@@ -184,16 +180,71 @@ initService Markdown[Global]:
         else:
           nil
 
+    proc writeMarkdownInstanceFields(b: var Buffer, inst: MarkdownInstance) =
+      b.writeField(1'u16, proc (bb: var Buffer) =
+        let items =
+          if inst.pages.isNil: newSeq[tuple[key: string, val: MarkdownPage]]()
+          else: toSeq(pairs(inst.pages))
+        writeMap[string, MarkdownPage](bb, items,
+          proc (bbb: var Buffer, k: string) = bbb.writeString(k),
+          proc (bbb: var Buffer, p: MarkdownPage) = bbb.writeMarkdownPage(p)))
+      b.writeField(2'u16, proc (bb: var Buffer) = bb.writeStrMap(inst.index))
+      b.writeField(3'u16, proc (bb: var Buffer) = bb.writeConfig(inst.config))
+      b.writeField(4'u16, proc (bb: var Buffer) = bb.writeSemverVersion(inst.version))
+
+    proc handleMarkdownInstanceField(fid: uint16, fsz: int, b: var Buffer,
+                                     into: var MarkdownInstance) =
+      case fid
+      of 1'u16:
+        into.pages = newTable[string, MarkdownPage]()
+        for kv in readMap[string, MarkdownPage](b, 
+            proc (bb: var Buffer): string = bb.readString(),
+            proc (bb: var Buffer): MarkdownPage = bb.readMarkdownPage()):
+          into.pages[kv.key] = kv.val
+      of 2'u16:
+        into.index = b.readStrMap()
+      of 3'u16:
+        into.config = b.readConfig()
+      of 4'u16:
+        into.version = b.readSemverVersion()
+      else: discard
+
+    proc encodeMarkdownInstance*(inst: MarkdownInstance): Buffer =
+      ## Serializes a `MarkdownInstance` into an FBE payload buffer
+      ## (wrap with `writeDbFile` for the signature envelope)
+      result = initBuffer()
+      encodeRootFrom(result, inst, writeMarkdownInstanceFields, DbCodecVersion)
+
+    proc decodeMarkdownInstance*(b: var Buffer): MarkdownInstance =
+      ## Deserializes a `MarkdownInstance` from an FBE payload buffer
+      ## (unwrap with `readDbFile` first)
+      result = MarkdownInstance(
+        pages: newTable[string, MarkdownPage](),
+        index: newTable[string, string](),
+      )
+      var outVer: uint32
+      b.decodeRootInto(result, handleMarkdownInstanceField, outVer)
+
     proc initMarkdownInstance*(app: Application, dbPath: string) =
       ## Initializes the markdown service instance, loading existing data from the database if it exists
       setupMarkdownOptions()
-      if fileExists(dbPath):
-        gMarkdownService = fromFlatty(readFile(dbPath), MarkdownInstance)
-      else:
+      proc freshMarkdownService() =
         gMarkdownService = MarkdownInstance(
           pages: newTable[string, MarkdownPage](),
           index: newTable[string, string](), # map of original paths to hashed paths
         )
+      var payload: Buffer
+      case readDbFile(dbPath, payload)
+      of dbOk:
+        try:
+          gMarkdownService = decodeMarkdownInstance(payload)
+        except CatchableError:
+          freshMarkdownService()
+      else:
+        # missing file (first run) or stale/foreign format (pre-FBE
+        # flatty db, codec or Booyaka version mismatch): start fresh,
+        # the scan below rebuilds the index
+        freshMarkdownService()
       search.init(app)
       searchInstance = getSpotlightInstance()
 
@@ -231,6 +282,35 @@ initService Markdown[Global]:
       var k = path.replace(basePath).replace(".md").slugify(allowSlash = true)
       if k == "index": k = "/"
       result = (k, $(secureHash(k)))
+
+    proc isReservedLlmsFile(basePath, path: string): bool =
+      ## Returns true for the reserved root `llms.md` (case-insensitive),
+      ## e.g. `contents/llms.md`, `contents/LLMS.md`. Nested files such as
+      ## `contents/docs/llms.md` (`/docs/llms`) are normal pages and return false.
+      ## The reserved file only serves `/llms.txt` and must never create a
+      ## `/llms` page route nor a search entry.
+      try:
+        if absolutePath(parentDir(path)) != absolutePath(basePath):
+          return false
+      except:
+        if parentDir(path) != basePath:
+          return false
+      extractFilename(path).toLowerAscii() == "llms.md"
+
+    proc purgeReservedLlms*(mdInstance: MarkdownInstance) =
+      ## Removes a stale `/llms` page (from an older `booyaka.db`) so a
+      ## reserved root `llms.md` can never resolve to a page route.
+      if mdInstance.isNil or mdInstance.index.isNil or mdInstance.pages.isNil:
+        return
+      var staleKeys: seq[string] = @[]
+      for slug in keys(mdInstance.index):
+        if slug.strip(chars = {'/'}, leading = true, trailing = true).toLowerAscii() == "llms":
+          staleKeys.add(slug)
+      for slug in staleKeys:
+        let hash = mdInstance.index[slug]
+        mdInstance.index.del(slug)
+        if mdInstance.pages.hasKey(hash):
+          mdInstance.pages.del(hash)
 
     proc flattenNavigation(nav: seq[NavigationSection]): seq[BooyakaNavItem] =
       # Flattens sidebar_navigation into a single sequence of nav items
@@ -297,6 +377,10 @@ initService Markdown[Global]:
                     path: string, hashedSlug: Option[(string, string)] = none((string, string)),
                     addToSearch: bool = true) = 
       # Parses a markdown file and updates the markdown instance
+      # The reserved root `llms.md` only serves `/llms.txt` and must
+      # never create a page route or search entry.
+      if isReservedLlmsFile(basePath, path):
+        return
       # Keep the module-level `contentPath` in sync so the `@<page>.md`
       # reference fallback can resolve files in the `build` path (which calls
       # this proc via `scanMarkdownFiles` instead of going through `init`).
@@ -383,20 +467,30 @@ initService Markdown[Global]:
     proc onChange(file: watchout.File) =
       # Callback when a markdown file is changed
       let path = file.getPath()
+      if isReservedLlmsFile(contentPath, path):
+        # reserved root `llms.md` only serves `/llms.txt` (read from
+        # disk per request); nothing to index and no page to re-render
+        return
       gMarkdownService.parseMarkdownFile(contentPath, path)
       notifyClients()
 
     proc onDelete(file: watchout.File) =
       # Callback when a markdown file is deleted
+      if isReservedLlmsFile(contentPath, file.getPath()):
+        return
       echo "Markdown file deleted: ", file.getPath
 
     proc scanMarkdownFiles*(contentPath, dbPath, searchPath: string) =
       ## Scans the content directory for markdown files, parses them, and
       ## updates the markdown service index and search index accordingly.
+      ## The reserved root `llms.md` (any case) is skipped: it only serves
+      ## `/llms.txt` and must never create a `/llms` page or search entry.
       for path in walkDirRec(contentPath, {pcFile}):
         let fpath = path.splitFile
         if fpath.ext != ".md" or fpath.name.startsWith("!"):
           # skip non-markdown files and temporary files prefixed with "!"
+          continue
+        if isReservedLlmsFile(contentPath, path):
           continue
         let hashedSlug = getSlugHash(contentPath, path)
         if gMarkdownService.pages.hasKey(hashedSlug[1]):
@@ -407,9 +501,14 @@ initService Markdown[Global]:
         # parse markdown file and update the markdown service index
         gMarkdownService.parseMarkdownFile(contentPath, path, some(hashedSlug))
       
-      # write initial index to booyaka.db
-      writeFile(dbPath, toFlatty(gMarkdownService))
-      writeFile(searchPath, toFlatty(searchInstance[]))
+      # drop stale `/llms` entries from older dbs; root `llms.md`
+      # is reserved for `/llms.txt` and must never resolve to a page
+      gMarkdownService.purgeReservedLlms()
+      if not searchInstance.isNil:
+        searchInstance.purgeLlmsEntries()
+      # write FBE-encoded caches (signature envelope included)
+      writeDbFile(dbPath, encodeMarkdownInstance(gMarkdownService))
+      writeDbFile(searchPath, encodeSpotlight(searchInstance[]))
 
     proc scanVersion*(projectPath, tag: string): MarkdownInstance =
       ## Extracts `tag` from the git repository at `projectPath`, scans its
@@ -432,6 +531,9 @@ initService Markdown[Global]:
       for path in walkDirRec(tagContentsPath, {pcFile}):
         let fpath = path.splitFile
         if fpath.ext != ".md" or fpath.name.startsWith("!"):
+          continue
+        if isReservedLlmsFile(tagContentsPath, path):
+          # reserved root `llms.md` only serves `/llms.txt`
           continue
         let hashedSlug = getSlugHash(tagContentsPath, path)
         instance.parseMarkdownFile(tagContentsPath, path, some(hashedSlug),

@@ -3,10 +3,9 @@
 # (c) 2025 George Lemon | AGPLv3 License
 #          Made by Humans from OpenPeeps
 #          https://github.com/openpeeps/booyaka
-
-import std/json
-import std/[strutils, os]
+import std/[strutils, os, json]
 import pkg/supranim/[controller, core/paths]
+import std/httpcore except HttpMethods
 
 import ../service/provider/[tim, markdown, search]
 import ../app/structs
@@ -50,6 +49,20 @@ proc versionsData(currentSlug = ""): JsonNode =
     "items": versions
   }
 
+proc isReservedLlmsSlug(slug: string): bool =
+  ## The reserved root `llms.md` only serves `/llms.txt`; it must never
+  ## resolve to a `/llms` page route (any case). Nested slugs such as
+  ## `/docs/llms` are normal pages and return false here.
+  slug.strip(chars = {'/'}, leading = true, trailing = true).toLowerAscii() == "llms"
+
+proc findLlmsFile(): string =
+  ## Returns the reserved root `llms.md` path (any case) or "" when absent
+  let dir = booyakaProjectPath / "contents"
+  for kind, path in walkDir(dir):
+    if kind == pcFile and extractFilename(path).toLowerAscii() == "llms.md":
+      return path
+  ""
+
 proc versionPage(mdInstance: MarkdownInstance, slug: string): JsonNode =
   ## Resolves `slug` within the given MarkdownInstance, returning the
   ## rendered page data or `nil` when the slug is not found.
@@ -78,10 +91,10 @@ ctrl getResultsJson:
 
 ctrl getLlmsTxt:
   ## serves the raw `llms.md` file (when present in the root of the
-  ## contents directory) at `/llms.txt` as plain text.
+  ## contents directory, any case) at `/llms.txt` as plain text.
   {.gcsafe.}:
-    let llmsPath = booyakaProjectPath / "contents" / "llms.md"
-    if fileExists(llmsPath):
+    let llmsPath = findLlmsFile()
+    if llmsPath.len > 0:
       respond(readFile(llmsPath), "text/plain; charset=utf-8")
     else:
       respond(Http404, "Not Found", "text/plain; charset=utf-8")
@@ -101,7 +114,18 @@ ctrl getVersionSlug:
     let
       label = req.params["version"]
       slug = req.params["slug"]
-    if gMarkdownVersions.isNil or not gMarkdownVersions.hasKey(label):
+    if isReservedLlmsSlug(slug):
+      # reserved root `llms.md` only serves `/llms.txt`, never a page route
+      render("errors.4xx", local = &*{
+        "markdown": {
+          "meta": {
+            "title": "Page Not Found",
+            "description": "The page you are looking for does not exist."
+          },
+        },
+        "config": toJson(globalBooyakaConfig).fromJson()
+      }, httpCode = Http404)
+    elif gMarkdownVersions.isNil or not gMarkdownVersions.hasKey(label):
       render("errors.4xx", local = &*{
         "markdown": {
           "meta": {
@@ -185,7 +209,18 @@ ctrl getVersion:
 ctrl getSlug:
   {.gcsafe.}:
     let slug = req.params["slug"]
-    if gMarkdownService.index.hasKey(slug):
+    if isReservedLlmsSlug(slug):
+      # reserved root `llms.md` only serves `/llms.txt`, never `/llms`
+      render("errors.4xx", local = &*{
+        "markdown": {
+          "meta": {
+            "title": "Page Not Found",
+            "description": "The page you are looking for does not exist."
+          },
+        },
+        "config": toJson(globalBooyakaConfig).fromJson()
+      }, httpCode = Http404)
+    elif gMarkdownService.index.hasKey(slug):
       if req.isSPARequest:
         renderView("index", local = &*{
           "markdown": gMarkdownService.pages[gMarkdownService.index[slug]],

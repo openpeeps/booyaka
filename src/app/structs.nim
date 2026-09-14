@@ -70,9 +70,9 @@ type
 
   BooyakaFooter* = object
     ## Represents the footer configuration for Booyaka
-    text: Option[string]
+    text*: Option[string]
       ## Footer text content
-    links: Option[seq[BooyakaNavItem]]
+    links*: Option[seq[BooyakaNavItem]]
       ## Footer links configuration
   
   BooyakaMetadata* = object

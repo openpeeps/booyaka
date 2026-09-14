@@ -50,13 +50,13 @@ preload_assets: true
   App.configs["tim"] = timConfig
   
 App.cli do:
-  new path(directory), ?bool("--json"):
+  new path(project), ?bool("--json"):
     ## Create a new Booyaka project in the specified directory
 
-  start path(directory), ?bool("--sync"), ?port("--port"):
+  start path(project), ?bool("--sync"), ?port("--port"):
     ## Init the app with the given installation path
 
-  build path(directory):
+  build path(project):
     ## Generate static HTML website
 
 #

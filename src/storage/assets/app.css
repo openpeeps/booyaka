@@ -92,18 +92,16 @@ a.external {
 }
 
 a.external:not(.no-external)::after {
-  content: "";
+content: "↗";
+  font-size: 0.75em;
+  margin-left: 0.25em;
+  text-decoration: none;
   display: inline-block;
-  margin-left: 0.2em;
-  vertical-align: middle;
   width: 0;
   height: 0;
-  border-top: 0.4em solid transparent;
-  border-left: 0.4em solid #dedede; /* arrow color */
-  border-bottom: 0.4em solid transparent;
-  transform: rotate(-45deg) translateY(-1px);
-  position: relative;
-  top: -5px;
+  vertical-align: 0.20em;
+  font-weight: 200 !important;
+  margin-right: 0.65em;
 }
 
 a.external:hover::after {

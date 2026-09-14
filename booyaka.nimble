@@ -1,6 +1,6 @@
 # Package
 
-version       = "0.1.0"
+version       = "0.2.0"
 author        = "George Lemon"
 description   = "A fast documentation generator for cool kids!"
 license       = "AGPL-3.0-or-later"
@@ -11,15 +11,14 @@ binDir        = "build"
 # Dependencies
 
 requires "nim >= 2.0.0"
-requires "supranim >= 0.1.9[powpow]"
+requires "supranim >= 0.1.9"
 requires "powpow >= 0.1.8"
 requires "tim >= 0.2.6"
 requires "marvdown >= 0.1.4"
-requires "flatty >= 0.4.0"
 requires "semver >= 1.2.3"
 requires "iconim >= 0.1.0"
 requires "openparser >= 0.1.2"
-requires "emitter >= 0.2.1[powpow]"
+requires "emitter >= 0.2.1"
 
 # Supra is not really a dependency but we want to ensure 
 # it's available when building the release version of Booyaka
