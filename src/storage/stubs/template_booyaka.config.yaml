@@ -3,7 +3,10 @@ metadata:
   description: "A documentation website built with Booyaka"
   keywords: ["booyaka", "documentation", "docs"]
 appearance:
+  # Show a light/dark theme switcher in the header (persists per visitor)
   show_theme_switcher: true
+  # Default theme: "system" follows the visitor's OS preference,
+  # or pin it with "light" / "dark"
   default_theme: "system"
   show_toggle_left_sidebar: true
   show_toggle_right_sidebar: true

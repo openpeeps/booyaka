@@ -1,4 +1,4 @@
-div.col-7.mx-auto > div.row.vh-100 > div.col-12.align-self-center.text-center
+div.col-6.mx-auto > div.row.vh-100 > div.col-12.align-self-center.text-center
   p.text-muted.mb-1: "404"
   h1.h1.fw-bold.text-center.d-block: "Page Not Found"
   p.lead: "The page you are looking for does not exist."

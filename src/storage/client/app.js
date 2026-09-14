@@ -58,6 +58,7 @@ export default {
     this.initExternalLinksDecorator();
     this.initSpotlightSearch();
     this.initShareButtons();
+    this.initTheme();
 
     const fetchSwapCallback = function() {
       opts.enableStickySidebar && this.initStickySidebar();
@@ -68,14 +69,15 @@ export default {
       this.initSmoothAnchors();
       this.initExternalLinksDecorator();
 
-      sidebarNavigation.querySelectorAll('a').forEach(link => link.classList.remove('active', 'bg-dark'));
+      sidebarNavigation.querySelectorAll('a').forEach(link => link.classList.remove('active', 'booyaka-active'));
       // after fetching new content, we want to make the current page's link active in the sidebar
       const currentPath = location.pathname;
       const activeLink = sidebarNavigation.querySelector(`a[href="${currentPath}"]`);
       if (activeLink) {
-        activeLink.classList.add('active', 'bg-dark');
+        activeLink.classList.add('active', 'booyaka-active');
       }
 
+      this.initTheme();
       this.triggerReload();
     }.bind(this) // bind 'this' to ensure the correct context inside the callback
 
@@ -119,27 +121,71 @@ export default {
     });
   },
 
+  // Initialize the light/dark theme: resolves stored choice, then the
+  // configured `appearance.default_theme` (`data-theme-default`), then the
+  // OS preference. The toggle persists to localStorage. Idempotent across
+  // SPA swaps; the media listener only follows the OS while neither a
+  // stored nor a configured theme pins the choice.
+  initTheme: function() {
+    const root = document.documentElement;
+    const media = (window.matchMedia) ? window.matchMedia('(prefers-color-scheme: light)') : null;
+    const isPinned = () => {
+      let stored = null;
+      try { stored = localStorage.getItem('booyaka-theme'); } catch (e) {}
+      if (stored === 'light' || stored === 'dark') return true;
+      const configured = root.getAttribute('data-theme-default') || 'system';
+      return configured === 'light' || configured === 'dark';
+    };
+    const resolveTheme = () => {
+      let stored = null;
+      try { stored = localStorage.getItem('booyaka-theme'); } catch (e) {}
+      if (stored === 'light' || stored === 'dark') return stored;
+      const configured = root.getAttribute('data-theme-default') || 'system';
+      if (configured === 'light' || configured === 'dark') return configured;
+      return (media && media.matches) ? 'light' : 'dark';
+    };
+    root.setAttribute('data-bs-theme', resolveTheme());
+    if (media && media.addEventListener && !window.__booyakaThemeMediaBound) {
+      window.__booyakaThemeMediaBound = true;
+      media.addEventListener('change', () => {
+        if (!isPinned()) {
+          root.setAttribute('data-bs-theme', media.matches ? 'light' : 'dark');
+        }
+      });
+    }
+    document.querySelectorAll('[data-theme-toggle]').forEach(btn => {
+      if (btn.dataset.themeBound) return;
+      btn.dataset.themeBound = 'true';
+      btn.addEventListener('click', () => {
+        const next = root.getAttribute('data-bs-theme') === 'light' ? 'dark' : 'light';
+        try { localStorage.setItem('booyaka-theme', next); } catch (e) {}
+        root.setAttribute('data-bs-theme', next);
+      });
+    });
+  },
+
   // Initialize the spotlight search feature using Fuse.js for client-side fuzzy searching.
   initSpotlightSearch: function() {
     fetch("/results.json").then(response => response.json()).then(data => {
       if(!data) return;
       let spotlightForm = document.querySelector('.spotlight-form');
       let spotlightAutocomplete = document.createElement('div');
-      spotlightAutocomplete.classList.add('position-fixed', 'border', 'border-dark', 'list-unstyled', 'w-100', 'rounded-4', 'p-2', 'd-none', 'spotlight-autocomplete');
+      spotlightAutocomplete.classList.add('position-fixed', 'border', 'list-unstyled', 'w-100', 'rounded-4', 'p-2', 'd-none', 'spotlight-autocomplete');
       spotlightAutocomplete.style.top = '68px'
       spotlightAutocomplete.style.zIndex = '1050';
       spotlightAutocomplete.style.maxWidth = spotlightForm.offsetWidth + 'px';
       spotlightAutocomplete.style.left = spotlightForm.getBoundingClientRect().left + 'px';
-      spotlightAutocomplete.style.backgroundColor = 'rgba(10,14,14,0.60)';
-      spotlightAutocomplete.style.boxShadow = '0 30px 30px rgba(0,0,0,.8)';
-      spotlightAutocomplete.style.backdropFilter = 'blur(34px)';
-      
-      spotlightAutocomplete.style.maxHeight = '280px';
+      spotlightAutocomplete.style.backgroundColor = 'var(--booyaka-spotlight-bg)';
+      spotlightAutocomplete.style.boxShadow = 'var(--booyaka-spotlight-shadow)';
+      spotlightAutocomplete.style.backdropFilter = 'var(--booyaka-blur-spotlight)';
+      spotlightAutocomplete.style.webkitBackdropFilter = 'var(--booyaka-blur-spotlight)';
+
+      spotlightAutocomplete.style.maxHeight = 'var(--booyaka-spotlight-max)';
 
       let spotlightInner = document.createElement('ul');
       spotlightInner.classList.add('m-0', 'p-0', 'spotlight-autocomplete-list');
       spotlightInner.style.overflowX = 'scroll';
-      spotlightInner.style.maxHeight = '260px';
+      spotlightInner.style.maxHeight = 'var(--booyaka-spotlight-list-max)';
       
       spotlightAutocomplete.appendChild(spotlightInner);
       document.body.insertAdjacentElement('beforeend', spotlightAutocomplete);

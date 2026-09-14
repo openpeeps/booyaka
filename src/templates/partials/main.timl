@@ -24,9 +24,9 @@ div.px-lg-4.px-2 > div.container-fluid data-view
       div.col-6 > h6.my-0: $this["markdown"]["section"]
       div.col-6.text-end
         div.btn-group
-          button type="button" aria-label="Share this page" class="btn btn-dark btn-sm border-end rounded-start-3 d-flex align-items-center"
+          button type="button" aria-label="Share this page" class="btn btn-secondary btn-sm border-end rounded-start-3 d-flex align-items-center"
             span.ms-1: "Share page"
-          button type="button" aria-label="Open share options" class="btn btn-dark btn-sm dropdown-toggle dropdown-toggle-split rounded-end-3" data-bs-toggle="dropdown" aria-expanded="false"
+          button type="button" aria-label="Open share options" class="btn btn-secondary btn-sm dropdown-toggle dropdown-toggle-split rounded-end-3" data-bs-toggle="dropdown" aria-expanded="false"
             span class="visually-hidden": "Toggle Dropdown"
           ul.dropdown-menu.dropdown-menu-sm.dropdown-menu-end.rounded-4.shadow-lg style="font-size:0.85em"
             li
@@ -34,14 +34,14 @@ div.px-lg-4.px-2 > div.container-fluid data-view
                 div.d-flex.flex-row
                   div.share-svg-icon.me-2: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-link"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M9 15l6 -6" /><path d="M11 6l.463 -.536a5 5 0 0 1 7.071 7.072l-.534 .464" /><path d="M13 18l-.397 .534a5.068 5.068 0 0 1 -7.127 0a4.972 4.972 0 0 1 0 -7.071l.524 -.463" /></svg>'
                   div.d-flex.flex-column
-                    span.fw-bold.text-light data-share-copy-label: "Copy URL"
+                    span.fw-bold.text-body-emphasis data-share-copy-label: "Copy URL"
                     small.text-muted: "Copy the URL of this page"
             li
               a.dropdown-item.d-flex.align-items-center.gap-2 data-share="copy-markdown"
                 div.d-flex.flex-row
                   div.share-svg-icon.me-2: '<svg viewBox="0 0 208 128" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" ><path fill="none" stroke="#FFF" stroke-width="10" d="M15 5h178a10 10 0 0 1 10 10v98a10 10 0 0 1-10 10H15a10 10 0 0 1-10-10V15A10 10 0 0 1 15 5z"/><path fill="#FFF" d="M30 98V30h20l20 25 20-25h20v68H90V59L70 84 50 59v39H30zm125 0-30-33h20V30h20v35h20l-30 33z"/></svg>'
                   div.d-flex.flex-column
-                    span.fw-bold.text-light data-share-copy-label: "Copy as Markdown"
+                    span.fw-bold.text-body-emphasis data-share-copy-label: "Copy as Markdown"
                     small.text-muted: "Copy page content as Markdown"
             li: hr.dropdown-divider
             for $shareOption in $this["config"]["content"]["share_buttons_ai_providers"]:
@@ -53,7 +53,7 @@ div.px-lg-4.px-2 > div.container-fluid data-view
                     if $shareOption.hasKey("icon"):
                       div.share-svg-icon.me-2: toString($shareOption["icon"])
                     div.d-flex.flex-column
-                      span.fw-bold.text-light: $shareOption["label"]
+                      span.fw-bold.text-body-emphasis: $shareOption["label"]
                       small.text-muted: $shareOption["description"]
     div.row > div.col-12
       // Raw Markdown source of the current page, embedded as JSON in a
@@ -65,7 +65,7 @@ div.px-lg-4.px-2 > div.container-fluid data-view
         h1.display-6.mt-3.fw-normal: $this["markdown"]["meta"]["title"]
         p.lead.text-muted: $this["markdown"]["meta"]["description"]
 
-    div.row > div.col-12 > div.d-block.mb-3.px-3.py-2.border-top.border-bottom.border-dark
+    div.row > div.col-12 > div.d-block.mb-3.px-3.py-2.border-top.border-bottom.border-booyaka
       span: "Last updated"
       time.ms-2 datetime=$this["markdown"]["last_updated"] title=$this["markdown"]["last_updated"]: $this["markdown"]["last_updated"]
 
@@ -81,15 +81,15 @@ div.px-lg-4.px-2 > div.container-fluid data-view
         div.col-lg-6.col-md-6
           if $this["markdown"]["navigation"]["previous"] != nil:
             const previousItem = $this["markdown"]["navigation"]["previous"]
-            a.btn.btn-outline-dark.border-2.rounded-4.px-4.py-3.w-100.text-start href=toString($this["version"]["path"]) & $previousItem["url"]
+            a.btn.btn-outline-secondary.border-2.rounded-4.px-4.py-3.w-100.text-start href=toString($this["version"]["path"]) & $previousItem["url"]
               span.text-muted.small: "← Previous"
-              span.d-block.mt-1.h6.text-light: $previousItem["title"]
+              span.d-block.mt-1.h6.text-body-emphasis: $previousItem["title"]
         div.col-lg-6.col-md-6
           if $this["markdown"]["navigation"]["next"] != nil:
             const nextItem = $this["markdown"]["navigation"]["next"]
-            a.btn.btn-outline-dark.border-2.rounded-4.px-4.py-3.w-100.text-end href=toString($this["version"]["path"]) & $nextItem["url"]
+            a.btn.btn-outline-secondary.border-2.rounded-4.px-4.py-3.w-100.text-end href=toString($this["version"]["path"]) & $nextItem["url"]
               span.text-muted.small: "Next →"
-              span.d-block.mt-1.h6.text-light: $nextItem["title"]
+              span.d-block.mt-1.h6.text-body-emphasis: $nextItem["title"]
 
 // Toggle right sidebar area button
 if $this["config"]["appearance"]["show_toggle_right_sidebar"] == true:
