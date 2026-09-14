@@ -259,6 +259,4 @@ proc buildCommand*(v: Values) =
   var results = newJObject()
   results["results"] = resultsArray
   writeFile(outputPath / "results.json", $results)
-
-  display("Build complete: " & outputPath)
-  quit(0)
+  displaySuccess("Build complete: " & outputPath)
