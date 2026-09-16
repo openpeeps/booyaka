@@ -138,7 +138,7 @@ html[data-bs-theme="dark"] {
 }
 
 html[data-bs-theme="light"] {
-  --bs-body-bg: #f9f8ef;
+  --bs-body-bg: #faf9f7;
   --bs-body-color: #343a40;
   --bs-text-heading: #111;
 

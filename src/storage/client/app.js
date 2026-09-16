@@ -60,6 +60,10 @@ export default {
     this.initShareButtons();
     this.initTheme();
 
+    // Tracks the URL of the currently displayed content so spurious or
+    // duplicate popstate events can be ignored.
+    let currentSpaUrl = location.pathname + location.search;
+
     const fetchSwapCallback = function() {
       opts.enableStickySidebar && this.initStickySidebar();
       opts.enableTimeAgo && this.initTimeAgo();
@@ -79,6 +83,10 @@ export default {
 
       this.initTheme();
       this.triggerReload();
+
+      // The address bar already reflects the swapped content at this point
+      // (via pushState on click navigation, natively on popstate traversal).
+      currentSpaUrl = location.pathname + location.search;
     }.bind(this) // bind 'this' to ensure the correct context inside the callback
 
     // Intercept clicks on internal links to enable SPA-like navigation without full page reloads.
@@ -90,6 +98,21 @@ export default {
         e.preventDefault();
         this.fetchAndSwap(a.pathname + a.search, true, fetchSwapCallback);
       }
+    });
+
+    // Handle browser Back/Forward buttons: the address bar updates natively,
+    // but the swapped content must be re-fetched (click navigation above only
+    // covers pushState). Reuses the same swap + re-init path, without pushing
+    // a duplicate history entry.
+    window.addEventListener('popstate', () => {
+      const targetUrl = location.pathname + location.search;
+      if (targetUrl === currentSpaUrl) {
+        if (!location.hash) return; // spurious or duplicate event
+        // hash-only traversal: scroll to the anchor without re-fetching
+        this.scrollToAnchorTarget(decodeURIComponent(location.hash.slice(1)));
+        return;
+      }
+      this.fetchAndSwap(targetUrl, false, fetchSwapCallback);
     });
 
     // Apply Bootstrap classes to checkboxes for consistent styling
@@ -465,17 +488,41 @@ export default {
 
 
   /**
-   * Fetches the given URL and swaps the content of the current
-   * view with the new view from the response.
-   * 
-   * If the fetch fails or the expected view container is not
-   * found in the response, it falls back to a full page reload.
-   * 
-   * @param {string} url - The URL to fetch and swap.
-   * @param {boolean} pushState - Whether to push the new URL to the browser history (default: true).
-   * @param {callback} callback - Optional callback to execute after successful content swap.
-   * @returns {void}
-  */
+   * Smooth-scroll to the element identified by `hash`, offsetting for the
+   * sticky navbar. Returns true when a target was found and scrolled to.
+   *
+   * @param {string} hash - Anchor id without the leading '#'.
+   * @returns {boolean}
+   */
+  scrollToAnchorTarget: function(hash) {
+    if (!hash) return false;
+    const target = document.getElementById(hash) || document.querySelector(`[name="${hash}"]`);
+    if (!target) return false;
+    const navbar = document.querySelector('.navbar-container-area');
+    const navbarHeight = navbar ? navbar.offsetHeight : 0;
+    window.scrollTo({
+      top: target.getBoundingClientRect().top + window.pageYOffset - navbarHeight,
+      behavior: 'smooth'
+    });
+    return true;
+  },
+
+  /**
+    * Fetches the given URL and swaps the content of the current
+    * view with the new view from the response.
+    * 
+    * If the fetch fails or the expected view container is not
+    * found in the response, it falls back to a full page reload.
+    * 
+    * On every successful swap the tab title is synced from the fetched
+    * view's `data-page-title` (SPA responses carry no layout, hence no
+    * `<title>` element to read).
+    *
+    * @param {string} url - The URL to fetch and swap.
+    * @param {boolean} pushState - Whether to push the new URL to the browser history (default: true).
+    * @param {callback} callback - Optional callback to execute after successful content swap.
+    * @returns {void}
+   */
   fetchAndSwap(url, pushState = true, callback) {
     fetch(url, {headers: {'X-Requested-With': 'spa'}})
       .then(resp => {
@@ -501,7 +548,13 @@ export default {
         }
         if (swapped) {
           if (pushState) history.pushState(null, '', url);
-          window.scrollTo(0, 0);
+          const pageTitle = newView && newView.getAttribute && newView.getAttribute('data-page-title');
+          if (pageTitle) document.title = pageTitle;
+          if (location.hash) {
+            this.scrollToAnchorTarget(decodeURIComponent(location.hash.slice(1)));
+          } else {
+            window.scrollTo(0, 0);
+          }
           callback && callback(url, newView, newToc);
         } else {
           console.warn('Could not find view containers in the fetched HTML. Reloading the page as fallback.');
