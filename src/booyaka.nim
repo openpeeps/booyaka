@@ -23,15 +23,15 @@ App.init(skipLocalConfig = true) do:
   #
   # This is necessary for the application to run, and will be
   # overridden by the user's local configuration when they run the app.
-  App.configs = newOrderedTable[string, YamlObject]()
-  let serverConfig = parseYaml("""
+  App.configs = newOrderedTable[string, Configuration]()
+  let serverConfig = parseConfiguration(".yml", """
 type: "AF_INET"
 port: 8000
 address: "127.0.0.1"
 threads: 1""")
-    
+
   # setup tim configuration with defaults
-  let timConfig = parseYaml("""
+  let timConfig = parseConfiguration(".yml", """
 source: ./templates
 output: ./storage/templates
 indent: 2
@@ -41,7 +41,7 @@ sync: false
   # setup booyaka runtime config for preloading
   # user-defined static assets in production
   if fileExists(customCSSPath):
-    let booyakaRuntimeLoader = parseYaml("""
+    let booyakaRuntimeLoader = parseConfiguration(".yml", """
 preload_assets: true
 """)
     App.configs["runtime"] = booyakaRuntimeLoader
