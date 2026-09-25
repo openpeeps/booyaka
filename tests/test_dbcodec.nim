@@ -1,5 +1,5 @@
 # Round-trip tests for the FBE database codecs (dbcodec)
-import std/[unittest, options, tables, times]
+import std/[unittest, options, tables, times, os]
 import pkg/semver
 import pkg/openparser/fbe
 import pkg/openparser/json
@@ -8,23 +8,26 @@ import ../src/app/structs
 
 suite "dbcodec envelope":
   test "writeDbFile/readDbFile round-trip":
+    let envelopePath = getTempDir() / "fbe_test_envelope.db"
     var payload = initBuffer()
     payload.writeString("hello-payload")
-    writeDbFile("/tmp/fbe_test_envelope.db", payload)
+    writeDbFile(envelopePath, payload)
     var outPayload: Buffer
-    check readDbFile("/tmp/fbe_test_envelope.db", outPayload) == dbOk
+    check readDbFile(envelopePath, outPayload) == dbOk
     check outPayload.readString() == "hello-payload"
 
   test "missing file reports dbMissing":
     var outPayload: Buffer
-    check readDbFile("/tmp/fbe_test_nonexistent_xyz.db", outPayload) == dbMissing
+    check readDbFile(getTempDir() / "fbe_test_nonexistent_xyz.db", outPayload) == dbMissing
 
   test "foreign bytes report dbInvalid":
-    writeFile("/tmp/fbe_test_foreign.db", "this is a flatty-era blob")
+    let foreignPath = getTempDir() / "fbe_test_foreign.db"
+    writeFile(foreignPath, "this is a flatty-era blob")
     var outPayload: Buffer
-    check readDbFile("/tmp/fbe_test_foreign.db", outPayload) == dbInvalid
+    check readDbFile(foreignPath, outPayload) == dbInvalid
 
   test "wrong booyaka version reports dbVersionMismatch":
+    let badverPath = getTempDir() / "fbe_test_badver.db"
     var payload = initBuffer()
     payload.writeString("x")
     var b = initBuffer()
@@ -32,9 +35,9 @@ suite "dbcodec envelope":
     b.writeUint32LE(DbCodecVersion)
     b.writeString("0.0.0-fake")
     b.writeBytes(payload.data)
-    writeFile("/tmp/fbe_test_badver.db", bufferToString(b))
+    writeFile(badverPath, bufferToString(b))
     var outPayload: Buffer
-    check readDbFile("/tmp/fbe_test_badver.db", outPayload) == dbVersionMismatch
+    check readDbFile(badverPath, outPayload) == dbVersionMismatch
 
 suite "dbcodec primitives":
   test "Option[string] round-trip incl. none":
