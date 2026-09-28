@@ -12,7 +12,7 @@ export HttpCode, render, `&*`
 export times.now, times.format
 
 import ../../app/structs
-import ./assets, ./logger
+import ./logger
 
 initService Tim[Global]:
   # A singleton service that wraps the Tim Engine
@@ -26,18 +26,21 @@ initService Tim[Global]:
       stripAttrs = %*[]
     )
 
-    proc init*(src, output, basePath: string; global = newJObject()) =
-      ## Initialize Tim Engine as a singleton service
+    proc init*(src, output, basePath: string; global = newJObject();
+                activeTheme = "default", fallbackTheme = "default") =
+      ## Initialize Tim Engine as a singleton service with theme support.
+      ## Templates resolve from `<basePath>/<src>/<activeTheme>` with
+      ## fallback to `<basePath>/<src>/<fallbackTheme>`.
       logger("Service Tim: Initializing Tim Engine (backend + frontend)")
-      when defined release:
-        timInstance = newTim(globalData = global)
-      else:
-        timInstance = newTim(
-          src = src,
-          output = output,
-          basePath = basePath,
-          globalData = global
-        )
+      timInstance = newTim(
+        src = src,
+        output = output,
+        basePath = basePath,
+        globalData = global,
+        enableThemes = true,
+        activeThemeName = activeTheme,
+        fallbackThemeName = fallbackTheme
+      )
 
       # predefine foreign functions
       timInstance.userScript.addProc("slugify", @[paramDef("s", ttyString)], ttyString,
@@ -67,14 +70,7 @@ initService Tim[Global]:
           }
         }
 
-      when defined release:
-        timInstance.precompile(
-          views = staticAssets().directory("views"),
-          layouts = staticAssets().directory("layouts"),
-          partials = staticAssets().directory("partials"),
-        )
-      else:
-        timInstance.precompile()
+      timInstance.precompile()
 
     proc getTimInstance*: TimEngine =
       # Returns the singleton instance of the Tim Engine
@@ -82,17 +78,18 @@ initService Tim[Global]:
         raise newException(ValueError, "Tim Engine not initialized")
       return timInstance
 
-    proc buildSetup*(src, output, basePath: string; global = newJObject()) =
+    proc buildSetup*(src, output, basePath: string; global = newJObject();
+                     activeTheme = "default", fallbackTheme = "default") =
       echo "  Building Tim Engine templates..."
-      when defined release:
-        timInstance = newTim(globalData = global)
-      else:
-        timInstance = newTim(
-          src = src,
-          output = output,
-          basePath = basePath,
-          globalData = global
-        )
+      timInstance = newTim(
+        src = src,
+        output = output,
+        basePath = basePath,
+        globalData = global,
+        enableThemes = true,
+        activeThemeName = activeTheme,
+        fallbackThemeName = fallbackTheme
+      )
       timInstance.userScript.addProc("slugify", @[paramDef("s", ttyString)], ttyString,
         proc (args: StackView, argc: int): value.Value =
           return initValue(slugify(args[0].stringVal[]))
@@ -106,14 +103,7 @@ initService Tim[Global]:
           let iconName = args[0].stringVal[]
           return initValue($icon(iconName))
       )
-      when defined release:
-        timInstance.precompile(
-          views = staticAssets().directory("views"),
-          layouts = staticAssets().directory("layouts"),
-          partials = staticAssets().directory("partials"),
-        )
-      else:
-        timInstance.precompile()
+      timInstance.precompile()
 
     proc buildRender*(path: string, local: JsonNode): string =
       if timInstance == nil:

@@ -25,17 +25,19 @@ when defined supranimDebug:
 when not defined release:
   --define:timHotCode
 else:
-  const embedAssetsPath {.strdefine.} = ""
-  let outputEmbedAssets = getProjectPath().parentDir() / ".cache" / "embed_assets.nim"
-  let assetsPath = absolutePath(joinPath(getProjectPath() / "storage", "assets"))
-  if dirExists(assetsPath):
-    exec "supra bundle.assets \"" & assetsPath & "\" \"" & outputEmbedAssets & "\""
+  --define:supranimEmbedConfig
+    # Embed Supranim config files (config/*.yml) into the binary at
+    # compile time instead of creating a config/ directory at runtime
 
-  for dir in ["views", "layouts", "partials"]:
-    let outputEmbedTemplates = getProjectPath().parentDir() / ".cache" / "embed_templates_" & dir & ".nim"
-    let templatesPath = absolutePath(joinPath(getProjectPath() / "templates" / dir))
-    if dirExists(templatesPath):
-      exec "supra bundle.assets \"" & templatesPath & "\" \"" & outputEmbedTemplates & "\" --skip-prefix" 
+  # Note: `src/storage/assets/` is intentionally NOT bundled. Theme assets
+  # ship inside each theme bundle below and are seeded/copied from the
+  # project at runtime.
+
+  for themeDir in ["default"]:
+    let outputEmbedTheme = getProjectPath().parentDir() / ".cache" / "embed_themes_" & themeDir & ".nim"
+    let themePath = absolutePath(joinPath(getProjectPath() / "themes" / themeDir))
+    if dirExists(themePath):
+      exec "supra bundle.assets \"" & themePath & "\" \"" & outputEmbedTheme & "\""
 
   let outputSVGIcons = getProjectPath().parentDir() / ".cache" / "embed_storage_icons.nim"
   let iconsPath = absolutePath(joinPath(getProjectPath() / "storage", "icons"))

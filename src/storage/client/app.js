@@ -1,4 +1,3 @@
-import nimSyntax from  "./hljsnim.js";
 import Fuse from 'fuse.js'
 
 /**
@@ -655,16 +654,8 @@ document.addEventListener('DOMContentLoaded', () => {
   UI.init({
     enableStickySidebar: true,
     enableTimeAgo: true,
-    enableAnimatedAlerts: true,
-    fetchAndSwapCallback: (url, html) => {
-      hljs.registerLanguage('nim', nimSyntax)
-      hljs.highlightAll();
-    }
+    enableAnimatedAlerts: true
   });
-
-  // Initial syntax highlighting for code blocks
-  hljs.registerLanguage('nim', nimSyntax)
-  hljs.highlightAll();
 
   const toggleAreaBtns = document.querySelectorAll('button[data-toggle-area]');
   const mainArea = document.querySelector('div[data-area="main"]');

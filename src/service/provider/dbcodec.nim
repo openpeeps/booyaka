@@ -30,9 +30,11 @@ export fbe.Buffer, fbe.initBuffer
 const
   DbMagic* = "BOOYAKA1"
     ## File signature written at the start of every `.db` file
-  DbCodecVersion*: uint32 = 1
+  DbCodecVersion*: uint32 = 2
     ## Version of the codec layout below. Bump when field ids or the
     ## envelope format change in an incompatible way.
+    ## v2: page HTML is backend-highlighted via SweetSyntax
+    ## (codeBlockTransform), so v1 caches rebuild once.
   BooyakaDbVersion* = "0.2.0"
     ## Booyaka release that wrote the file. Must match the `version`
     ## in `booyaka.nimble`; a mismatch invalidates the cache.

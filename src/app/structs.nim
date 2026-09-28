@@ -106,8 +106,9 @@ type
     bottom_navigation*: bool
       ## Whether to enable bottom navigation links on pages
     codeHighlightTheme*: string = "default"
-      ## The code syntax highlighting theme to use (e.g.,
-      ## "default", "dark", "funky", "okaidia", etc.)
+      ## Legacy client-side (highlight.js) theme name. Code blocks are now
+      ## highlighted on the backend via SweetSyntax (`sweetsyntax.css`);
+      ## this field is kept for config compatibility and currently ignored.
     share_ai_buttons*: bool = true
       ## Whether to show AI share buttons in the page header of documentation pages
     share_buttons_ai_providers*: Option[seq[ShareProvider]]
@@ -198,6 +199,10 @@ type
 
   BooyakaConfig* = object
     ## Configuration options for Booyaka This object is automatically populated from `booyaka.config.yaml` or `booyaka.config.json` file in the current directory.
+    theme*: string = "default"
+      ## The active Tim theme, resolved from `<project>/themes/<name>`.
+      ## Templates missing from the active theme fall back to the
+      ## `default` theme shipped with Booyaka.
     metadata*: BooyakaMetadata
       ## Metadata information for the site
     appearance*: AppearanceSettings

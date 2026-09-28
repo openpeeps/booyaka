@@ -31,7 +31,7 @@ import pkg/supranim/network/[webserver, websocket]
 import pkg/supranim/support/slug
 import pkg/threading/rwlock
 
-import ./tim, ./search, ./git, ./dbcodec
+import ./tim, ./search, ./git, ./dbcodec, ./syntax
 import ../../app/structs
 
 export structs
@@ -161,10 +161,25 @@ initService Markdown[Global]:
         result.add(line[i])
         inc i
 
+    proc loadThemeSyntax() =
+      ## Loads custom SweetSyntax specs from theme `syntax/` dirs:
+      ## `default` first, then the active theme (per-file override).
+      ## No-op when no project is loaded (e.g. unit tests).
+      clearSyntaxCache()
+      if booyakaProjectPath.len == 0:
+        return
+      let t = globalBooyakaConfig.theme.strip()
+      let active = if t.len > 0: t else: "default"
+      discard loadSyntaxDir(booyakaProjectPath / "themes" / "default" / "syntax")
+      if active != "default":
+        discard loadSyntaxDir(booyakaProjectPath / "themes" / active / "syntax")
+
     proc setupMarkdownOptions() =
       ## Configures the Marvdown options based on the Booyaka configuration.
       ## Called from `initMarkdownInstance` so both `start` and `build` paths
       ## apply the same settings (allowed tags, lazy loading, page references).
+      ## Also loads custom SweetSyntax specs from theme `syntax/` dirs and
+      ## hooks fenced code blocks to backend highlighting.
       var allowedHtmlTags: seq[HtmlTag]
       if isSome(globalBooyakaConfig.content.allowedRawHtmlTags):
         allowedHtmlTags = concat(allowedTags, globalBooyakaConfig.content.allowedRawHtmlTags.get())
@@ -179,6 +194,8 @@ initService Markdown[Global]:
           pageReferenceTransform
         else:
           nil
+      loadThemeSyntax()
+      markdownOptions.codeBlockTransform = highlightCode
 
     proc writeMarkdownInstanceFields(b: var Buffer, inst: MarkdownInstance) =
       b.writeField(1'u16, proc (bb: var Buffer) =

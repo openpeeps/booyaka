@@ -10,12 +10,12 @@ export default [{
   output: [
     {
       name: 'UI',
-      file: 'src/storage/assets/app.js',
+      file: 'src/themes/default/assets/app.js',
       format: 'iife'
     }
   ],
   plugins: [
-    (!isRelease) && livereload('src/storage/assets'),
+    (!isRelease) && livereload('src/themes/default/assets'),
     nodeResolve(),
     commonjs({
       include: 'node_modules/**',
