@@ -1,0 +1,6 @@
+name: "__THEME_NAME__"
+version: "0.1.0"
+author: "__THEME_AUTHOR__"
+url: ""
+license: "AGPL-3.0-or-later"
+description: "A blank Booyaka theme"

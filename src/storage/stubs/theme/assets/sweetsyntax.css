@@ -1,0 +1,128 @@
+/* ==========================================================================
+   SweetSyntax backend highlighting for fenced code blocks.
+   Token classes are emitted by `sweetsyntax/renderers/htmlrenderer`:
+   `<span class="<kind> <attr>...">`, e.g. `<span class="ident import">`.
+   Kinds: ident int float tkHex tkOctal tkBinary tkBigInt tkImag char
+   string punct comment doc_comment regex. Attrs are language-specific
+   identifier/symbol names (e.g. `proc`, `return`, `assign`).
+   Code blocks stay dark islands in both themes (see --booyaka-code-*).
+   ========================================================================== */
+pre code[class*="language-"] {
+  display: block;
+  overflow-x: auto;
+  padding: 1em;
+  background: var(--booyaka-code-bg);
+  color: var(--booyaka-code-fg);
+  border: 1px solid var(--booyaka-code-border);
+  border-radius: var(--booyaka-radius-md, 8px);
+}
+
+/* comments */
+pre code .comment,
+pre code .doc_comment {
+  color: #777;
+  font-style: italic;
+}
+
+/* strings, chars, regex */
+pre code .string,
+pre code .char,
+pre code .regex,
+pre code .heredoc {
+  color: #ff6868;
+}
+
+/* numbers */
+pre code .int,
+pre code .float,
+pre code .tkHex,
+pre code .tkOctal,
+pre code .tkBinary,
+pre code .tkBigInt,
+pre code .tkImag {
+  color: #ab875d;
+}
+
+/* punctuation / operators */
+pre code .punct {
+  color: #78b0e8;
+}
+
+/* identifiers default to the code foreground */
+pre code .ident {
+  color: inherit;
+}
+
+/* keywords (language-specific identifier attrs) */
+pre code .ident.import,
+pre code .ident.export,
+pre code .ident.from,
+pre code .ident.as,
+pre code .ident.proc,
+pre code .ident.func,
+pre code .ident.function,
+pre code .ident.const,
+pre code .ident.let,
+pre code .ident.var,
+pre code .ident.return,
+pre code .ident.if,
+pre code .ident.elif,
+pre code .ident.else,
+pre code .ident.for,
+pre code .ident.while,
+pre code .ident.do,
+pre code .ident.break,
+pre code .ident.continue,
+pre code .ident.case,
+pre code .ident.of,
+pre code .ident.when,
+pre code .ident.switch,
+pre code .ident.match,
+pre code .ident.class,
+pre code .ident.interface,
+pre code .ident.enum,
+pre code .ident.struct,
+pre code .ident.type,
+pre code .ident.distinct,
+pre code .ident.template,
+pre code .ident.macro,
+pre code .ident.method,
+pre code .ident.def,
+pre code .ident.lambda,
+pre code .ident.new,
+pre code .ident.delete,
+pre code .ident.typeof,
+pre code .ident.sizeof,
+pre code .ident.include,
+pre code .ident.addr,
+pre code .ident.cast,
+pre code .ident.discard,
+pre code .ident.assert,
+pre code .ident.raise,
+pre code .ident.try,
+pre code .ident.except,
+pre code .ident.finally,
+pre code .ident.with,
+pre code .ident.async,
+pre code .ident.await,
+pre code .ident.yield,
+pre code .ident.in,
+pre code .ident.is,
+pre code .ident.isnot,
+pre code .ident.not,
+pre code .ident.and,
+pre code .ident.or,
+pre code .ident.xor,
+pre code .ident.div,
+pre code .ident.mod,
+pre code .ident.nil,
+pre code .ident.null,
+pre code .ident.true,
+pre code .ident.false,
+pre code .ident.self,
+pre code .ident.this,
+pre code .ident.super,
+pre code .ident.echo,
+pre code .ident.result {
+  color: #ff6868;
+}

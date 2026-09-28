@@ -1,0 +1,6 @@
+name: "default"
+version: "0.1.0"
+author: "OpenPeeps"
+url: "https://github.com/openpeeps/booyaka"
+license: "AGPL-3.0-or-later"
+description: "The default Booyaka theme (Bootstrap 5, dark mode)"

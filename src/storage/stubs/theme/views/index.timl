@@ -1,0 +1,68 @@
+div.navbar-container-area.sticky-top.user-select-none
+  if $this["site"]["hasNotifications"] == true:
+    div.text-center.border-bottom.border-booyaka.p-1.small: $this["config"]["header"]["notification"]
+  nav.navbar.navbar-expand-lg.py-1
+    div.container.d-flex
+      a.navbar-brand.fw-bold.py-0 href=toString($this["version"]["path"]) & "/"
+        img src=$this["site"]["logo"] height="32"
+        if $this["site"]["hasLogo"] != true or $this["config"]["metadata"]["logo_keep_gradient"] == true:
+          em
+
+      // When enabled, shows the search bar in the header
+      if $this["config"]["header"]["search"]["enable"] == true:
+        div.col-6.col-lg-4
+          form.spotlight-form.d-flex.ms-3.mb-0.position-relative action=toString($this["version"]["path"]) & "/search" method="GET"
+            input.form-control.form-control-sm.px-3.rounded-4.spotlight.border-2.me-2
+              type="search" name="q" placeholder="Search the docs..." aria-label="Search the docs"
+            button.btn.btn-sm.text-muted.position-absolute.me-2.border-0
+              type="submit" style="margin-top:2px; right:10px;": "⌘/"
+
+      // When git versioning is enabled, shows a version switcher dropdown
+      if $this["versions"]["enable"] == true:
+        div.btn-group.ms-auto
+          button.btn.btn-sm.btn-secondary.dropdown-toggle.rounded-4.border-0 type="button" data-bs-toggle="dropdown" aria-expanded="false": toString($this["version"]["label"])
+            span.icon-brand-git.me-1
+              svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                path stroke="none" d="M0 0h24v24H0z" fill="none"
+                path d="M16 12h-5"
+                path d="M6 3m0 1a1 1 0 0 1 1 -1h2a1 1 0 0 1 1 1v3a1 1 0 0 1 -1 1h-2a1 1 0 0 1 -1 -1z"
+                path d="M6 15m0 1a1 1 0 0 1 1 -1h2a1 1 0 0 1 1 1v3a1 1 0 0 1 -1 1h-2a1 1 0 0 1 -1 -1z"
+                path d="M17 7m0 1a1 1 0 0 1 1 -1h2a1 1 0 0 1 1 1v3a1 1 0 0 1 -1 1h-2a1 1 0 0 1 -1 -1z"
+                path d="M6 7v8"
+                path d="M16 12l-2 -2"
+                path d="M16 12l-2 2"
+          ul.dropdown-menu.dropdown-menu-end.rounded-3.shadow-lg
+            for $version in items($this["versions"]["items"]):
+              if toString($this["version"]["label"]) == toString($version["label"]):
+                li > span.dropdown-item.active.fw-bold: $version["label"]
+              else:
+                li > a.dropdown-item href=$version["path"]: $version["label"]
+
+      // When enabled, shows a light/dark theme switcher in the header
+      if $this["config"]["appearance"]["show_theme_switcher"] == true:
+        if $this["versions"]["enable"] == true:
+          div.d-flex.align-items-center.ms-2
+            @include "theme-switcher"
+        else:
+          div.d-flex.align-items-center.ms-auto
+            @include "theme-switcher"
+
+      div#navbarSupportedContent.collapse.navbar-collapse
+        // Makes the navbar items defined in the config file.
+        // You can add links to other pages, external sites
+        // or anything you want here.
+        if $this["config"]["navbar"].len() > 0:
+          ul.navbar-nav.ms-auto.mb-2.mb-lg-0
+            for $navItem in items($this["config"]["navbar"]):
+              li.nav-item.mx-1
+                a.nav-link.fw-medium href=toString($this["version"]["path"]) & $navItem["url"]: $navItem["title"]
+
+div.container-fluid.my-4 style="min-height:calc(100vh - 150px)"
+  div.row > div.col-lg-12.col-xl-10.mx-auto > div.row
+    div.col-lg-2.collapse.d-lg-block data-area="left"
+      @include "leftsidebar"
+    div.col-lg-7.position-relative data-area="main"
+      @include "main"
+    div.col-lg-3.collapse.d-lg-block data-area="right"
+      @include "rightsidebar"
+      

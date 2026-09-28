@@ -1,0 +1,146 @@
+const themeDefault = toString($this["config"]["appearance"]["default_theme"])
+html data-bs-theme="dark" data-theme-default=$themeDefault
+  head
+    meta charset="utf-8"
+    title: $this["markdown"]["meta"]["title"] & " &mdash; " & $this["config"]["metadata"]["title"]
+    meta name="viewport" content="width=device-width, initial-scale=1"
+    // Resolves the effective theme before first paint: persisted choice,
+    // then `appearance.default_theme`, then the OS preference. Runs before
+    // the stylesheets below so there is no dark-to-light flash.
+    @javascript
+    {
+      (function () {
+        try {
+          var root = document.documentElement;
+          var stored = null;
+          try { stored = localStorage.getItem('booyaka-theme'); } catch (e) {}
+          var configured = root.getAttribute('data-theme-default') || 'system';
+          var theme = stored;
+          if (theme !== 'light' && theme !== 'dark') {
+            if (configured === 'light' || configured === 'dark') {
+              theme = configured;
+            } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+              theme = 'light';
+            } else {
+              theme = 'dark';
+            }
+          }
+          root.setAttribute('data-bs-theme', theme);
+        } catch (e) {}
+      })();
+    }
+    @end
+    link rel="icon" href="/assets/favicon-32x32.png" type="image/x-icon"
+    link rel="stylesheet" href="/assets/bootstrap.min.css"
+    link rel="stylesheet" href="/assets/app.css"
+    link rel="stylesheet" href="/assets/sweetsyntax.css"
+    link rel="stylesheet" href="/assets/style.css"
+    link rel="stylesheet" href="/assets/print.css" media="print"
+
+    const bgNoise = toFloat($this["config"]["appearance"]["background_noise_opacity"])
+    if $bgNoise > 0:
+      style: """
+body:before {
+  content: "";
+  display: block;
+  background-image: url("/assets/image.png");
+  background-repeat: repeat;
+  background-size: 257px auto;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  pointer-events: none;
+  z-index: 99999;
+  opacity: """ & $bgNoise & """;
+}
+      """
+
+  body
+    div.container-fluid
+      div.row
+        // The `@view` macro is a special macro that injects
+        // the content of the specific view into this layout.
+        @view
+      footer.row.mb-4 > div.col-12.text-center.opacity-50 > small > small
+        p.mt-4.mb-0: "Powered by "
+          a href="https://github.com/openpeeps/booyaka": "Booyaka"
+          " &mdash; Made by Humans from "
+          a href="https://openpeeps.dev": "OpenPeeps"
+        p.mb-0: $this["currentYear"] & " &copy; OpenPeeps & Contributors | AGPLv3 License"
+
+    script src="/assets/bootstrap.min.js"
+    script type="text/javascript" src="/assets/app.js"
+
+    if $this["config"]["content"]["lazyloadIframes"] or
+       $this["config"]["content"]["lazyloadVideos"] or
+       $this["config"]["content"]["lazyloadImages"]:
+      @javascript
+      {
+        UI.onReload(() => {
+          const lazyMedia = document.querySelectorAll('iframe[data-src], video[data-src], audio[data-src], source[data-src], img[data-src]');
+          const loadMedia = (el) => {
+            setTimeout(() => {
+              el.src = el.dataset.src;
+              el.removeAttribute('data-src');
+            }, 150);
+          };
+          if ('IntersectionObserver' in window) {
+            const observer = new IntersectionObserver((entries, obs) => {
+              entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                  loadMedia(entry.target);
+                  obs.unobserve(entry.target);
+                }
+              });
+            }, { rootMargin: '200px' });
+            lazyMedia.forEach(el => observer.observe(el));
+          } else {
+            lazyMedia.forEach(loadMedia);
+          }
+        });
+      }
+      @end
+
+    // Connects to the Watchout server to listen
+    // for file changes and reloads the page when a change is detected.
+    if $app["isDev"] == true:
+      @javascript
+      {
+        function connectWatchoutServer() {
+          const watchout = new WebSocket("ws://127.0.0.1:9000");
+          watchout.addEventListener('message', (e) => {
+            if(e.data == '1') location.reload()
+          });
+
+          watchout.addEventListener('close', () => {
+            setTimeout(() => {
+              console.log('Watchout WebSocket is closed. Try again...')
+              connectWatchoutServer()
+            }, 300)
+          })
+        }
+        connectWatchoutServer()
+      }
+      @end
+
+    if $app["enableMarkdownSync"] == true:
+      @javascript
+      {
+        function connectWatchoutServer() {
+          const watchout = new WebSocket("http://127.0.0.1:3000/ws");
+          watchout.addEventListener('message', (e) => {
+            if(e.data == '1') location.reload()
+          });
+
+          watchout.addEventListener('close', () => {
+            setTimeout(() => {
+              console.log('Watchout WebSocket is closed. Try again...')
+              connectWatchoutServer()
+            }, 300)
+          })
+        }
+        connectWatchoutServer()
+      }
+      @end
