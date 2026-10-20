@@ -75,6 +75,7 @@ initApp(skipLocalConfig = true):
     # init Markdown Service
     markdown.init(App)
 
+  assets "assets":
     when defined release:
       # Note: theme assets are NOT embedded as servable files. The embedded
       # default theme bundle only seeds `<project>/themes/default/`; the
@@ -89,24 +90,11 @@ initApp(skipLocalConfig = true):
       # embed Tabler SVG icons directly into the binary for production
       assets.embedDirectory("storage/icons", "storage/icons")
 
-    when defined release:
       # Preload embedded resources into memory (default theme bundle used for
       # seeding `themes/` into projects; icons used by `icon()` in templates)
       assets.preloadBundle("storage/icons")
 
       assets.preloadBundle("themes/default")
-
-App.withAssetsHandler:
-  proc (req: var Request, res: var Response, foundRes: var bool) =
-    # Serve `/assets/*` from the runtime storage disks: project assets
-    # first, then the active theme, then the default (fallback) theme.
-    # Works identically in dev and release; theme assets are never copied
-    # into the project.
-    if req.path.startsWith("/assets/"):
-      let full = resolvePublicAsset(req.path["/assets/".len .. ^1])
-      if full.len > 0:
-        req.sendAssetFile(full, res.getHeaders())
-        foundRes = true
 
 #
 # Starts the application. This will start the HTTP

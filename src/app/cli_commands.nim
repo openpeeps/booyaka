@@ -125,7 +125,10 @@ proc resolvePublicAsset*(rel: string): string =
   ## Resolves a public `/assets/...` path to an absolute file path,
   ## probing project assets first, then the active theme, then the
   ## default (fallback) theme. Returns "" when no disk provides it.
-  let relPath = normalizedPath(rel.strip(chars = {'/'}, leading = true))
+  ## Accepts both `/assets/x` URLs and bare `x` relative paths.
+  var relPath = normalizedPath(rel.strip(chars = {'/'}, leading = true))
+  if relPath.startsWith("assets/"):
+    relPath = relPath["assets/".len .. ^1]
   if relPath.len == 0 or relPath.startsWith(".") or relPath == ".." or
      relPath.startsWith(".." / ""):
     return ""
