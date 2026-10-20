@@ -48,8 +48,6 @@ initService Markdown[Global]:
     var
       contentPath: string # provided when initializing the service
       buildPath: string
-      partialsPath: string
-      buildStaticPath: string
       watcher*: Watchout
       hasChanges : bool
       gMarkdownService* : MarkdownInstance
@@ -195,6 +193,8 @@ initService Markdown[Global]:
         else:
           nil
       loadThemeSyntax()
+      code_line_numbers = globalBooyakaConfig.content.code_line_numbers
+      highlight_strip_lines = globalBooyakaConfig.content.highlight_strip_lines
       markdownOptions.codeBlockTransform = highlightCode
 
     proc writeMarkdownInstanceFields(b: var Buffer, inst: MarkdownInstance) =
@@ -469,11 +469,8 @@ initService Markdown[Global]:
           lastEdited: some(now().toTime)
         )
 
-      # write the parsed markdown content to disk
-      # we write to a hashed filename to avoid issues with special
-      # characters in URLs and to ensure uniqueness
-      let hashedPath = partialsPath / toLowerAscii(slugHash[1])  & ".html"
-      writeFile(hashedPath, htmlContent) #
+      # parsed HTML lives in `mdInstance.pages` (and the FBE caches);
+      # nothing is written to disk per page
       hasChanges = true
 
     # initialize markdown service
@@ -579,10 +576,8 @@ initService Markdown[Global]:
       ## Initialize the Markdown service and start monitoring files
       contentPath = app.applicationPaths.getInstallationPath / "contents"
       buildPath = app.applicationPaths.getInstallationPath / "_build"
-      partialsPath = buildPath / "partials"
 
       discard existsOrCreateDir(buildPath)
-      discard existsOrCreateDir(buildPath / "partials")
       discard existsOrCreateDir(contentPath)
       
       if not fileExists(contentPath / "index.md"):

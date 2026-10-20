@@ -75,21 +75,52 @@ proc clearSyntaxCache*() =
   ## Empties the custom specs table (used in tests and theme reloads).
   customSpecs.clear()
 
+var code_line_numbers* = false
+  ## When true, `highlightCode` wraps every line in
+  ## `<span class="code-line">` so `sweetsyntax.css` can render
+  ## line numbers via CSS counters. Set from `content.code_line_numbers`.
+var highlight_strip_lines* = true
+  ## When true, leading/trailing blank lines are stripped from fenced
+  ## code blocks before highlighting. Set from
+  ## `content.highlight_strip_lines`.
+
+proc addLineNumbers*(html: string): string =
+  ## Wraps every line of highlighted `html` in `<span class="code-line">`
+  ## for CSS-counter line numbers. Operates on raw newlines; a span split
+  ## across lines by a multiline token (comment, string) is re-opened per
+  ## line by the browser, so highlighting may degrade on those lines.
+  let lines = html.split('\n')
+  result = newStringOfCap(html.len + lines.len * 32)
+  for i, line in lines:
+    if i > 0:
+      result.add('\n')
+    result.add("<span class=\"code-line\">")
+    result.add(line)
+    result.add("</span>")
+
 proc highlightCode*(lang, code: string): string =
   ## Highlights `code` for backend rendering inside `<pre><code>`.
+  ## Applies `highlight_strip_lines` and `code_line_numbers` from the
+  ## module flags (wired to `BooyakaConfig.content` in `markdown.nim`).
   ## Returns span-annotated HTML, or plain escaped code when the language
   ## is unknown/empty or highlighting fails. Never raises.
+  let src = if highlight_strip_lines: code.strip() else: code
   let key = normalizeLang(lang)
   if key.len == 0:
-    return escapeCodeHtml(code.strip())
+    let esc = escapeCodeHtml(src)
+    return if code_line_numbers: addLineNumbers(esc) else: esc
   if customSpecs.hasKey(key):
     try:
-      var lx = initLexer(customSpecs[key], code)
-      return highlightHtml(lx)
+      var lx = initLexer(customSpecs[key], src)
+      let html = highlightHtml(lx)
+      return if code_line_numbers: addLineNumbers(html) else: html
     except CatchableError:
-      return escapeCodeHtml(code.strip())
+      let esc = escapeCodeHtml(src)
+      return if code_line_numbers: addLineNumbers(esc) else: esc
   try:
     let known = syntaxForExt(key)
-    return highlight(known, code, hfHtml)
+    let html = highlight(known, src, hfHtml)
+    return if code_line_numbers: addLineNumbers(html) else: html
   except CatchableError:
-    return escapeCodeHtml(code.strip())
+    let esc = escapeCodeHtml(src)
+    return if code_line_numbers: addLineNumbers(esc) else: esc

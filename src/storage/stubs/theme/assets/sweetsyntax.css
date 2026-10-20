@@ -126,3 +126,26 @@ pre code .ident.echo,
 pre code .ident.result {
   color: #ff6868;
 }
+
+/* line numbers (enabled via `content.code_line_numbers`) */
+pre code:has(> .code-line) {
+  counter-reset: code-line;
+}
+pre code .code-line {
+  display: block;
+  counter-increment: code-line;
+}
+pre code .code-line::before {
+  content: counter(code-line);
+  display: inline-block;
+  min-width: 2.5ch;
+  margin-right: 1.25ch;
+  padding-right: 1ch;
+  border-right: 1px solid var(--booyaka-code-border);
+  text-align: right;
+  color: #777;
+  user-select: none;
+}
+pre code .code-line:empty::after {
+  content: " ";
+}

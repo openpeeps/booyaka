@@ -512,34 +512,38 @@ proc readOptSidebarSectionSeq*(b: var Buffer): Option[seq[SidebarSection]] =
 # ---------------------------------------------------------------------------
 
 proc writeContentFields(b: var Buffer, c: ContentSettings) =
-  b.writeField(1'u16, proc (bb: var Buffer) = bb.writeOptHtmlTagSeq(c.allowedRawHtmlTags))
-  b.writeField(2'u16, proc (bb: var Buffer) = bb.writeBool(c.showLastUpdated))
-  b.writeField(3'u16, proc (bb: var Buffer) = bb.writeString(c.lastDateUpdatedFormat))
-  b.writeField(4'u16, proc (bb: var Buffer) = bb.writeBool(c.enableAutoFormatLinks))
+  b.writeField(1'u16, proc (bb: var Buffer) = bb.writeOptHtmlTagSeq(c.allowed_raw_html_tags))
+  b.writeField(2'u16, proc (bb: var Buffer) = bb.writeBool(c.show_last_updated))
+  b.writeField(3'u16, proc (bb: var Buffer) = bb.writeString(c.last_date_updated_format))
+  b.writeField(4'u16, proc (bb: var Buffer) = bb.writeBool(c.enable_auto_format_links))
   b.writeField(5'u16, proc (bb: var Buffer) = bb.writeBool(c.bottom_navigation))
-  b.writeField(6'u16, proc (bb: var Buffer) = bb.writeString(c.codeHighlightTheme))
+  b.writeField(6'u16, proc (bb: var Buffer) = bb.writeString(c.code_highlight_theme))
   b.writeField(7'u16, proc (bb: var Buffer) = bb.writeBool(c.share_ai_buttons))
   b.writeField(8'u16, proc (bb: var Buffer) = bb.writeOptShareProviderSeq(c.share_buttons_ai_providers))
-  b.writeField(9'u16, proc (bb: var Buffer) = bb.writeBool(c.lazyloadIframes))
-  b.writeField(10'u16, proc (bb: var Buffer) = bb.writeBool(c.lazyloadVideos))
-  b.writeField(11'u16, proc (bb: var Buffer) = bb.writeBool(c.lazyloadImages))
-  b.writeField(12'u16, proc (bb: var Buffer) = bb.writeBool(c.pageReferences))
+  b.writeField(9'u16, proc (bb: var Buffer) = bb.writeBool(c.lazyload_iframes))
+  b.writeField(10'u16, proc (bb: var Buffer) = bb.writeBool(c.lazyload_videos))
+  b.writeField(11'u16, proc (bb: var Buffer) = bb.writeBool(c.lazyload_images))
+  b.writeField(12'u16, proc (bb: var Buffer) = bb.writeBool(c.page_references))
+  b.writeField(13'u16, proc (bb: var Buffer) = bb.writeBool(c.code_line_numbers))
+  b.writeField(14'u16, proc (bb: var Buffer) = bb.writeBool(c.highlight_strip_lines))
 
 proc handleContentField(fid: uint16, fsz: int, b: var Buffer,
                         into: var ContentSettings) =
   case fid
-  of 1'u16: into.allowedRawHtmlTags = b.readOptHtmlTagSeq()
-  of 2'u16: into.showLastUpdated = b.readBool()
-  of 3'u16: into.lastDateUpdatedFormat = b.readString()
-  of 4'u16: into.enableAutoFormatLinks = b.readBool()
+  of 1'u16: into.allowed_raw_html_tags = b.readOptHtmlTagSeq()
+  of 2'u16: into.show_last_updated = b.readBool()
+  of 3'u16: into.last_date_updated_format = b.readString()
+  of 4'u16: into.enable_auto_format_links = b.readBool()
   of 5'u16: into.bottom_navigation = b.readBool()
-  of 6'u16: into.codeHighlightTheme = b.readString()
+  of 6'u16: into.code_highlight_theme = b.readString()
   of 7'u16: into.share_ai_buttons = b.readBool()
   of 8'u16: into.share_buttons_ai_providers = b.readOptShareProviderSeq()
-  of 9'u16: into.lazyloadIframes = b.readBool()
-  of 10'u16: into.lazyloadVideos = b.readBool()
-  of 11'u16: into.lazyloadImages = b.readBool()
-  of 12'u16: into.pageReferences = b.readBool()
+  of 9'u16: into.lazyload_iframes = b.readBool()
+  of 10'u16: into.lazyload_videos = b.readBool()
+  of 11'u16: into.lazyload_images = b.readBool()
+  of 12'u16: into.page_references = b.readBool()
+  of 13'u16: into.code_line_numbers = b.readBool()
+  of 14'u16: into.highlight_strip_lines = b.readBool()
   else: discard
 
 proc writeContent*(b: var Buffer, c: ContentSettings) =
@@ -602,8 +606,6 @@ proc writeAppearanceFields(b: var Buffer, a: AppearanceSettings) =
   b.writeField(2'u16, proc (bb: var Buffer) = bb.writeTheme(a.default_theme))
   b.writeField(3'u16, proc (bb: var Buffer) = bb.writeBool(a.show_toggle_left_sidebar))
   b.writeField(4'u16, proc (bb: var Buffer) = bb.writeBool(a.show_toggle_right_sidebar))
-  b.writeField(5'u16, proc (bb: var Buffer) = bb.writeString(a.container_width))
-  b.writeField(6'u16, proc (bb: var Buffer) = bb.writeString(a.content_width))
   b.writeField(7'u16, proc (bb: var Buffer) = bb.writeFloat64LE(a.background_noise_opacity))
 
 proc handleAppearanceField(fid: uint16, fsz: int, b: var Buffer,
@@ -613,8 +615,6 @@ proc handleAppearanceField(fid: uint16, fsz: int, b: var Buffer,
   of 2'u16: into.default_theme = b.readTheme()
   of 3'u16: into.show_toggle_left_sidebar = b.readBool()
   of 4'u16: into.show_toggle_right_sidebar = b.readBool()
-  of 5'u16: into.container_width = b.readString()
-  of 6'u16: into.content_width = b.readString()
   of 7'u16: into.background_noise_opacity = b.readFloat64LE()
   else: discard
 
@@ -701,8 +701,8 @@ proc writeConfigFields(b: var Buffer, c: BooyakaConfig) =
   b.writeField(5'u16, proc (bb: var Buffer) = bb.writeContent(c.content))
   b.writeField(6'u16, proc (bb: var Buffer) = bb.writeOptNavItemSeq(c.navbar))
   b.writeField(7'u16, proc (bb: var Buffer) = bb.writeNavSectionSeq(c.sidebar_navigation))
-  b.writeField(8'u16, proc (bb: var Buffer) = bb.writeSidebarType(c.sidebarLeftType))
-  b.writeField(9'u16, proc (bb: var Buffer) = bb.writeSidebarType(c.sidebarRightType))
+  b.writeField(8'u16, proc (bb: var Buffer) = bb.writeSidebarType(c.sidebar_left_type))
+  b.writeField(9'u16, proc (bb: var Buffer) = bb.writeSidebarType(c.sidebar_right_type))
   b.writeField(10'u16, proc (bb: var Buffer) = bb.writeExtraSections(c.extra_sections))
   b.writeField(11'u16, proc (bb: var Buffer) = bb.writeFooter(c.footer))
 
@@ -716,8 +716,8 @@ proc handleConfigField(fid: uint16, fsz: int, b: var Buffer,
   of 5'u16: into.content = b.readContent()
   of 6'u16: into.navbar = b.readOptNavItemSeq()
   of 7'u16: into.sidebar_navigation = b.readNavSectionSeq()
-  of 8'u16: into.sidebarLeftType = b.readSidebarType()
-  of 9'u16: into.sidebarRightType = b.readSidebarType()
+  of 8'u16: into.sidebar_left_type = b.readSidebarType()
+  of 9'u16: into.sidebar_right_type = b.readSidebarType()
   of 10'u16: into.extra_sections = b.readExtraSections()
   of 11'u16: into.footer = b.readFooter()
   else: discard
@@ -762,10 +762,10 @@ proc writePageFields(b: var Buffer, p: MarkdownPage) =
   b.writeField(4'u16, proc (bb: var Buffer) = bb.writeString(p.content))
   b.writeField(5'u16, proc (bb: var Buffer) = bb.writeString(p.last_updated))
   b.writeField(6'u16, proc (bb: var Buffer) = bb.writeOrderedStrMap(p.toc))
-  b.writeField(7'u16, proc (bb: var Buffer) = bb.writeString(p.tocHtml))
-  b.writeField(8'u16, proc (bb: var Buffer) = bb.writeString(p.markdownSourceJson))
+  b.writeField(7'u16, proc (bb: var Buffer) = bb.writeString(p.toc_html))
+  b.writeField(8'u16, proc (bb: var Buffer) = bb.writeString(p.markdown_source_json))
   b.writeField(9'u16, proc (bb: var Buffer) = bb.writePageNav(p.navigation))
-  b.writeField(10'u16, proc (bb: var Buffer) = bb.writeOptTime(p.lastEdited))
+  b.writeField(10'u16, proc (bb: var Buffer) = bb.writeOptTime(p.last_edited))
 
 proc handlePageField(fid: uint16, fsz: int, b: var Buffer,
                      into: var MarkdownPage) =
@@ -776,10 +776,10 @@ proc handlePageField(fid: uint16, fsz: int, b: var Buffer,
   of 4'u16: into.content = b.readString()
   of 5'u16: into.last_updated = b.readString()
   of 6'u16: into.toc = b.readOrderedStrMap()
-  of 7'u16: into.tocHtml = b.readString()
-  of 8'u16: into.markdownSourceJson = b.readString()
+  of 7'u16: into.toc_html = b.readString()
+  of 8'u16: into.markdown_source_json = b.readString()
   of 9'u16: into.navigation = b.readPageNav()
-  of 10'u16: into.lastEdited = b.readOptTime()
+  of 10'u16: into.last_edited = b.readOptTime()
   else: discard
 
 proc writeMarkdownPage*(b: var Buffer, p: MarkdownPage) =

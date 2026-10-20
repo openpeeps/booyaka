@@ -39,15 +39,15 @@ type
       ## The last updated timestamp of the page (formatted as a string)
     toc*: OrderedTableRef[string, string]
       ## Table of contents for the page (mapping section titles to anchors)
-    tocHtml*: string
+    toc_html*: string
       ## Pre-rendered nested table of contents HTML for the page
-    markdownSourceJson*: string
+    markdown_source_json*: string
       ## Script-safe JSON-encoded raw Markdown source of the page,
       ## embedded in a `<script type="application/json">` tag for the
       ## "Copy as Markdown" share action
     navigation*: MarkdownPageBottomNavigation
       ## Navigation information for the page (previous/next links)
-    lastEdited*: Option[Time]
+    last_edited*: Option[Time]
       ## The last edited time as a Time object (optional, can be used for sorting or display)
 
   BooyakaNavItem* = ref object
@@ -93,37 +93,43 @@ type
   
   ContentSettings* = object
     ## Settings related to Markdown processing in Booyaka
-    allowedRawHtmlTags*: Option[seq[HtmlTag]]
+    allowed_raw_html_tags*: Option[seq[HtmlTag]]
       ## A list of allowed raw HTML tags in Markdown content if
       ## not specified, only safe tags will be allowed (e.g.,
       ## "b", "i", "strong", "em", "a", "p", "ul", "ol", "li", etc.)
-    showLastUpdated*: bool
+    show_last_updated*: bool
       ## Whether to show the "Last Updated" timestamp on pages
-    lastDateUpdatedFormat*: string = "yyyy-MM-dd HH:mm:ss"
+    last_date_updated_format*: string = "yyyy-MM-dd HH:mm:ss"
       ## The format string for displaying the "Last Updated" timestamp
-    enableAutoFormatLinks*: bool = true
+    enable_auto_format_links*: bool = true
       ## Whether to automatically format URLs as clickable links in Markdown content
     bottom_navigation*: bool
       ## Whether to enable bottom navigation links on pages
-    codeHighlightTheme*: string = "default"
+    code_highlight_theme*: string = "default"
       ## Legacy client-side (highlight.js) theme name. Code blocks are now
       ## highlighted on the backend via SweetSyntax (`sweetsyntax.css`);
       ## this field is kept for config compatibility and currently ignored.
+    code_line_numbers*: bool
+      ## Whether to render line numbers alongside fenced code blocks
+      ## (CSS counters, not copied to clipboard) (default: false)
+    highlight_strip_lines*: bool = true
+      ## Whether to strip leading/trailing blank lines from fenced
+      ## code blocks before highlighting (default: true)
     share_ai_buttons*: bool = true
       ## Whether to show AI share buttons in the page header of documentation pages
     share_buttons_ai_providers*: Option[seq[ShareProvider]]
       ## A list of AI providers for share buttons (e.g.,
       ## "ChatGPT", "Claude", "DeepSeek", etc.)
-    lazyloadIframes*: bool
+    lazyload_iframes*: bool
       ## Whether to lazyload iframes in Markdown content by
       ## rewriting `src` to `data-src` (default: false)
-    lazyloadVideos*: bool
+    lazyload_videos*: bool
       ## Whether to lazyload videos and audio in Markdown content by
       ## rewriting `src` to `data-src` (default: false)
-    lazyloadImages*: bool
+    lazyload_images*: bool
       ## Whether to lazyload images in Markdown content by
       ## rewriting `src` to `data-src` (default: false)
-    pageReferences*: bool
+    page_references*: bool
       ## Whether to render `@<page>.md` references in Markdown content as
       ## rich page cards (default: false)
   
@@ -179,10 +185,6 @@ type
       ## Whether to show a toggle button for the left sidebar
     show_toggle_right_sidebar*: bool = false
       ## Whether to show a toggle button for the right sidebar
-    container_width*: string = "col-lg-10 mx-auto"
-      ## Bootstrap 5 container width class for the main content area
-    content_width*: string = "col-lg-7"
-      ## Bootstrap 5 column width class for the content area
     background_noise_opacity*: float = 0.03
       ## Opacity of the background noise texture (0.0 to 1.0) Set to 0.0 to disable background noise
 
@@ -231,9 +233,9 @@ type
       ## Top navigation bar configuration
     sidebar_navigation*: seq[NavigationSection]
       ## Sidebar navigation configuration
-    sidebarLeftType*: SidebarType
+    sidebar_left_type*: SidebarType
       ## Type of the left sidebar
-    sidebarRightType*: SidebarType
+    sidebar_right_type*: SidebarType
       ## Type of the right sidebar
     extra_sections*: BooyakaExtraSections
       ## Extra sections for future extensions
@@ -241,13 +243,13 @@ type
       ## Footer configuration
 
 var
-  enableBrowserSync* = true
+  enable_browser_sync* = true
     ## Whether to enable BrowserSync for live-reloading during
     ## writing documentation
 
-  booyakaProjectPath*: string
+  booyaka_project_path*: string
 
-  globalBooyakaConfig*: BooyakaConfig
+  global_booyaka_config*: BooyakaConfig
     ## Global variable to hold the Booyaka configuration loaded from the config file.
     ## This variable is accessible throughout the application and contains all the
     ## settings defined in `booyaka.config.yaml` or `booyaka.config.json`.

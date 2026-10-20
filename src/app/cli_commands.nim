@@ -328,6 +328,12 @@ proc buildCommand*(v: Values) =
   discard existsOrCreateDir(outputPath)
   discard existsOrCreateDir(outputPath / "assets")
 
+  # drop the legacy per-page fragment dir: `parseMarkdownFile` no longer
+  # writes hashed HTML there, but older runs may have left one behind
+  # and it must not ship in the published output
+  if dirExists(outputPath / "partials"):
+    removeDir(outputPath / "partials")
+
   proc copyDiskAssets(diskName: string) =
     ## Copies every file from a theme/project storage disk into the build
     ## output. Called fallback-first (then active theme, then project), so
@@ -401,12 +407,12 @@ proc buildCommand*(v: Values) =
       mdJson["section"] = newJString(mdPage.section)
       mdJson["content"] = newJString(mdPage.content)
       mdJson["last_updated"] = newJString(mdPage.last_updated)
-      mdJson["markdownSourceJson"] = newJString(mdPage.markdownSourceJson)
+      mdJson["markdown_source_json"] = newJString(mdPage.markdown_source_json)
       var tocJson = newJObject()
       for k, v in mdPage.toc:
         tocJson[k] = newJString(v)
       mdJson["toc"] = tocJson
-      mdJson["tocHtml"] = newJString(mdPage.tocHtml)
+      mdJson["toc_html"] = newJString(mdPage.toc_html)
       var navJson = newJObject()
       if mdPage.navigation.previous.isSome:
         var prev = newJObject()

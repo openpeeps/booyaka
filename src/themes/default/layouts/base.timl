@@ -73,9 +73,9 @@ body:before {
     script src="/assets/bootstrap.min.js"
     script type="text/javascript" src="/assets/app.js"
 
-    if $this["config"]["content"]["lazyloadIframes"] or
-       $this["config"]["content"]["lazyloadVideos"] or
-       $this["config"]["content"]["lazyloadImages"]:
+    if $this["config"]["content"]["lazyload_iframes"] or
+       $this["config"]["content"]["lazyload_videos"] or
+       $this["config"]["content"]["lazyload_images"]:
       @javascript
       {
         UI.onReload(() => {

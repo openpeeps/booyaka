@@ -4,7 +4,7 @@ div.sticky-top.sidebar-right.sticky-sidebar
       const tocItems = toKeys($this["markdown"]["toc"])
       if len($tocItems) > 0:
         h5.h6.text-body-emphasis: "Table of Contents"
-        ul.table-of-contents data-view-right: $this["markdown"]["tocHtml"]
+        ul.table-of-contents data-view-right: $this["markdown"]["toc_html"]
   
   for $widget in items($this["config"]["extra_sections"]["right_sidebar"]):
     div.mb-4: $widget["content"]
