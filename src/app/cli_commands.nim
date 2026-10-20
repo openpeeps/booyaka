@@ -45,6 +45,14 @@ proc loadBooyaka*(projectPath: string) =
     display("No Booyaka Config found in the current directory (.yml/.yaml/.json)")
     QuitFailure.quit
   globalBooyakaConfig.ensureLeadingSlash()
+  # `parseYAML` leaves absent keys at their zero value (Nim field
+  # defaults do not survive parsing), so projects predating the
+  # `server` section are normalized to the built-in defaults here.
+  # (`threads: 0` passes through: powpow reads it as one worker per core.)
+  if globalBooyakaConfig.server.port == 0:
+    globalBooyakaConfig.server.port = 3000
+  if globalBooyakaConfig.server.address.len == 0:
+    globalBooyakaConfig.server.address = "127.0.0.1"
   booyakaProjectPath = configPath.parentDir
 
 proc activeThemeName*(): string =
@@ -232,18 +240,32 @@ proc themeCommand*(v: Values) =
 proc startCommand*(v: Values) =
   ## Kapsis `init` command handler
   initStartCommand(v, createDirs = false)
+  let projectPath = absolutePath($(v.get("project").getPath))
+  loadBooyaka(projectPath)
   let
-    projectPath = absolutePath($(v.get("project").getPath))
-    port = 
+    bkServer = globalBooyakaConfig.server
+    port =
       if v.has("--port"): v.get("--port").getPort
-      else: 3000.Port
+      else:
+        if bkServer.port notin 1 .. 65535:
+          displayError("Invalid `server.port` in booyaka.config.yaml: \"" &
+            $bkServer.port & "\" (expected 1..65535)", quitProcess = true)
+          quit(1)
+        Port(bkServer.port)
 
   enableBrowserSync = v.has("--sync")
-  # Set the server port in the application configuration
-  App.configs["server"].putInt("port", port.int)
+  # Hand the project server settings to the framework (`putInt` only
+  # addresses top-level keys, so the nested `server` table is updated
+  # directly). `--port` wins over the file; the rest always comes from
+  # the project config, falling back to built-in defaults for projects
+  # predating the `server` section.
+  let srvTable = App.configs["app"].tomlDoc.tableVal["server"]
+  srvTable.tableVal["address"] = newTomlString(bkServer.address)
+  srvTable.tableVal["port"] = newTomlInteger(port.int.int64)
+  srvTable.tableVal["threads"] = newTomlInteger(bkServer.threads.int64)
+  srvTable.tableVal["unix"] = newTomlBoolean(bkServer.unix)
   App.configs["tim"].putBool("sync", enableBrowserSync)
 
-  loadBooyaka(projectPath)
   seedDefaultTheme(projectPath)
   initThemeDisks(projectPath)
   if v.has("--devMode"):

@@ -1,0 +1,36 @@
+# Booyaka default configuration (TOML).
+#
+# One merged file for the whole application. At startup it is split into
+# the per-area objects the framework and providers expect: each top-level
+# table becomes one config object (`[app]` -> `App.configs["app"]`,
+# `[tim]` -> `App.configs["tim"]`, ...). Non-table keys are ignored.
+#
+# This file is baked into the binary at compile time (`staticRead`) and
+# read from memory. Nothing is loaded from a runtime config directory
+# (`skipLocalConfig = true`).
+
+[app]
+# URL used when building absolute links and redirects.
+url = "127.0.0.1:3000"
+# Serve generated links as https.
+ssl = false
+
+[app.server]
+address = "127.0.0.1"
+port = 3000
+# Worker threads. 1 = single worker, 0 = one per CPU core.
+threads = 1
+# Serve HTTP over a Unix domain socket instead of TCP. Always
+# single-threaded: powpow worker pools cannot listen on Unix sockets.
+unix = false
+
+[tim]
+source = "./themes"
+output = "./storage/templates"
+indent = 2
+sync = false
+
+[runtime]
+# Whether to preload user-defined static assets in production.
+# Flipped to true at startup when `./assets/style.css` exists.
+preload_assets = false

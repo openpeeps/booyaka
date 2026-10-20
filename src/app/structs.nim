@@ -186,6 +186,18 @@ type
     background_noise_opacity*: float = 0.03
       ## Opacity of the background noise texture (0.0 to 1.0) Set to 0.0 to disable background noise
 
+  ServerSettings* = object
+    ## Supranim server settings for `booyaka start`. Projects created
+    ## before this section existed fall back to these defaults.
+    address*: string = "127.0.0.1"
+      ## TCP bind address (`unix = true` turns it into a socket path)
+    port*: int = 3000
+      ## TCP port to listen on (overridden by `start --port`)
+    threads*: int = 1
+      ## Worker threads. 1 = single worker, 0 = one per CPU core
+    unix*: bool = false
+      ## Serve over a Unix domain socket instead of TCP (single-threaded)
+
   GitSettings* = object
     ## Git-related settings for Booyaka
     enable_versioning*: bool
@@ -199,6 +211,8 @@ type
 
   BooyakaConfig* = object
     ## Configuration options for Booyaka This object is automatically populated from `booyaka.config.yaml` or `booyaka.config.json` file in the current directory.
+    server*: ServerSettings
+      ## Supranim server settings used by `booyaka start`
     theme*: string = "default"
       ## The active Tim theme, resolved from `<project>/themes/<name>`.
       ## Templates missing from the active theme fall back to the
