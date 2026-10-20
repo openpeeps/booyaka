@@ -75,7 +75,7 @@ initApp(skipLocalConfig = true):
     # init Markdown Service
     markdown.init(App)
 
-  assets "assets":
+  serveAssets "assets":
     when defined release:
       # Note: theme assets are NOT embedded as servable files. The embedded
       # default theme bundle only seeds `<project>/themes/default/`; the
@@ -85,16 +85,16 @@ initApp(skipLocalConfig = true):
       # embed Tim Engine default theme directly into the binary for production.
       # Project themes resolve from `<project>/themes/` at runtime; the embedded
       # bundle seeds `themes/default/` into projects missing it.
-      assets.embedDirectory("themes/default", "themes/default")
+      embedDirectory("themes/default", "themes/default")
 
       # embed Tabler SVG icons directly into the binary for production
-      assets.embedDirectory("storage/icons", "storage/icons")
+      embedDirectory("storage/icons", "storage/icons")
 
       # Preload embedded resources into memory (default theme bundle used for
       # seeding `themes/` into projects; icons used by `icon()` in templates)
-      assets.preloadBundle("storage/icons")
+      preloadBundle("storage/icons")
 
-      assets.preloadBundle("themes/default")
+      preloadBundle("themes/default")
 
 #
 # Starts the application. This will start the HTTP
