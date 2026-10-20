@@ -38,7 +38,7 @@ initApp(skipLocalConfig = true):
 
   cli do:
     new path(project), ?bool("--json"):
-      ## Create a new Booyaka project in the specified directory
+      ## Create a new Booyaka project
 
     theme string(name):
       ## Create a new blank Booyaka theme in ./<name>
@@ -49,7 +49,7 @@ initApp(skipLocalConfig = true):
     build path(project):
       ## Generate static HTML website
 
-  services do:
+  services do(app: Application):
     # init Logger Service
     logger.init()
 
@@ -95,19 +95,19 @@ initApp(skipLocalConfig = true):
       preloadBundle("storage/icons")
 
       preloadBundle("themes/default")
-
-#
-# Starts the application. This will start the HTTP
-# server and listen for incoming requests.
-#
-# The application will be available at the specified port.
-#
-App.run do:
-  # Booyaka WebSocket endpoint for live-reloading.
-  if enableBrowserSync:
-    App.server.registerCallback("/ws",
-      proc (req: HttpRequest, res: HttpResponse) {.gcsafe.} =
-        {.gcsafe.}:
-          discard websocketUpgrade(res, req, onOpen = onOpenCallback,
-                        onClose = onClose, onError = onError)
-    )
+  
+  #
+  # Starts the application. This will start the HTTP
+  # server and listen for incoming requests.
+  #
+  # The application will be available at the specified port.
+  #
+  run do(app: Application):
+    # Booyaka WebSocket endpoint for live-reloading.
+    if enableBrowserSync:
+      app.server.registerCallback("/ws",
+        proc (req: HttpRequest, res: HttpResponse) {.gcsafe.} =
+          {.gcsafe.}:
+            discard websocketUpgrade(res, req, onOpen = onOpenCallback,
+                            onClose = onClose, onError = onError)
+      )
