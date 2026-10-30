@@ -173,7 +173,7 @@ proc copyThemeAssetsToPublic*(projectPath: string) =
   if activeThemeName() != defaultThemeName:
     copyThemeDir(activeThemeName())
   if copied > 0:
-    display("Public assets synced from theme \"" & activeThemeName() &
+    displayInfo("Public assets synced from theme \"" & activeThemeName() &
       "\" (" & $copied & " file(s) into assets/)")
 
 const blankThemeStyleCss = "/* A blank Booyaka theme. Customize this file, not the public copy in assets/. */\n"
@@ -300,7 +300,7 @@ proc startCommand*(v: Values) =
         "localhost"
       else:
         bkServer.address
-    displaySuccess("Serving at http://" & host & ":" & $port.int)
+    displayInfo("Serving at http://" & host & ":" & $port.int)
 
 proc newCommand*(v: Values) =  ## Create a new Booyaka project in the specified directory
   ## If the directory is not empty, the command will fail with an error message.
