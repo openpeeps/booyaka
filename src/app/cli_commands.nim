@@ -288,6 +288,20 @@ proc startCommand*(v: Values) =
   else:
     copyThemeAssetsToPublic(projectPath)
 
+  # Print the local URL so it can be clicked/copied straight from the
+  # terminal (the port already includes any `--port` override).
+  # Wildcard and loopback binds are shown as `localhost`; a specific
+  # LAN address is shown as-is, unix mode shows the socket path.
+  if bkServer.unix:
+    display("Serving on unix socket: " & bkServer.address)
+  else:
+    let host =
+      if bkServer.address.len == 0 or bkServer.address in ["0.0.0.0", "::", "127.0.0.1", "localhost", "::1"]:
+        "localhost"
+      else:
+        bkServer.address
+    displaySuccess("Serving at http://" & host & ":" & $port.int)
+
 proc newCommand*(v: Values) =  ## Create a new Booyaka project in the specified directory
   ## If the directory is not empty, the command will fail with an error message.
   let dirPath = absolutePath($(v.get("project").getPath))
