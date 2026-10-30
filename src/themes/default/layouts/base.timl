@@ -1,5 +1,6 @@
 const themeDefault = toString($this["config"]["appearance"]["default_theme"])
-html data-bs-theme="dark" data-theme-default=$themeDefault
+const basePath = toString($this["base_path"])
+html data-bs-theme="dark" data-theme-default=$themeDefault data-base-path=$basePath
   head
     meta charset="utf-8"
     title: $this["markdown"]["meta"]["title"] & " &mdash; " & $this["config"]["metadata"]["title"]
@@ -30,12 +31,12 @@ html data-bs-theme="dark" data-theme-default=$themeDefault
       })();
     }
     @end
-    link rel="icon" href="/assets/favicon-32x32.png" type="image/x-icon"
-    link rel="stylesheet" href="/assets/bootstrap.min.css"
-    link rel="stylesheet" href="/assets/app.css"
-    link rel="stylesheet" href="/assets/sweetsyntax.css"
-    link rel="stylesheet" href="/assets/style.css"
-    link rel="stylesheet" href="/assets/print.css" media="print"
+    link rel="icon" href=$basePath & "/assets/favicon-32x32.png" type="image/x-icon"
+    link rel="stylesheet" href=$basePath & "/assets/bootstrap.min.css"
+    link rel="stylesheet" href=$basePath & "/assets/app.css"
+    link rel="stylesheet" href=$basePath & "/assets/sweetsyntax.css"
+    link rel="stylesheet" href=$basePath & "/assets/style.css"
+    link rel="stylesheet" href=$basePath & "/assets/print.css" media="print"
 
     const bgNoise = toFloat($this["config"]["appearance"]["background_noise_opacity"])
     if $bgNoise > 0:
@@ -43,7 +44,7 @@ html data-bs-theme="dark" data-theme-default=$themeDefault
 body:before {
   content: "";
   display: block;
-  background-image: url("/assets/image.png");
+  background-image: url(""" & $basePath & """/assets/image.png);
   background-repeat: repeat;
   background-size: 257px auto;
   position: fixed;
@@ -70,8 +71,8 @@ body:before {
           a href="https://openpeeps.dev": "OpenPeeps"
         p.mb-0: $this["currentYear"] & " &copy; OpenPeeps & Contributors | AGPLv3 License"
 
-    script src="/assets/bootstrap.min.js"
-    script type="text/javascript" src="/assets/app.js"
+    script src=$basePath & "/assets/bootstrap.min.js"
+    script type="text/javascript" src=$basePath & "/assets/app.js"
 
     if $this["config"]["content"]["lazyload_iframes"] or
        $this["config"]["content"]["lazyload_videos"] or

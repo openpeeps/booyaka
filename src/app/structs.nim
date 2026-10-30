@@ -1,4 +1,4 @@
-import std/[options, times, tables]
+import std/[options, times, tables, uri, strutils]
 import pkg/openparser/[json, html]
 
 type
@@ -78,7 +78,11 @@ type
   BooyakaMetadata* = object
     ## Metadata information for the Booyaka site
     url*: string
-      ## The base URL of the documentation site
+      ## The public base URL of the documentation site, e.g.
+      ## `"https://example.com"` or `"https://openpeeps.github.io/carne"`.
+      ## Required by `booyaka build`: the URL path becomes the prefix for
+      ## every asset and page link so the static site also works from a
+      ## subdirectory. Empty when unset (dev server ignores it).
     logo*: Option[string]
       ## URL or path to the logo image for the site
     logo_keep_gradient*: bool
@@ -264,3 +268,21 @@ proc ensureLeadingSlash*(config: BooyakaConfig) =
     for navItem in section.items:
       if navItem.url.len > 0 and navItem.url[0] != '/':
         navItem.url.insert("/", 0)
+
+proc siteBasePath*(config: BooyakaConfig): string =
+  ## Path prefix derived from `metadata.url` for prefixing asset and page
+  ## links in built output. `"https://openpeeps.github.io/carne"` returns
+  ## `"/carne"`; a root-hosted URL returns `""`. Never raises.
+  let u = config.metadata.url.strip()
+  if u.len == 0:
+    return ""
+  var p =
+    try: parseUri(u).path
+    except CatchableError: ""
+  while p.len > 1 and p.endsWith("/"):
+    p = p[0 .. ^2]
+  if p == "/":
+    return ""
+  if p.len > 0 and p[0] != '/':
+    p = "/" & p
+  p

@@ -13,21 +13,6 @@ import ./structs
 import ../service/provider/[markdown, tim, search, assets, git]
 const tpl = staticRead(storagePath / "stubs" / "template_booyaka.config.yaml")
   # a static template for the default Booyaka config file, used when creating new projects
-const
-  themeStubThemeYaml = staticRead(storagePath / "stubs" / "theme" / "theme.yaml")
-  themeStubBase = staticRead(storagePath / "stubs" / "theme" / "layouts" / "base.timl")
-  themeStubLeftSidebar = staticRead(storagePath / "stubs" / "theme" / "partials" / "leftsidebar.timl")
-  themeStubMain = staticRead(storagePath / "stubs" / "theme" / "partials" / "main.timl")
-  themeStubRightSidebar = staticRead(storagePath / "stubs" / "theme" / "partials" / "rightsidebar.timl")
-  themeStubThemeSwitcher = staticRead(storagePath / "stubs" / "theme" / "partials" / "theme-switcher.timl")
-  themeStubIndex = staticRead(storagePath / "stubs" / "theme" / "views" / "index.timl")
-  themeStubMarkdown = staticRead(storagePath / "stubs" / "theme" / "views" / "markdown.timl")
-  themeStubSearch = staticRead(storagePath / "stubs" / "theme" / "views" / "search.timl")
-  themeStub4xx = staticRead(storagePath / "stubs" / "theme" / "views" / "errors" / "4xx.timl")
-  themeStub5xx = staticRead(storagePath / "stubs" / "theme" / "views" / "errors" / "5xx.timl")
-  themeStubStyle = staticRead(storagePath / "stubs" / "theme" / "assets" / "style.css")
-  themeStubSweetSyntaxCss = staticRead(storagePath / "stubs" / "theme" / "assets" / "sweetsyntax.css")
-  themeStubSyntaxReadme = staticRead(storagePath / "stubs" / "theme" / "syntax" / "README.md")
 
 const defaultThemeName* = "default"
   ## Name of the built-in fallback theme shipped with Booyaka
@@ -61,6 +46,25 @@ proc activeThemeName*(): string =
   let t = globalBooyakaConfig.theme.strip()
   if t.len > 0: t else: defaultThemeName
 
+proc readDefaultThemeFile*(rel: string): string =
+  ## Reads a file from the built-in default theme — from the embedded
+  ## binary bundle in release builds, from the theme source tree in dev.
+  ## Single source of truth for creating `themes/default/` in new
+  ## projects (`seedDefaultTheme`) and blank themes (`scaffoldTheme`).
+  when defined release:
+    let
+      sta = staticAssets()
+      key = "/default/" & rel
+    if sta.hasAsset(key):
+      result = cast[string](sta.get(key))
+    else:
+      result = sta.directory("default")[key]
+  else:
+    let srcRoot = supranim.basePath / "themes" / defaultThemeName
+    if not dirExists(srcRoot):
+      displayError("Default theme not found in Booyaka sources: " & srcRoot, quitProcess = true)
+    result = readFile(srcRoot / rel)
+
 proc seedDefaultTheme*(projectPath: string) =
   ## Ensures `<project>/themes/default/` contains every file shipped with
   ## the built-in default theme. Only missing files are written, so user
@@ -80,16 +84,10 @@ proc seedDefaultTheme*(projectPath: string) =
     return
   when defined release:
     const prefix = "/default/"
-    let sta = staticAssets()
-    for key in sta.listAssetsDir("/default"):
+    for key in staticAssets().listAssetsDir("/default"):
       if not key.startsWith(prefix):
         continue
-      var content: string
-      if sta.hasAsset(key):
-        content = cast[string](sta.get(key))
-      else:
-        content = sta.directory("default")[key]
-      seedFile(key[prefix.len .. ^1], content)
+      seedFile(key[prefix.len .. ^1], readDefaultThemeFile(key[prefix.len .. ^1]))
   else:
     let srcRoot = supranim.basePath / "themes" / defaultThemeName
     if not dirExists(srcRoot):
@@ -178,35 +176,49 @@ proc copyThemeAssetsToPublic*(projectPath: string) =
     display("Public assets synced from theme \"" & activeThemeName() &
       "\" (" & $copied & " file(s) into assets/)")
 
+const blankThemeStyleCss = "/* A blank Booyaka theme. Customize this file, not the public copy in assets/. */\n"
+  ## Placeholder `assets/style.css` for freshly scaffolded themes. The
+  ## default theme ships no `style.css` of its own; per-project rules live
+  ## in `<project>/assets/style.css` (see `copyThemeAssetsToPublic`).
+
 proc scaffoldTheme*(destRoot, name, author: string): int =
   ## Writes a blank theme skeleton into `destRoot` (i.e. `./<name>/`).
+  ## File contents come from the built-in default theme (embedded bundle
+  ## in release builds, source tree in dev); `theme.yaml` is personalized
+  ## and `assets/style.css` starts as a blank placeholder.
   ## Returns the number of files written. The caller must ensure the
   ## destination does not exist yet.
   let themeFiles = [
-    ("theme.yaml", themeStubThemeYaml),
-    ("layouts/base.timl", themeStubBase),
-    ("partials/leftsidebar.timl", themeStubLeftSidebar),
-    ("partials/main.timl", themeStubMain),
-    ("partials/rightsidebar.timl", themeStubRightSidebar),
-    ("partials/theme-switcher.timl", themeStubThemeSwitcher),
-    ("views/index.timl", themeStubIndex),
-    ("views/markdown.timl", themeStubMarkdown),
-    ("views/search.timl", themeStubSearch),
-    ("views/errors/4xx.timl", themeStub4xx),
-    ("views/errors/5xx.timl", themeStub5xx),
-    ("assets/style.css", themeStubStyle),
-    ("assets/sweetsyntax.css", themeStubSweetSyntaxCss),
-    ("syntax/README.md", themeStubSyntaxReadme),
+    "layouts/base.timl",
+    "partials/leftsidebar.timl",
+    "partials/main.timl",
+    "partials/rightsidebar.timl",
+    "partials/theme-switcher.timl",
+    "views/index.timl",
+    "views/markdown.timl",
+    "views/search.timl",
+    "views/errors/4xx.timl",
+    "views/errors/5xx.timl",
+    "assets/sweetsyntax.css",
+    "syntax/README.md",
   ]
   result = 0
-  for (rel, content) in themeFiles:
+  for rel in themeFiles:
     let dest = destRoot / rel
     createDir(dest.parentDir)
-    var text = content
-    if rel == "theme.yaml":
-      text = text.replace("__THEME_NAME__", name).replace("__THEME_AUTHOR__", author)
-    writeFile(dest, text)
+    writeFile(dest, readDefaultThemeFile(rel))
     inc result
+  var themeYaml = readDefaultThemeFile("theme.yaml")
+  themeYaml = themeYaml.replace("name: \"default\"", "name: \"" & name & "\"")
+  themeYaml = themeYaml.replace("author: \"OpenPeeps\"", "author: \"" & author & "\"")
+  themeYaml = themeYaml.replace("url: \"https://github.com/openpeeps/booyaka\"", "url: \"\"")
+  themeYaml = themeYaml.replace(
+    "description: \"The default Booyaka theme (Bootstrap 5, dark mode)\"",
+    "description: \"A blank Booyaka theme\"")
+  writeFile(destRoot / "theme.yaml", themeYaml)
+  inc result
+  writeFile(destRoot / "assets" / "style.css", blankThemeStyleCss)
+  inc result
 
 proc themeCommand*(v: Values) =
   ## Create a new blank Booyaka theme in `./<name>`. Works anywhere —
@@ -298,6 +310,11 @@ proc buildCommand*(v: Values) =
     projectPath = absolutePath($(v.get("project").getPath))
 
   loadBooyaka(projectPath)
+  if globalBooyakaConfig.metadata.url.strip().len == 0:
+    displayError("`metadata.url` is required to build the static site " &
+      "(e.g. `metadata.url: \"https://openpeeps.github.io/carne\"`). " &
+      "Set it in booyaka.config.yaml, then rebuild.", quitProcess = true)
+  let basePath = globalBooyakaConfig.siteBasePath()
   seedDefaultTheme(projectPath)
   initThemeDisks(projectPath)
 
@@ -386,7 +403,7 @@ proc buildCommand*(v: Values) =
             target = target & "/" & slugPath
         versions.add(%*{
           "label": label,
-          "path": target
+          "path": basePath & target
         })
       versions
     for pagePath, pageHash in instance.index:
@@ -432,9 +449,10 @@ proc buildCommand*(v: Values) =
       var localData = newJObject()
       localData["markdown"] = mdJson
       localData["config"] = toJson(globalBooyakaConfig).fromJson()
+      localData["base_path"] = newJString(basePath)
       localData["version"] = %*{
         "label": version,
-        "path": if version.len > 0: "/" & version else: ""
+        "path": basePath & (if version.len > 0: "/" & version else: "")
       }
       localData["versions"] = %*{
         "enable": globalBooyakaConfig.git.enable_versioning,

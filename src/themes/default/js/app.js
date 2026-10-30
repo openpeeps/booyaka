@@ -57,6 +57,7 @@ export default {
     this.initExternalLinksDecorator();
     this.initSpotlightSearch();
     this.initShareButtons();
+    this.initCodeCopy();
     this.initTheme();
 
     // Tracks the URL of the currently displayed content so spurious or
@@ -188,7 +189,10 @@ export default {
 
   // Initialize the spotlight search feature using Fuse.js for client-side fuzzy searching.
   initSpotlightSearch: function() {
-    fetch("/results.json").then(response => response.json()).then(data => {
+    // Subpath prefix for static builds served from a subdirectory
+    // (e.g. `/carne`); exposed by the layout as `<html data-base-path>`.
+    const basePath = (document.documentElement.dataset.basePath || '').replace(/\/$/, '');
+    fetch(basePath + "/results.json").then(response => response.json()).then(data => {
       if(!data) return;
       let spotlightForm = document.querySelector('.spotlight-form');
       let spotlightAutocomplete = document.createElement('div');
@@ -289,7 +293,7 @@ export default {
           let li = document.createElement('li');
           let a = document.createElement('a');
           a.classList.add('d-block', 'rounded-4', 'py-2', 'px-3', 'border-0', 'text-decoration-none', 'spotlight-autocomplete-item');
-          a.href = r.item.url != '/' ? `/${r.item.url}` : '/';
+          a.href = r.item.url != '/' ? `${basePath}/${String(r.item.url).replace(/^\//, '')}` : `${basePath}/`;
           a.innerHTML = `<span class="d-block">${r.item.title}</span><span class="text-muted small d-block lh-sm">${r.item.description}</span>`;
           li.appendChild(a);
 
@@ -419,6 +423,58 @@ export default {
     const original = label.textContent;
     label.textContent = 'Copied!';
     setTimeout(() => { label.textContent = original; }, 1200);
+  },
+
+  /**
+   * Injects a floating click-to-copy button into every `pre > code` block.
+   *
+   * The button copies the block's plain text (highlight spans excluded;
+   * line numbers are CSS counters, never in the DOM). Injection runs on
+   * every page load/swap through `UI.onReload`, while clicks are delegated
+   * on `document` so swapped content works without re-binding.
+   */
+  initCodeCopy: function() {
+    const copySvg = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M7 9.667a2.667 2.667 0 0 1 2.667 -2.667h8.666a2.667 2.667 0 0 1 2.667 2.667v8.666a2.667 2.667 0 0 1 -2.667 2.667h-8.666a2.667 2.667 0 0 1 -2.667 -2.667l0 -8.666" /><path d="M4.012 16.737a2.005 2.005 0 0 1 -1.012 -1.737v-10c0 -1.1 .9 -2 2 -2h10c.75 0 1.158 .385 1.5 1" /></svg>';
+    const checkSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M5 12l5 5l10 -10" /></svg>';
+
+    const injectCopyButtons = () => {
+      document.querySelectorAll('pre > code').forEach(code => {
+        const pre = code.parentElement;
+        if (!pre || pre.querySelector(':scope > .code-copy-btn')) return;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'code-copy-btn';
+        btn.setAttribute('aria-label', 'Copy code to clipboard');
+        btn.setAttribute('title', 'Copy');
+        btn.innerHTML = copySvg;
+        pre.appendChild(btn);
+      });
+    };
+    this.onReload(injectCopyButtons);
+    injectCopyButtons();
+
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest('.code-copy-btn');
+      if (!btn) return;
+      e.preventDefault();
+      const pre = btn.closest('pre');
+      const code = pre ? pre.querySelector('code') : null;
+      if (!code) return;
+      const lines = code.querySelectorAll('.code-line');
+      const text = lines.length > 0
+        ? Array.from(lines).map(l => l.textContent).join('\n')
+        : (code.innerText != null ? code.innerText : code.textContent);
+      Promise.resolve(this.copyTextToClipboard(text)).catch(() => {}).finally(() => {
+        btn.classList.add('is-copied');
+        btn.setAttribute('aria-label', 'Copied!');
+        btn.innerHTML = checkSvg;
+        setTimeout(() => {
+          btn.classList.remove('is-copied');
+          btn.setAttribute('aria-label', 'Copy code to clipboard');
+          btn.innerHTML = copySvg;
+        }, 1500);
+      });
+    });
   },
 
   /**

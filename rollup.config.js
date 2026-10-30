@@ -6,7 +6,7 @@ import terser from '@rollup/plugin-terser';
 const isRelease = process.env.NODE_ENV === 'production';
 
 export default [{
-  input: 'src/storage/client/app.js',
+  input: 'src/themes/default/js/app.js',
   output: [
     {
       name: 'UI',

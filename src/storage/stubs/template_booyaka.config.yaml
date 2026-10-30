@@ -5,6 +5,11 @@ server:
   unix: false
 theme: "default"
 metadata:
+  # Public base URL of the site. Required by `booyaka build`: the URL path
+  # becomes the prefix for assets and page links, e.g. "/carne" below lets
+  # the static site live at https://openpeeps.github.io/carne.
+  # Use a bare domain (https://example.com) when serving from the root.
+  url: "https://openpeeps.github.io/carne"
   title: "Booyaka Documentation"
   description: "A documentation website built with Booyaka"
   keywords: ["booyaka", "documentation", "docs"]

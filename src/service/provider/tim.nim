@@ -62,6 +62,7 @@ initService Tim[Global]:
       tim.initCommonStorage:
         {
           "path": req.getUrl(),
+          "base_path": "",
           "currentYear": now().format("yyyy"),
           "site": {
             "logo": globalBooyakaConfig.metadata.logo.get("/assets/booyaka.png"),
@@ -108,11 +109,17 @@ initService Tim[Global]:
     proc buildRender*(path: string, local: JsonNode): string =
       if timInstance == nil:
         raise newException(ValueError, "Tim Engine not initialized. Call buildSetup first.")
+      let basePath = globalBooyakaConfig.siteBasePath()
       var data = newJObject()
       data["path"] = newJString(path)
+      data["base_path"] = newJString(basePath)
       data["currentYear"] = newJString(now().format("yyyy"))
       var site = newJObject()
-      site["logo"] = newJString(globalBooyakaConfig.metadata.logo.get("/assets/booyaka.png"))
+      var logo = globalBooyakaConfig.metadata.logo.get("/assets/booyaka.png")
+      if basePath.len > 0 and logo.startsWith("/") and
+          not logo.startsWith(basePath & "/") and logo != basePath:
+        logo = basePath & logo
+      site["logo"] = newJString(logo)
       site["hasLogo"] = newJBool(globalBooyakaConfig.metadata.logo.isSome())
       site["hasNotifications"] = newJBool(globalBooyakaConfig.header.notification.isSome())
       data["site"] = site
