@@ -1,4 +1,4 @@
-import std/[options, times, tables, uri, strutils]
+import std/[options, times, tables, strutils]
 import pkg/openparser/[json, html]
 
 type
@@ -78,8 +78,9 @@ type
   BooyakaMetadata* = object
     ## Metadata information for the Booyaka site
     url*: string
-      ## The public base URL of the documentation site, e.g.
-      ## `"https://example.com"` or `"https://openpeeps.github.io/carne"`.
+      ## The public base URL of the documentation site, with or without a
+      ## scheme: `"website.com"`, `"openpeeps.github.io/carne"` or
+      ## `"https://openpeeps.github.io/carne"`.
       ## Required by `booyaka build`: the URL path becomes the prefix for
       ## every asset and page link so the static site also works from a
       ## subdirectory. Empty when unset (dev server ignores it).
@@ -271,18 +272,37 @@ proc ensureLeadingSlash*(config: BooyakaConfig) =
 
 proc siteBasePath*(config: BooyakaConfig): string =
   ## Path prefix derived from `metadata.url` for prefixing asset and page
-  ## links in built output. `"https://openpeeps.github.io/carne"` returns
-  ## `"/carne"`; a root-hosted URL returns `""`. Never raises.
-  let u = config.metadata.url.strip()
+  ## links in built output. Accepts bare hosts (`website.com`,
+  ## `openpeeps.github.io/carne`) as well as full URLs
+  ## (`https://openpeeps.github.io/carne`); both subpath forms return
+  ## `"/carne"`, root-hosted sites return `""`. Never raises.
+  var u = config.metadata.url.strip()
   if u.len == 0:
     return ""
-  var p =
-    try: parseUri(u).path
-    except CatchableError: ""
-  while p.len > 1 and p.endsWith("/"):
-    p = p[0 .. ^2]
-  if p == "/":
+  # drop `scheme://` when present
+  let schemeIdx = u.find("://")
+  if schemeIdx >= 0:
+    u = u[schemeIdx + 3 .. ^1]
+  # drop query/fragment
+  let qIdx = u.find({'?', '#'})
+  if qIdx >= 0:
+    u = u[0 ..< qIdx]
+  u = u.strip(chars = {'/'}, leading = false, trailing = true)
+  if u.len == 0:
     return ""
-  if p.len > 0 and p[0] != '/':
-    p = "/" & p
-  p
+  # the first segment is the host — unless there is only one segment,
+  # in which case a dotted value is a bare host and anything else
+  # (e.g. `carne`) is a subpath
+  let slashIdx = u.find('/')
+  var path: string
+  if slashIdx < 0:
+    if '.' in u or ':' in u:
+      return ""
+    path = u
+  else:
+    path = u[slashIdx .. ^1]
+  if path.len == 0 or path == "/":
+    return ""
+  if path[0] != '/':
+    path = "/" & path
+  path

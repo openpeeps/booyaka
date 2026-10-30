@@ -312,7 +312,7 @@ proc buildCommand*(v: Values) =
   loadBooyaka(projectPath)
   if globalBooyakaConfig.metadata.url.strip().len == 0:
     displayError("`metadata.url` is required to build the static site " &
-      "(e.g. `metadata.url: \"https://openpeeps.github.io/carne\"`). " &
+      "(e.g. `metadata.url: \"openpeeps.github.io/carne\"`). " &
       "Set it in booyaka.config.yaml, then rebuild.", quitProcess = true)
   let basePath = globalBooyakaConfig.siteBasePath()
   seedDefaultTheme(projectPath)
