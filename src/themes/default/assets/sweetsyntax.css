@@ -13,7 +13,7 @@ pre code[class*="language-"] {
   padding: 1em;
   background: var(--booyaka-code-bg);
   color: var(--booyaka-code-fg);
-  border: 1px solid var(--booyaka-code-border);
+  /* border: 1px solid var(--booyaka-code-border); */
   border-radius: var(--booyaka-radius-md, 8px);
 }
 
@@ -132,7 +132,7 @@ pre code:has(> .code-line) {
   counter-reset: code-line;
 }
 pre code .code-line {
-  display: block;
+  display: inline-block;
   counter-increment: code-line;
 }
 pre code .code-line::before {
@@ -142,6 +142,8 @@ pre code .code-line::before {
   margin-right: 1.25ch;
   padding-right: 1ch;
   border-right: 1px solid var(--booyaka-code-border);
+  /* the gutter shares the code background: only the divider may show */
+  background: transparent;
   text-align: right;
   color: #777;
   user-select: none;

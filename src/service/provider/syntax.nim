@@ -89,11 +89,13 @@ proc addLineNumbers*(html: string): string =
   ## for CSS-counter line numbers. Operates on raw newlines; a span split
   ## across lines by a multiline token (comment, string) is re-opened per
   ## line by the browser, so highlighting may degrade on those lines.
+  ## Spans are joined with no separator: under `<pre>`'s `white-space: pre`
+  ## a raw newline between two block spans would render as a phantom blank
+  ## row, doubling every line. (Clipboard copy re-joins lines with `\n` in
+  ## `app.js`, and block boxes still paste with line breaks.)
   let lines = html.split('\n')
   result = newStringOfCap(html.len + lines.len * 32)
-  for i, line in lines:
-    if i > 0:
-      result.add('\n')
+  for line in lines:
     result.add("<span class=\"code-line\">")
     result.add(line)
     result.add("</span>")
