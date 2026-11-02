@@ -105,7 +105,7 @@ Each section below is optional except `metadata.url`, which `booyaka build` requ
 
 ### Server
 Controls the embedded HTTP server used by `booyaka start`. The `--port` flag overrides `port`.
-```
+```yaml
 server:
   address: "127.0.0.1"
   port: 3000
@@ -117,7 +117,7 @@ server:
 Name of the active theme, resolved from `<project>/themes/<name>`. Templates missing from the
 active theme fall back to the built-in `default` theme. Scaffold a blank theme with
 `booyaka theme <name>`, then copy or symlink it into `themes/` and activate it here.
-```
+```yaml
 theme: "default"
 ```
 
@@ -125,7 +125,7 @@ theme: "default"
 Site identity and SEO basics. `url` accepts a bare host (`website.com`,
 `openpeeps.github.io/carne`) or a full URL; its path prefix (e.g. `/carne`) is applied to every
 asset and page link so the static site also works from a subdirectory.
-```
+```yaml
 metadata:
   url: "openpeeps.github.io/carne"
   title: "Booyaka Documentation"
@@ -136,7 +136,7 @@ metadata:
 ```
 
 ### Appearance
-```
+```yaml
 appearance:
   show_theme_switcher: true     # light/dark switcher in the header
   default_theme: "system"       # "system" follows the OS, or pin "light" / "dark"
@@ -146,7 +146,7 @@ appearance:
 ```
 
 ### Git
-```
+```yaml
 git:
   enable_versioning: false      # version switcher from semver git tags
   enable_contributors_info: false
@@ -154,7 +154,7 @@ git:
 ```
 
 ### Header
-```
+```yaml
 header:
   search:
     enable: true
@@ -165,7 +165,7 @@ header:
 
 ### Content
 Rendering options for Markdown pages.
-```
+```yaml
 content:
   allowed_raw_html_tags: ["b", "i", "strong", "em", "a", "p", "ul", "ol", "li"]
   show_last_updated: true
@@ -188,7 +188,7 @@ content:
 ### Navigation
 Top navbar and sidebar sections. Sidebar `url` values need a leading slash and should match
 page slugs so previous/next links and highlighting resolve.
-```
+```yaml
 navbar:
   - title: "Home"
     url: "/"
@@ -206,7 +206,7 @@ sidebar_navigation:
 ```
 
 Extra sidebar widgets accept raw HTML or Markdown content:
-```
+```yaml
 extra_sections:
   left_sidebar:
     - title: ""
@@ -217,7 +217,7 @@ extra_sections:
 ```
 
 ### Footer
-```
+```yaml
 footer:
   text: ""
   links:
@@ -231,7 +231,7 @@ You can define custom routes at Booyaka config level. A `view` route renders a T
 directly, which lets any documentation site grow fully custom pages. A `page` route serves a
 Markdown file from `contents/` at an explicit path instead of its natural slug (the original
 URL is then excluded from the build, search index, and page cards).
-```
+```yaml
 routes:
   - path: "/contact"          # static Tim view
     view: "pages/contact"     # -> themes/<theme>/views/pages/contact.timl
