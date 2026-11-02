@@ -1,0 +1,20 @@
+// Example static page for a custom `view` route:
+//
+// ```yaml
+// routes:
+//   - path: "/contact"
+//     view: "pages/contact"
+//     title: "Contact"
+// ```
+//
+// Static view routes render without a Markdown page: only `config`,
+// `versions` and a minimal `markdown.meta` (title/description) are
+// available. Use `$this["config"]...` for site data.
+
+div.container.my-5
+  div.row > div.col-lg-8.mx-auto
+    h1.display-6: $this["markdown"]["meta"]["title"]
+    if toString($this["markdown"]["meta"]["description"]) != "":
+      p.lead.text-muted: $this["markdown"]["meta"]["description"]
+    else:
+      p.lead.text-muted: "Get in touch with us."

@@ -209,7 +209,77 @@ ctrl getVersion:
 ctrl getSlug:
   {.gcsafe.}:
     let slug = req.params["slug"]
-    if isReservedLlmsSlug(slug):
+    let routeOpt = globalBooyakaConfig.findCustomRoute(slug)
+    if routeOpt.isSome:
+      # custom route (checked before page slugs so a route path always wins)
+      let route = routeOpt.get()
+      if route.page.isSome and route.page.get.strip().len > 0:
+        # Markdown-backed route: the file is indexed under the route slug,
+        # so its natural URL stays excluded
+        let rs = routeSlug(route.path)
+        let page = versionPage(gMarkdownService, rs)
+        if page.isNil:
+          render("errors.4xx", local = &*{
+            "markdown": {
+              "meta": {
+                "title": "Page Not Found",
+                "description": "The page you are looking for does not exist."
+              },
+            },
+            "config": toJson(globalBooyakaConfig).fromJson()
+          }, httpCode = Http404)
+        else:
+          let (view, layout) = resolvePageViewLayout(
+            gMarkdownService.pages[gMarkdownService.index[rs]].meta, some(route))
+          if req.isSPARequest:
+            renderView(view, local = &*{
+              "markdown": page,
+              "config": toJson(globalBooyakaConfig).fromJson(),
+              "version": {
+                "label": "",
+                "path": ""
+              },
+              "versions": versionsData(rs)
+            })
+          else:
+            render(view, layout, local = &*{
+              "markdown": page,
+              "config": toJson(globalBooyakaConfig).fromJson(),
+              "version": {
+                "label": "",
+                "path": ""
+              },
+              "versions": versionsData(rs)
+            })
+      else:
+        # static Tim view route; the meta shim keeps `base.timl`'s
+        # `<title>` working without a Markdown page
+        let (view, layout) = resolveRouteViewLayout(route)
+        var metaTitle = routeSlug(route.path)
+        if route.title.isSome and route.title.get.strip().len > 0:
+          metaTitle = route.title.get.strip()
+        var metaDesc = ""
+        if route.description.isSome:
+          metaDesc = route.description.get
+        let local = &*{
+          "markdown": {
+            "meta": {
+              "title": metaTitle,
+              "description": metaDesc
+            },
+          },
+          "config": toJson(globalBooyakaConfig).fromJson(),
+          "version": {
+            "label": "",
+            "path": ""
+          },
+          "versions": versionsData(routeSlug(route.path))
+        }
+        if req.isSPARequest:
+          renderView(view, local = local)
+        else:
+          render(view, layout, local = local)
+    elif isReservedLlmsSlug(slug):
       # reserved root `llms.md` only serves `/llms.txt`, never `/llms`
       render("errors.4xx", local = &*{
         "markdown": {

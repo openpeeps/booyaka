@@ -132,6 +132,18 @@ initService Markdown[Global]:
         opts.customTransform = nil
         var md = newMarkdown(readFile(refPath), opts)
         let meta: JsonNode = toJson(md.getHeader()).fromJson()
+        # a file served at a custom route links to the route path,
+        # never to its excluded natural slug (compared by normalized
+        # path so no slug computation is needed here)
+        for r in globalBooyakaConfig.routes:
+          if r.page.isSome and r.page.get.strip().len > 0:
+            var rel = r.page.get.strip().replace("\\", "/")
+            rel = rel.strip(chars = {'/'}, leading = true, trailing = false)
+            if rel.startsWith("contents/"):
+              rel = rel["contents/".len .. ^1]
+            if normalizedPath(refPath) == normalizedPath(contentPath / rel):
+              return ("/" & routeSlug(r.path),
+                MarkdownPage(meta: meta, title: md.getTitle()))
         return ("/" & refName, MarkdownPage(meta: meta, title: md.getTitle()))
       result = ("", MarkdownPage())
 
@@ -329,6 +341,81 @@ initService Markdown[Global]:
         if mdInstance.pages.hasKey(hash):
           mdInstance.pages.del(hash)
 
+    proc routedSlugMap*(basePath: string): TableRef[string, string] =
+      ## Maps natural Markdown slugs to custom route slugs for every route
+      ## with `page` set: `{origSlug: routeSlug}`. Slugs carry no leading
+      ## slash (except `"/"`); route paths are normalized the same way.
+      result = newTable[string, string]()
+      for r in globalBooyakaConfig.routes:
+        if r.page.isSome and r.page.get.strip().len > 0:
+          var rel = r.page.get.strip().replace("\\", "/")
+          rel = rel.strip(chars = {'/'}, leading = true, trailing = false)
+          if rel.startsWith("contents/"):
+            rel = rel["contents/".len .. ^1]
+          let orig = getSlugHash(basePath, basePath / rel)
+          result[orig[0]] = routeSlug(r.path)
+
+    proc purgeRoutedPages*(mdInstance: MarkdownInstance, basePath: string) =
+      ## Drops stale original-slug entries for Markdown files that are now
+      ## served at a custom route path (see `routedSlugMap`). Runs before
+      ## the scan so the files are re-parsed under their route slug.
+      if mdInstance.isNil or mdInstance.index.isNil or mdInstance.pages.isNil:
+        return
+      let routed = routedSlugMap(basePath)
+      if routed.len == 0:
+        return
+      for slug in toSeq(keys(mdInstance.index)):
+        if routed.hasKey(slug):
+          let hash = mdInstance.index[slug]
+          mdInstance.index.del(slug)
+          if mdInstance.pages.hasKey(hash):
+            mdInstance.pages.del(hash)
+      if not searchInstance.isNil:
+        for slug in keys(routed):
+          searchInstance.removeEntry($(secureHash(slug)))
+
+    proc metaFieldStr(meta: JsonNode, key: string): string =
+      ## Reads an optional string field from Markdown frontmatter (`nil`-
+      ## and type-safe; empty when absent).
+      if meta != nil and meta.kind == JObject and meta.hasKey(key):
+        let v = meta[key]
+        if v != nil and v.kind == JString:
+          return v.getStr().strip()
+      ""
+
+    proc resolvePageViewLayout*(meta: JsonNode,
+        route: Option[BooyakaRoute] = none(BooyakaRoute)): (string, string) =
+      ## Resolves the Tim `(view, layout)` for a Markdown page. Frontmatter
+      ## `view:` / `layout:` win, then the custom-route defaults, then
+      ## `("index", "base")`.
+      var
+        view = metaFieldStr(meta, "view")
+        layout = metaFieldStr(meta, "layout")
+      if view.len == 0:
+        if route.isSome and route.get.view.isSome and route.get.view.get.strip().len > 0:
+          view = routeViewName(route.get.view.get)
+        else:
+          view = "index"
+      else:
+        view = routeViewName(view)
+      if layout.len == 0:
+        if route.isSome and route.get.layout.isSome and route.get.layout.get.strip().len > 0:
+          layout = route.get.layout.get.strip()
+        else:
+          layout = "base"
+      (view, layout)
+
+    proc resolveRouteViewLayout*(route: BooyakaRoute): (string, string) =
+      ## Resolves the Tim `(view, layout)` for a static view route (no
+      ## Markdown involved). The route `view` is required; `layout`
+      ## defaults to `"base"`.
+      let layout =
+        if route.layout.isSome and route.layout.get.strip().len > 0:
+          route.layout.get.strip()
+        else:
+          "base"
+      (routeViewName(route.view.get), layout)
+
     proc flattenNavigation(nav: seq[NavigationSection]): seq[BooyakaNavItem] =
       # Flattens sidebar_navigation into a single sequence of nav items
       for section in nav:
@@ -411,11 +498,17 @@ initService Markdown[Global]:
       # so the complete `<script type="application/json">` element is
       # pre-built here and injected into the template as raw HTML.
       let encodedMarkdown = $(newJString(rawContent))
+      # compute slug and hash; a Markdown file served at a custom route
+      # path is indexed under the route slug instead of its natural slug,
+      # so the original URL is excluded and the route URL serves the page
+      var slugHash =
+        if not hashedSlug.isSome: getSlugHash(basePath, path)
+        else: hashedSlug.get()
+      let routed = routedSlugMap(basePath)
+      if routed.hasKey(slugHash[0]):
+        let rs = routed[slugHash[0]]
+        slugHash = (rs, $(secureHash(rs)))
       let
-        # compute slug and hash
-        slugHash =
-          if not hashedSlug.isSome: getSlugHash(basePath, path)
-          else: hashedSlug.get()
         # get previous and next navigation items
         (prev, next) = getPrevNext(globalBooyakaConfig.sidebar_navigation, slugHash[0])
         htmlContent: string = md.toHtml()   # convert markdown to HTML
@@ -499,6 +592,12 @@ initService Markdown[Global]:
       ## updates the markdown service index and search index accordingly.
       ## The reserved root `llms.md` (any case) is skipped: it only serves
       ## `/llms.txt` and must never create a `/llms` page or search entry.
+      ## Stale entries are purged *before* the walk so renamed (routed) or
+      ## reserved files are re-parsed fresh instead of skipped as unchanged.
+      gMarkdownService.purgeReservedLlms()
+      gMarkdownService.purgeRoutedPages(contentPath)
+      if not searchInstance.isNil:
+        searchInstance.purgeLlmsEntries()
       for path in walkDirRec(contentPath, {pcFile}):
         let fpath = path.splitFile
         if fpath.ext != ".md" or fpath.name.startsWith("!"):
@@ -515,11 +614,6 @@ initService Markdown[Global]:
         # parse markdown file and update the markdown service index
         gMarkdownService.parseMarkdownFile(contentPath, path, some(hashedSlug))
       
-      # drop stale `/llms` entries from older dbs; root `llms.md`
-      # is reserved for `/llms.txt` and must never resolve to a page
-      gMarkdownService.purgeReservedLlms()
-      if not searchInstance.isNil:
-        searchInstance.purgeLlmsEntries()
       # write FBE-encoded caches (signature envelope included)
       writeDbFile(dbPath, encodeMarkdownInstance(gMarkdownService))
       writeDbFile(searchPath, encodeSpotlight(searchInstance[]))

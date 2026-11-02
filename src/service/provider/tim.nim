@@ -106,7 +106,8 @@ initService Tim[Global]:
       )
       timInstance.precompile()
 
-    proc buildRender*(path: string, local: JsonNode): string =
+    proc buildRender*(path: string, local: JsonNode, view = "index",
+                       layout = "base"): string =
       if timInstance == nil:
         raise newException(ValueError, "Tim Engine not initialized. Call buildSetup first.")
       let basePath = globalBooyakaConfig.siteBasePath()
@@ -125,7 +126,7 @@ initService Tim[Global]:
       data["site"] = site
       for key, val in local.pairs:
         data[key] = val
-      result = render(timInstance, "index", "base", data)
+      result = render(timInstance, view, layout, data)
 
   client do:
 

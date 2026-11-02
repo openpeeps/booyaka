@@ -115,3 +115,19 @@ footer:
     - title: "GitHub"
       url: "https://github.com/example"
       icon: "icon-brand-github"
+# Custom routes: static Tim views or Markdown pages at explicit paths.
+# A `view` renders `themes/<theme>/views/<view>.timl` directly
+# (e.g. `pages/contact` -> `views/pages/contact.timl`, layout defaults
+# to `base`). A `page` serves a Markdown file from `contents/` at `path`
+# instead of its natural slug (the original URL is then excluded from
+# the build). Markdown frontmatter `view:` / `layout:` override the
+# route defaults per page. `"/"`, `/search`, `/results.json`,
+# `/llms.txt` and `/assets` stay reserved.
+# routes:
+#   - path: "/contact"
+#     view: "pages/contact"
+#     title: "Contact"
+#     description: "Get in touch with us"
+#   - path: "/changelog"
+#     page: "changelog.md"
+#     layout: "base"

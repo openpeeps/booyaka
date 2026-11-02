@@ -1,5 +1,6 @@
-import std/[options, times, tables, strutils]
+import std/[options, times, tables, strutils, os]
 import pkg/openparser/[json, html]
+import pkg/kapsis/interactive/prompts
 
 type
   SidebarType* = enum
@@ -216,6 +217,28 @@ type
       ## The label of the root version (the current working tree / default branch).
       ## Used by the version switcher and `versionPath` to detect the current version.
 
+  BooyakaRoute* = object
+    ## A custom route registered at `booyaka.config` level. Exactly one of
+    ## `view` / `page` must be set:
+    ## - `view`: a static Tim template, e.g. `"pages/contact"` renders
+    ##   `themes/<theme>/views/pages/contact.timl`.
+    ## - `page`: a Markdown file relative to `contents/`, e.g.
+    ##   `"changelog.md"`. The file is served at `path` instead of its
+    ##   natural slug (which is then excluded from the build).
+    path*: string
+      ## URL path of the route, e.g. `"/contact"`
+    view*: Option[string]
+      ## Tim view name for static template routes
+    page*: Option[string]
+      ## Markdown source for page routes, relative to `contents/`
+    layout*: Option[string]
+      ## Tim layout override (default `"base"`; Markdown frontmatter
+      ## `layout:` wins over this)
+    title*: Option[string]
+      ## Meta title fallback for static view routes (no Markdown meta)
+    description*: Option[string]
+      ## Meta description fallback for static view routes
+
   BooyakaConfig* = object
     ## Configuration options for Booyaka This object is automatically populated from `booyaka.config.yaml` or `booyaka.config.json` file in the current directory.
     server*: ServerSettings
@@ -246,6 +269,9 @@ type
       ## Extra sections for future extensions
     footer*: BooyakaFooter
       ## Footer configuration
+    routes*: seq[BooyakaRoute]
+      ## Custom routes: static Tim views or Markdown pages served at
+      ## explicit paths (see `BooyakaRoute`)
 
 var
   enable_browser_sync* = true
@@ -269,6 +295,77 @@ proc ensureLeadingSlash*(config: BooyakaConfig) =
     for navItem in section.items:
       if navItem.url.len > 0 and navItem.url[0] != '/':
         navItem.url.insert("/", 0)
+
+proc routeSlug*(p: string): string =
+  ## Slug form of a route path (`"/contact"` -> `"contact"`), matching the
+  ## slug style of Markdown pages (no leading/trailing slashes).
+  p.strip().strip(chars = {'/'}, leading = true, trailing = true)
+
+proc routeViewName*(v: string): string =
+  ## Normalizes a route `view` (or frontmatter `view:`) to a Tim dotted
+  ## view name: `"pages/contact"` / `"pages/contact.timl"` -> `"pages.contact"`.
+  var s = v.strip().replace("\\", "/")
+  if s.endsWith(".timl"):
+    s = s[0 .. ^6]
+  s = s.strip(chars = {'/'}, leading = true, trailing = true)
+  s.replace("/", ".")
+
+proc findCustomRoute*(config: BooyakaConfig, path: string): Option[BooyakaRoute] =
+  ## Returns the custom route registered for `path` (slash-tolerant), if any.
+  let want = routeSlug(path)
+  if want.len == 0:
+    return none(BooyakaRoute)
+  for r in config.routes:
+    if routeSlug(r.path) == want:
+      return some(r)
+  none(BooyakaRoute)
+
+proc validateRoutes*(config: var BooyakaConfig, projectPath: string) =
+  ## Normalizes `routes` (paths, view names, page paths) and fails fast on
+  ## invalid entries. Called from `loadBooyaka` so both `start` and `build`
+  ## enforce the same rules. The homepage (`"/"`) and the reserved
+  ## `/search`, `/results.json`, `/llms.txt`, `/assets` prefixes stay protected.
+  var seen: seq[string] = @[]
+  for i in 0 ..< config.routes.len:
+    var r = config.routes[i]
+    var p = r.path.strip().strip(chars = {'/'}, leading = true, trailing = true)
+    r.path = "/" & p
+    if p.len == 0:
+      displayError("Invalid `routes[" & $i & "].path`: \"/\" is the homepage and cannot be overridden.",
+        quitProcess = true)
+    if r.path in ["/search", "/results.json", "/llms.txt", "/assets"] or
+        r.path.startsWith("/assets/"):
+      displayError("Invalid `routes[" & $i & "].path` \"" & r.path &
+        "\": reserved by Booyaka.", quitProcess = true)
+    let
+      hasView = r.view.isSome and r.view.get.strip().len > 0
+      hasPage = r.page.isSome and r.page.get.strip().len > 0
+    if hasView == hasPage:
+      displayError("Invalid route \"" & r.path &
+        "\": set exactly one of `view` or `page`.", quitProcess = true)
+    if p in seen:
+      displayError("Duplicate route path \"" & r.path & "\".", quitProcess = true)
+    seen.add(p)
+    if hasView:
+      r.view = some(routeViewName(r.view.get))
+    if hasPage:
+      var rel = r.page.get.strip().replace("\\", "/")
+      rel = rel.strip(chars = {'/'}, leading = true, trailing = false)
+      if rel.startsWith("contents/"):
+        rel = rel["contents/".len .. ^1]
+      if not rel.endsWith(".md"):
+        displayError("Invalid route \"" & r.path &
+          "\".page: must point to a `.md` file relative to `contents/`.",
+          quitProcess = true)
+      if not fileExists(projectPath / "contents" / rel):
+        displayError("Invalid route \"" & r.path &
+          "\".page: file not found: contents/" & rel, quitProcess = true)
+      r.page = some(rel)
+    if r.layout.isSome and r.layout.get.strip().len == 0:
+      r.layout = none(string)
+    elif r.layout.isSome:
+      r.layout = some(r.layout.get.strip())
+    config.routes[i] = r
 
 proc siteBasePath*(config: BooyakaConfig): string =
   ## Path prefix derived from `metadata.url` for prefixing asset and page

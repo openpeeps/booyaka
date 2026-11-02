@@ -39,6 +39,7 @@ proc loadBooyaka*(projectPath: string) =
   if globalBooyakaConfig.server.address.len == 0:
     globalBooyakaConfig.server.address = "127.0.0.1"
   booyakaProjectPath = configPath.parentDir
+  globalBooyakaConfig.validateRoutes(booyakaProjectPath)
 
 proc activeThemeName*(): string =
   ## The theme selected in `booyaka.config`, defaulting to
@@ -197,6 +198,7 @@ proc scaffoldTheme*(destRoot, name, author: string): int =
     "views/index.timl",
     "views/markdown.timl",
     "views/search.timl",
+    "views/pages/contact.timl",
     "views/errors/4xx.timl",
     "views/errors/5xx.timl",
     "assets/sweetsyntax.css",
@@ -394,32 +396,34 @@ proc buildCommand*(v: Values) =
     copyDiskAssets("theme-active")
   copyDiskAssets("project-assets")
 
+  proc switcherItems(currentSlug: string): JsonNode =
+    ## Version switcher entries shared by `renderPages` and custom view
+    ## routes: each entry links to the same page in that version when it
+    ## exists, falling back to the version index.
+    var versions = newJArray()
+    for label in @[globalBooyakaConfig.git.latest_label] & gVersionList:
+      var target =
+        if label == globalBooyakaConfig.git.latest_label: ""
+        else: "/" & label
+      if currentSlug.len > 0 and currentSlug != "/":
+        let slugPath = currentSlug.strip(chars = {'/'}, leading = true)
+        let hasPage =
+          if label == globalBooyakaConfig.git.latest_label:
+            gMarkdownService.index.hasKey(currentSlug)
+          else:
+            not gMarkdownVersions.isNil and gMarkdownVersions.hasKey(label) and
+              gMarkdownVersions[label].index.hasKey(currentSlug)
+        if hasPage:
+          target = target & "/" & slugPath
+      versions.add(%*{
+        "label": label,
+        "path": basePath & target
+      })
+    versions
+
   proc renderPages(instance: MarkdownInstance, destPath: string,
       version = "") =
     ## Renders every page of `instance` into `destPath` as static HTML.
-    ## The version switcher data links each entry to the same page in that
-    ## version when it exists, falling back to the version index.
-    proc switcherItems(currentSlug: string): JsonNode =
-      var versions = newJArray()
-      for label in @[globalBooyakaConfig.git.latest_label] & gVersionList:
-        var target =
-          if label == globalBooyakaConfig.git.latest_label: ""
-          else: "/" & label
-        if currentSlug.len > 0 and currentSlug != "/":
-          let slugPath = currentSlug.strip(chars = {'/'}, leading = true)
-          let hasPage =
-            if label == globalBooyakaConfig.git.latest_label:
-              gMarkdownService.index.hasKey(currentSlug)
-            else:
-              not gMarkdownVersions.isNil and gMarkdownVersions.hasKey(label) and
-                gMarkdownVersions[label].index.hasKey(currentSlug)
-          if hasPage:
-            target = target & "/" & slugPath
-        versions.add(%*{
-          "label": label,
-          "path": basePath & target
-        })
-      versions
     for pagePath, pageHash in instance.index:
       if pagePath.strip(chars = {'/'}, leading = true, trailing = true).toLowerAscii() == "llms":
         # reserved root `llms.md` only emits `/llms.txt`, never `/llms`
@@ -472,7 +476,19 @@ proc buildCommand*(v: Values) =
         "enable": globalBooyakaConfig.git.enable_versioning,
         "items": switcherItems(pagePath)
       }
-      let html = tim.buildRender(pagePath, localData)
+      # Tim view/layout: frontmatter `view:`/`layout:` win, then the
+      # custom-route defaults (for Markdown-backed routes), then
+      # `("index", "base")`
+      let (pageView, pageLayout) = resolvePageViewLayout(mdPage.meta,
+        globalBooyakaConfig.findCustomRoute(pagePath))
+      var html: string
+      try:
+        html = tim.buildRender(pagePath, localData,
+          view = pageView, layout = pageLayout)
+      except CatchableError as e:
+        displayError("Failed to render page \"" & pagePath &
+          "\" (view \"" & pageView & "\", layout \"" & pageLayout &
+          "\"): " & e.msg, quitProcess = true)
       if pagePath == "/":
         writeFile(destPath / "index.html", html)
       else:
@@ -481,7 +497,51 @@ proc buildCommand*(v: Values) =
         createDir(pageDir)
         writeFile(pageDir / "index.html", html)
 
+  proc renderCustomViewRoutes(destPath: string) =
+    ## Renders static view routes (`view`, no `page`) into `destPath`.
+    ## Markdown-backed routes need no handling here: their files are
+    ## indexed under the route slug, so `renderPages` already emits them
+    ## at the route path. Custom routes are root-version only.
+    for route in globalBooyakaConfig.routes:
+      if route.page.isSome and route.page.get.strip().len > 0:
+        continue
+      let (view, layout) = resolveRouteViewLayout(route)
+      var metaTitle = routeSlug(route.path)
+      if route.title.isSome and route.title.get.strip().len > 0:
+        metaTitle = route.title.get.strip()
+      var metaDesc = ""
+      if route.description.isSome:
+        metaDesc = route.description.get
+      let routeSlugPath = routeSlug(route.path)
+      var localData = newJObject()
+      localData["markdown"] = %*{
+        "meta": {
+          "title": metaTitle,
+          "description": metaDesc
+        }
+      }
+      localData["config"] = toJson(globalBooyakaConfig).fromJson()
+      localData["base_path"] = newJString(basePath)
+      localData["version"] = %*{"label": "", "path": ""}
+      localData["versions"] = %*{
+        "enable": globalBooyakaConfig.git.enable_versioning,
+        "items": switcherItems(routeSlugPath)
+      }
+      let html =
+        try:
+          tim.buildRender(routeSlugPath, localData,
+            view = view, layout = layout)
+        except CatchableError as e:
+          displayError("Failed to render route \"" & route.path &
+            "\" (view \"" & view & "\", layout \"" & layout &
+            "\"): " & e.msg, quitProcess = true)
+          ""
+      let pageDir = destPath / routeSlugPath
+      createDir(pageDir)
+      writeFile(pageDir / "index.html", html)
+
   renderPages(gMarkdownService, outputPath)
+  renderCustomViewRoutes(outputPath)
 
   # emit `/llms.txt` from the root `llms.md` file when present (any case)
   var llmsSource = ""
